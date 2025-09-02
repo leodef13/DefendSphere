@@ -1,9 +1,3 @@
-# Defend13
-
-
-
-
-# Defend13
 # DefendSphere Dashboard
 
 React 18 + Vite + TypeScript + TailwindCSS. Includes minimal UI components (shadcn-like), lucide icons, framer-motion animations, recharts charts, and routing.
