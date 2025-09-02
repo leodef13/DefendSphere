@@ -1,0 +1,25 @@
+version: '3.9'
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: ds_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  api:
+    build: ./
+    container_name: ds_api
+    env_file:
+      - ./.env
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+    driver: local
