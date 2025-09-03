@@ -1,129 +1,299 @@
-import React from 'react'
-import { Card, CardContent, CardHeader } from '../components/ui'
-import { useLanguage } from '../contexts/LanguageContext'
-import { useAuth } from '../contexts/AuthContext'
-import { Shield, TrendingUp, Users, Activity } from 'lucide-react'
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { 
+  Shield, 
+  TrendingUp, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock, 
+  Users, 
+  Activity,
+  BarChart3,
+  Zap,
+  Target
+} from 'lucide-react';
 
-export default function Home() {
-  const { t } = useLanguage()
-  const { user } = useAuth()
+const Home: React.FC = () => {
+  const { user } = useAuth();
+  const { t } = useLanguage();
+  const [metrics, setMetrics] = useState({
+    securityScore: 0,
+    activeThreats: 0,
+    resolvedIncidents: 0,
+    uptime: 0
+  });
+
+  useEffect(() => {
+    // Анимация метрик
+    const animateMetrics = () => {
+      const targetMetrics = {
+        securityScore: 94,
+        activeThreats: 3,
+        resolvedIncidents: 127,
+        uptime: 99.8
+      };
+
+      const duration = 2000;
+      const steps = 60;
+      const stepDuration = duration / steps;
+
+      let currentStep = 0;
+      const interval = setInterval(() => {
+        currentStep++;
+        const progress = currentStep / steps;
+
+        setMetrics({
+          securityScore: Math.round(targetMetrics.securityScore * progress),
+          activeThreats: Math.round(targetMetrics.activeThreats * progress),
+          resolvedIncidents: Math.round(targetMetrics.resolvedIncidents * progress),
+          uptime: Math.round((targetMetrics.uptime * progress) * 100) / 100
+        });
+
+        if (currentStep >= steps) {
+          clearInterval(interval);
+        }
+      }, stepDuration);
+
+      return () => clearInterval(interval);
+    };
+
+    animateMetrics();
+  }, []);
+
+  const quickActions = [
+    {
+      title: t('home.quickActions.generateReport'),
+      description: t('home.quickActions.generateReportDesc'),
+      icon: <BarChart3 className="h-6 w-6" />,
+      action: () => console.log('Generate Report'),
+      color: 'bg-blue-500'
+    },
+    {
+      title: t('home.quickActions.checkCompliance'),
+      description: t('home.quickActions.checkComplianceDesc'),
+      icon: <Shield className="h-6 w-6" />,
+      action: () => console.log('Check Compliance'),
+      color: 'bg-green-500'
+    },
+    {
+      title: t('home.quickActions.viewAlerts'),
+      description: t('home.quickActions.viewAlertsDesc'),
+      icon: <AlertTriangle className="h-6 w-6" />,
+      action: () => console.log('View Alerts'),
+      color: 'bg-yellow-500'
+    },
+    {
+      title: t('home.quickActions.systemStatus'),
+      description: t('home.quickActions.systemStatusDesc'),
+      icon: <Activity className="h-6 w-6" />,
+      action: () => console.log('System Status'),
+      color: 'bg-purple-500'
+    }
+  ];
+
+  const recentActivities = [
+    {
+      type: 'incident',
+      message: t('home.activities.incidentResolved'),
+      time: '2 minutes ago',
+      icon: <CheckCircle className="h-4 w-4 text-green-500" />
+    },
+    {
+      type: 'alert',
+      message: t('home.activities.newAlert'),
+      time: '15 minutes ago',
+      icon: <AlertTriangle className="h-4 w-4 text-yellow-500" />
+    },
+    {
+      type: 'update',
+      message: t('home.activities.systemUpdate'),
+      time: '1 hour ago',
+      icon: <Zap className="h-4 w-4 text-blue-500" />
+    },
+    {
+      type: 'scan',
+      message: t('home.activities.scanComplete'),
+      time: '2 hours ago',
+      icon: <Target className="h-4 w-4 text-purple-500" />
+    }
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Welcome to DefendSphere
-        </h1>
-        <p className="mt-2 text-lg text-gray-600 dark:text-neutral-400">
-          Comprehensive security monitoring and threat management platform
-        </p>
+      {/* Welcome Header */}
+      <div className="card p-6 fade-in">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {t('home.welcome')}, {user?.username}!
+            </h1>
+            <p className="text-gray-600 text-lg">
+              {t('home.subtitle')}
+            </p>
+          </div>
+          <div className="hidden md:block">
+            <div className="w-16 h-16 bg-gradient-to-br from-[#56a3d9] to-[#134876] rounded-full flex items-center justify-center">
+              <Shield className="h-8 w-8 text-white" />
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-              <Shield className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+        <div className="card p-6 metric-card slide-in">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">{t('home.metrics.securityScore')}</p>
+              <p className="text-2xl font-bold text-gray-900">{metrics.securityScore}%</p>
             </div>
-            <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">Active Protections</h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
-              Real-time monitoring and threat prevention
-            </p>
-          </CardContent>
-        </Card>
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+              <Shield className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-green-500 h-2 rounded-full transition-all duration-1000"
+                style={{ width: `${metrics.securityScore}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-              <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-300" />
+        <div className="card p-6 metric-card slide-in">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">{t('home.metrics.activeThreats')}</p>
+              <p className="text-2xl font-bold text-gray-900">{metrics.activeThreats}</p>
             </div>
-            <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">Performance</h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
-              Optimized security operations
-            </p>
-          </CardContent>
-        </Card>
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="text-sm text-gray-500">{t('home.metrics.threatsDesc')}</p>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
-              <Users className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+        <div className="card p-6 metric-card slide-in">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">{t('home.metrics.resolvedIncidents')}</p>
+              <p className="text-2xl font-bold text-gray-900">{metrics.resolvedIncidents}</p>
             </div>
-            <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">Team Collaboration</h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
-              Multi-user access and role management
-            </p>
-          </CardContent>
-        </Card>
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <CheckCircle className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="text-sm text-gray-500">{t('home.metrics.incidentsDesc')}</p>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900">
-              <Activity className="h-6 w-6 text-orange-600 dark:text-orange-300" />
+        <div className="card p-6 metric-card slide-in">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">{t('home.metrics.uptime')}</p>
+              <p className="text-2xl font-bold text-gray-900">{metrics.uptime}%</p>
             </div>
-            <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">Real-time Alerts</h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
-              Instant notification system
-            </p>
-          </CardContent>
-        </Card>
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-purple-600" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="text-sm text-gray-500">{t('home.metrics.uptimeDesc')}</p>
+          </div>
+        </div>
       </div>
 
+      {/* Quick Actions and Recent Activities */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader className="p-4 pb-0">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Quick Actions</h3>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="space-y-3">
-              <button className="w-full text-left p-3 rounded-lg border border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors">
-                <div className="font-medium text-gray-900 dark:text-white">View Recent Incidents</div>
-                <div className="text-sm text-gray-600 dark:text-neutral-400">Check latest security events</div>
+        {/* Quick Actions */}
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('home.quickActions.title')}</h2>
+          <div className="space-y-3">
+            {quickActions.map((action, index) => (
+              <button
+                key={index}
+                onClick={action.action}
+                className="w-full p-4 border border-gray-200 rounded-lg hover:border-[#56a3d9] hover:shadow-md transition-all duration-200 text-left group"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className={`w-10 h-10 ${action.color} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200`}>
+                    {React.cloneElement(action.icon, { className: 'h-5 w-5 text-white' })}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-gray-900 group-hover:text-[#134876] transition-colors">
+                      {action.title}
+                    </h3>
+                    <p className="text-sm text-gray-500">{action.description}</p>
+                  </div>
+                </div>
               </button>
-              <button className="w-full text-left p-3 rounded-lg border border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors">
-                <div className="font-medium text-gray-900 dark:text-white">Generate Security Report</div>
-                <div className="text-sm text-gray-600 dark:text-neutral-400">Create comprehensive security overview</div>
-              </button>
-              <button className="w-full text-left p-3 rounded-lg border border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors">
-                <div className="font-medium text-gray-900 dark:text-white">Check System Status</div>
-                <div className="text-sm text-gray-600 dark:text-neutral-400">Monitor system health and performance</div>
-              </button>
-            </div>
-          </CardContent>
-        </Card>
+            ))}
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="p-4 pb-0">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">System Overview</h3>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-neutral-400">System Status</span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                  Operational
-                </span>
+        {/* Recent Activities */}
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('home.recentActivities.title')}</h2>
+          <div className="space-y-4">
+            {recentActivities.map((activity, index) => (
+              <div key={index} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="flex-shrink-0 mt-1">
+                  {activity.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900">{activity.message}</p>
+                  <p className="text-xs text-gray-500 flex items-center mt-1">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {activity.time}
+                  </p>
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-neutral-400">Last Update</span>
-                <span className="text-sm text-gray-900 dark:text-white">
-                  {new Date().toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-neutral-400">User Role</span>
-                <span className="text-sm text-gray-900 dark:text-white capitalize">
-                  {user?.role || 'user'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-neutral-400">Active Sessions</span>
-                <span className="text-sm text-gray-900 dark:text-white">1</span>
-              </div>
+            ))}
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <button className="text-sm text-[#56a3d9] hover:text-[#134876] font-medium transition-colors">
+              {t('home.recentActivities.viewAll')}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* System Status Overview */}
+      <div className="card p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('home.systemStatus.title')}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
-          </CardContent>
-        </Card>
+            <h3 className="font-medium text-gray-900 mb-1">{t('home.systemStatus.security')}</h3>
+            <p className="text-sm text-gray-500">{t('home.systemStatus.securityStatus')}</p>
+          </div>
+          
+          <div className="text-center">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Activity className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="font-medium text-gray-900 mb-1">{t('home.systemStatus.performance')}</h3>
+            <p className="text-sm text-gray-500">{t('home.systemStatus.performanceStatus')}</p>
+          </div>
+          
+          <div className="text-center">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Users className="h-8 w-8 text-purple-600" />
+            </div>
+            <h3 className="font-medium text-gray-900 mb-1">{t('home.systemStatus.users')}</h3>
+            <p className="text-sm text-gray-500">{t('home.systemStatus.usersStatus')}</p>
+          </div>
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
+
+export default Home;

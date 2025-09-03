@@ -1,73 +1,152 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext'
-import { LanguageProvider } from './contexts/LanguageContext'
-import MainLayout from './layouts/MainLayout'
-import AdminLayout from './layouts/AdminLayout'
-import AuthLayout from './layouts/AuthLayout'
-import Dashboard from './pages/Dashboard'
-import Incidents from './pages/Incidents'
-import Alerts from './pages/Alerts'
-import Settings from './pages/Settings'
-import Home from './pages/Home'
-import StarterGuide from './pages/StarterGuide'
-import Reports from './pages/Reports'
-import Compliance from './pages/Compliance'
-import CustomerTrust from './pages/CustomerTrust'
-import Suppliers from './pages/Suppliers'
-import Assets from './pages/Assets'
-import Integrations from './pages/Integrations'
-import Login from './pages/auth/Login'
-import Register from './pages/auth/Register'
-import Profile from './pages/Profile'
-import AdminDashboard from './pages/admin/Dashboard'
-import UserManagement from './pages/admin/UserManagement'
-import RoleManagement from './pages/admin/RoleManagement'
-import ProtectedRoute from './components/ProtectedRoute'
-import AdminRoute from './components/AdminRoute'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
+
+// Layouts
+import MainLayout from './layouts/MainLayout';
+import AuthLayout from './layouts/AuthLayout';
+import AdminLayout from './layouts/AdminLayout';
+
+// Auth Pages
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+
+// Main Pages
+import Home from './pages/Home';
+import StarterGuide from './pages/StarterGuide';
+import Reports from './pages/Reports';
+import Compliance from './pages/Compliance';
+import CustomerTrust from './pages/CustomerTrust';
+import Suppliers from './pages/Suppliers';
+import Assets from './pages/Assets';
+import Integrations from './pages/Integrations';
+import Profile from './pages/Profile';
+
+// Admin Pages
+import AdminDashboard from './pages/admin/Dashboard';
+import UserManagement from './pages/admin/UserManagement';
+import RoleManagement from './pages/admin/RoleManagement';
 
 function App() {
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <Routes>
-          {/* Auth routes */}
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Route>
+    <AuthProvider>
+      <LanguageProvider>
+        <Router>
+          <div className="App">
+            <Routes>
+              {/* Auth Routes */}
+              <Route path="/login" element={
+                <AuthLayout>
+                  <Login />
+                </AuthLayout>
+              } />
+              <Route path="/register" element={
+                <AuthLayout>
+                  <Register />
+                </AuthLayout>
+              } />
 
-          {/* Main app routes */}
-          <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/starter-guide" element={<StarterGuide />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/compliance" element={<Compliance />} />
-            <Route path="/customer-trust" element={<CustomerTrust />} />
-            <Route path="/suppliers" element={<Suppliers />} />
-            <Route path="/assets" element={<Assets />} />
-            <Route path="/integrations" element={<Integrations />} />
-            <Route path="/incidents" element={<Incidents />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/profile" element={<Profile />} />
-          </Route>
+              {/* Protected Main Routes */}
+              <Route path="/" element={<Navigate to="/home" replace />} />
+              <Route path="/home" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <Home />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/starter-guide" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <StarterGuide />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/reports" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <Reports />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/compliance" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <Compliance />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/customer-trust" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <CustomerTrust />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/suppliers" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <Suppliers />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/assets" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <Assets />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/integrations" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <Integrations />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <Profile />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
 
-          {/* Admin routes */}
-          <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/users" element={<UserManagement />} />
-            <Route path="/admin/roles" element={<RoleManagement />} />
-          </Route>
+              {/* Admin Routes */}
+              <Route path="/admin" element={
+                <AdminRoute>
+                  <AdminLayout>
+                    <AdminDashboard />
+                  </AdminLayout>
+                </AdminRoute>
+              } />
+              <Route path="/admin/users" element={
+                <AdminRoute>
+                  <AdminLayout>
+                    <UserManagement />
+                  </AdminLayout>
+                </AdminRoute>
+              } />
+              <Route path="/admin/roles" element={
+                <AdminRoute>
+                  <AdminLayout>
+                    <RoleManagement />
+                  </AdminLayout>
+                </AdminRoute>
+              } />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </AuthProvider>
-    </LanguageProvider>
-  )
+              {/* Catch all route */}
+              <Route path="*" element={<Navigate to="/home" replace />} />
+            </Routes>
+          </div>
+        </Router>
+      </LanguageProvider>
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;
 
