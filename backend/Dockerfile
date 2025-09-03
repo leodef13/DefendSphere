@@ -1,12 +1,31 @@
-FROM node:20-alpine
-WORKDIR /app
-# Установим prod-зависимости (если есть lock — используем ci)
-COPY package*.json ./
-RUN npm ci --omit=dev || npm install --omit=dev
+FROM node:18-alpine
 
-# Копируем исходники
+# Установка рабочей директории
+WORKDIR /app
+
+# Копирование package.json и package-lock.json
+COPY package*.json ./
+
+# Установка зависимостей
+RUN npm ci --only=production
+
+# Копирование исходного кода
 COPY . .
 
-ENV NODE_ENV=production
+# Создание непривилегированного пользователя
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nodejs -u 1001
+
+# Изменение владельца файлов
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+# Открытие порта
 EXPOSE 5000
-CMD ["node", "index.js"]
+
+# Проверка здоровья
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node healthcheck.js
+
+# Запуск приложения
+CMD ["npm", "start"]
