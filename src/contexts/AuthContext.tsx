@@ -1,145 +1,164 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, AuthContextType, LoginCredentials, RegisterCredentials, ProfileUpdateData } from '../types/auth';
 
-export interface User {
-  id: string
-  username: string
-  email: string
-  role: 'admin' | 'user'
-  permissions: string[]
-  createdAt: string
-  lastLogin: string
-}
-
-interface AuthContextType {
-  user: User | null
-  isAuthenticated: boolean
-  isLoading: boolean
-  login: (username: string, password: string) => Promise<boolean>
-  logout: () => void
-  register: (username: string, email: string, password: string) => Promise<boolean>
-  hasPermission: (permission: string) => boolean
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
-}
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const navigate = useNavigate()
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkAuthStatus()
-  }, [])
-
-  const checkAuthStatus = async () => {
-    try {
-      const token = localStorage.getItem('authToken')
-      if (token) {
-        const response = await fetch('/api/auth/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-        if (response.ok) {
-          const userData = await response.json()
-          setUser(userData.user)
-        } else {
-          localStorage.removeItem('authToken')
-        }
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error)
-      localStorage.removeItem('authToken')
-    } finally {
-      setIsLoading(false)
+    // Проверяем сохраненный токен при загрузке
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      fetchUserInfo(token);
+    } else {
+      setIsLoading(false);
     }
-  }
+  }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const fetchUserInfo = async (token: string) => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/me`, {
         headers: {
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password })
-      })
+      });
 
       if (response.ok) {
-        const data = await response.json()
-        localStorage.setItem('authToken', data.token)
-        setUser(data.user)
-        navigate('/dashboard')
-        return true
+        const userData = await response.json();
+        setUser(userData);
+      } else {
+        // Токен недействителен, удаляем его
+        localStorage.removeItem('authToken');
       }
-      return false
     } catch (error) {
-      console.error('Login failed:', error)
-      return false
+      console.error('Error fetching user info:', error);
+      localStorage.removeItem('authToken');
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
+
+  const login = async (username: string, password: string, rememberMe: boolean = false): Promise<void> => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Login failed');
+      }
+
+      const { token, user: userData } = await response.json();
+      
+      // Сохраняем токен
+      if (rememberMe) {
+        localStorage.setItem('authToken', token);
+      } else {
+        sessionStorage.setItem('authToken', token);
+      }
+      
+      setUser(userData);
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  };
+
+  const register = async (username: string, email: string, password: string): Promise<void> => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
+
+      // После успешной регистрации автоматически входим
+      await login(username, password);
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  };
 
   const logout = () => {
-    localStorage.removeItem('authToken')
-    setUser(null)
-    navigate('/login')
-  }
+    setUser(null);
+    localStorage.removeItem('authToken');
+    sessionStorage.removeItem('authToken');
+  };
 
-  const register = async (username: string, email: string, password: string): Promise<boolean> => {
+  const updateProfile = async (data: ProfileUpdateData): Promise<void> => {
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
+      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+      if (!token) throw new Error('No authentication token');
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users/profile`, {
+        method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, email, password })
-      })
+        body: JSON.stringify(data),
+      });
 
-      if (response.ok) {
-        const data = await response.json()
-        localStorage.setItem('authToken', data.token)
-        setUser(data.user)
-        navigate('/dashboard')
-        return true
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Profile update failed');
       }
-      return false
-    } catch (error) {
-      console.error('Registration failed:', error)
-      return false
-    }
-  }
 
-  const hasPermission = (permission: string): boolean => {
-    if (!user) return false
-    return user.permissions.includes(permission) || user.role === 'admin'
-  }
+      const updatedUser = await response.json();
+      setUser(updatedUser);
+    } catch (error) {
+      console.error('Profile update error:', error);
+      throw error;
+    }
+  };
+
+  const checkPermission = (permission: string): boolean => {
+    if (!user) return false;
+    if (user.role === 'admin') return true;
+    return user.permissions.includes(permission);
+  };
 
   const value: AuthContextType = {
     user,
-    isAuthenticated: !!user,
-    isLoading,
     login,
     logout,
     register,
-    hasPermission
-  }
+    updateProfile,
+    checkPermission,
+    isLoading,
+  };
 
   return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
-  )
-}
+  );
+};
+
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
