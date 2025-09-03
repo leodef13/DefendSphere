@@ -419,6 +419,10 @@ async function initializeDefaultUsers() {
 // Initialize default users on startup
 await initializeDefaultUsers()
 
+// Подключаем маршрут ассистента
+const assistantRoutes = require('./routes/assistant');
+app.use('/api/assistant', assistantRoutes);
+
 app.listen(PORT, () => {
   console.log(`API server running on http://0.0.0.0:${PORT}`)
   console.log('Default users:')
