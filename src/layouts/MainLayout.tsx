@@ -86,6 +86,16 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     setIsLanguageDropdownOpen(false);
   };
 
+  // Функция для получения инициалов пользователя
+  const getUserInitials = (username: string) => {
+    if (!username) return 'U';
+    const parts = username.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return username.substring(0, 2).toUpperCase();
+  };
+
   // Закрытие мобильного меню при изменении маршрута
   useEffect(() => {
     closeMobileMenu();
@@ -124,7 +134,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="px-3">
+        <nav className="px-3 flex-1">
           <ul className="space-y-2">
             {filteredNavItems.map((item) => {
               const isActive = location.pathname === item.path;
@@ -148,12 +158,15 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </ul>
         </nav>
 
-        {/* User Section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#134876]">
+        {/* User Section - внизу sidebar */}
+        <div className="p-4 border-t border-[#134876]">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-[#56a3d9] rounded-full flex items-center justify-center">
-              <User className="h-4 w-4 text-white" />
+            {/* Круглешок с инициалами */}
+            <div className="w-10 h-10 bg-[#56a3d9] rounded-full flex items-center justify-center text-white font-bold text-sm">
+              {getUserInitials(user.username)}
             </div>
+            
+            {/* Информация о пользователе */}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">
                 {user.username}

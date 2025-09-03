@@ -11,8 +11,16 @@ import {
   Activity,
   BarChart3,
   Zap,
-  Target
+  Target,
+  HardDrive,
+  AlertCircle,
+  ExclamationTriangle,
+  Info
 } from 'lucide-react';
+import SecurityHealthChart from '../components/charts/SecurityHealthChart';
+import ProblemsOverview from '../components/charts/ProblemsOverview';
+import HealthTrendChart from '../components/charts/HealthTrendChart';
+import CriticalLevelsChart from '../components/charts/CriticalLevelsChart';
 
 const Home: React.FC = () => {
   const { user } = useAuth();
@@ -119,6 +127,43 @@ const Home: React.FC = () => {
     }
   ];
 
+  // Данные для графиков
+  const healthTrendData = [
+    { date: '2025-08-01', health: 60 },
+    { date: '2025-08-10', health: 40 },
+    { date: '2025-08-20', health: 55 },
+    { date: '2025-08-30', health: 15 }
+  ];
+
+  const criticalLevelsData = [
+    {
+      element: 'Assets',
+      green: 20,
+      yellow: 10,
+      red: 5
+    },
+    {
+      element: 'Compliance',
+      green: 15,
+      yellow: 15,
+      red: 10
+    },
+    {
+      element: 'Suppliers',
+      green: 20,
+      yellow: 10,
+      red: 5
+    }
+  ];
+
+  const problemsData = [
+    { label: 'Assets Monitoring', value: 124, color: 'bg-blue-500' },
+    { label: 'Critical Problems', value: 5, color: 'bg-red-500' },
+    { label: 'High Problems', value: 12, color: 'bg-orange-500' },
+    { label: 'Medium Problems', value: 28, color: 'bg-yellow-500' },
+    { label: 'Low Problems', value: 43, color: 'bg-green-500' }
+  ];
+
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
@@ -137,6 +182,48 @@ const Home: React.FC = () => {
               <Shield className="h-8 w-8 text-white" />
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Security Health Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Total Security Health Chart */}
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Total Security Health</h2>
+          <div className="flex items-center justify-center">
+            <SecurityHealthChart percentage={75} />
+          </div>
+          <div className="mt-4 space-y-2 text-center">
+            <div className="flex items-center justify-center space-x-2">
+              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+              <span className="text-sm text-gray-600">Status: Need Attention</span>
+            </div>
+            <div className="flex items-center justify-center space-x-2">
+              <Clock className="h-4 w-4 text-gray-400" />
+              <span className="text-sm text-gray-600">Last scan: 2 days ago</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Problems Overview */}
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Problems Overview</h2>
+          <ProblemsOverview data={problemsData} />
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Health Trend Chart */}
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Health Trend</h2>
+          <HealthTrendChart data={healthTrendData} />
+        </div>
+
+        {/* Critical Levels Chart */}
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Critical Levels by Element</h2>
+          <CriticalLevelsChart data={criticalLevelsData} />
         </div>
       </div>
 
