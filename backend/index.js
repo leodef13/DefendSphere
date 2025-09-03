@@ -423,6 +423,10 @@ await initializeDefaultUsers()
 const assistantRoutes = require('./routes/assistant');
 app.use('/api/assistant', assistantRoutes);
 
+// Подключаем маршрут starter guide
+const starterGuideRoutes = require('./routes/starter-guide');
+app.use('/api/starter-guide', starterGuideRoutes);
+
 app.listen(PORT, () => {
   console.log(`API server running on http://0.0.0.0:${PORT}`)
   console.log('Default users:')
