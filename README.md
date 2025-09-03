@@ -98,6 +98,15 @@ make start
 
 ### 4. Запуск через Docker
 ```bash
+# Сборка и запуск всех сервисов
+docker-compose up -d
+
+# Просмотр логов
+docker-compose logs -f
+
+# Остановка
+docker-compose down
+```
 # Сборка и запуск
 make docker-build
 make docker-up
