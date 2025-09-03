@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import ChatWidget from '../components/ChatWidget';
+import SecurityAssistant from '../components/assistant/SecurityAssistant';
 import { 
   Home, 
   BookOpen, 
@@ -302,8 +302,8 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         />
       )}
 
-      {/* Chat Widget */}
-      <ChatWidget />
+      {/* Security Assistant */}
+      <SecurityAssistant />
     </div>
   );
 };
