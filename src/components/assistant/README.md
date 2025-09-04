@@ -256,3 +256,9 @@ DEBUG=assistant:*
 - Update README for new features
 - Include usage examples
 - Document API changes
+
+---
+
+**Версия**: 1.0.0  
+**Последнее обновление**: Сентябрь 2025  
+**Автор**: DefendSphere Team "DefendSphere — Secure Smarter, Comply Faster"

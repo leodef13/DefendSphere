@@ -425,6 +425,6 @@ redis-cli ping
 
 ---
 
-**Версия**: 2.0.0  
-**Дата**: Декабрь 2024  
-**Автор**: DefendSphere Team
+**Версия**: 1.0.0  
+**Последнее обновление**: Сентябрь 2025  
+**Автор**: DefendSphere Team "DefendSphere — Secure Smarter, Comply Faster"

@@ -153,3 +153,9 @@ Components include accessibility features:
 - Keyboard navigation support
 - High contrast color schemes
 - Screen reader friendly text alternatives
+
+---
+
+**Версия**: 1.0.0  
+**Последнее обновление**: Сентябрь 2025  
+**Автор**: DefendSphere Team "DefendSphere — Secure Smarter, Comply Faster"
