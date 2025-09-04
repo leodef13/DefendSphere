@@ -11,7 +11,9 @@ export default defineConfig({
     hmr: {
       port: 2525,
       host: 'localhost'
-    }
+    },
+    cors: true,
+    open: false
   },
   build: {
     outDir: 'dist',
