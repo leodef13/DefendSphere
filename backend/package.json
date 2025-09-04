@@ -1,6 +1,7 @@
 {
   "name": "defendsphere-backend",
   "version": "1.0.0",
+  "type": "module",
   "description": "DefendSphere Security Dashboard Backend API",
   "main": "index.js",
   "scripts": {
