@@ -31,7 +31,7 @@ fi
 # Start frontend
 echo "🎨 Starting frontend on port 2525..."
 cd frontend
-npm run dev &
+npx vite --port 2525 --host 0.0.0.0 &
 FRONTEND_PID=$!
 cd ..
 
