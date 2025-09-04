@@ -1,11 +1,17 @@
 // MainLayout.tsx
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { Shield, LayoutDashboard, Bell, AlertTriangle, Settings, User } from 'lucide-react'
+import { Shield, LayoutDashboard, Bell, AlertTriangle, Settings, User, BarChart3, Server, FileCheck, Users, Building2, FileText, HelpCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 function Sidebar() {
   const navItems = [
-    { to: '/dashboard', label: 'Home (Security Dashboard)', icon: LayoutDashboard },
+    { to: '/dashboard', label: 'Home - Security health overview and metrics', icon: LayoutDashboard },
+    { to: '/assets', label: 'Assets - IT asset management and monitoring', icon: Server },
+    { to: '/compliance', label: 'Compliance - Regulatory compliance tracking', icon: FileCheck },
+    { to: '/customer-trust', label: 'Customer Trust - Client relationship management', icon: Users },
+    { to: '/suppliers', label: 'Suppliers - Third-party supplier monitoring', icon: Building2 },
+    { to: '/reports', label: 'Reports - Security reports and analytics', icon: FileText },
+    { to: '/starter-guide', label: 'Starter Guide - Interactive security assessment', icon: HelpCircle },
     { to: '/incidents', label: 'Incidents', icon: AlertTriangle },
     { to: '/alerts', label: 'Alerts', icon: Bell },
     { to: '/settings', label: 'Settings', icon: Settings },
