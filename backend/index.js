@@ -5,6 +5,11 @@ import morgan from 'morgan'
 import { createClient } from 'redis'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import assistantRoutes from './routes/assistant.js'
+import starterGuideRoutes from './routes/starter-guide.js'
+import customerTrustRoutes from './routes/customer-trust.js'
+import assetsRoutes from './routes/assets.js'
+import complianceRoutes from './routes/compliance.js'
 
 const app = express()
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }))
@@ -419,24 +424,11 @@ async function initializeDefaultUsers() {
 // Initialize default users on startup
 await initializeDefaultUsers()
 
-// Подключаем маршрут ассистента
-const assistantRoutes = require('./routes/assistant');
+// Подключаем маршруты
 app.use('/api/assistant', assistantRoutes);
-
-// Подключаем маршрут starter guide
-const starterGuideRoutes = require('./routes/starter-guide');
 app.use('/api/starter-guide', starterGuideRoutes);
-
-// Подключаем маршрут customer trust
-const customerTrustRoutes = require('./routes/customer-trust');
 app.use('/api/customer-trust', customerTrustRoutes);
-
-// Подключаем маршрут assets
-const assetsRoutes = require('./routes/assets');
 app.use('/api/assets', assetsRoutes);
-
-// Подключаем маршрут compliance
-const complianceRoutes = require('./routes/compliance');
 app.use('/api/compliance', complianceRoutes);
 
 app.listen(PORT, () => {

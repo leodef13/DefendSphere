@@ -130,7 +130,7 @@ class MockRedis {
     
     // Hash password for admin
     const bcrypt = await import('bcryptjs')
-    const hashedPassword = await bcrypt.hash('admin', 10)
+    const hashedPassword = await bcrypt.default.hash('admin', 10)
     await this.hSet('user:1', 'password', hashedPassword)
 
     // Create default user1
@@ -140,7 +140,7 @@ class MockRedis {
     await this.hSet('user:2', 'role', 'user')
     await this.hSet('user:2', 'permissions', JSON.stringify(['read', 'write']))
     
-    const hashedPassword1 = await bcrypt.hash('user1', 10)
+    const hashedPassword1 = await bcrypt.default.hash('user1', 10)
     await this.hSet('user:2', 'password', hashedPassword1)
 
     // Create default user2
@@ -150,7 +150,7 @@ class MockRedis {
     await this.hSet('user:3', 'role', 'user')
     await this.hSet('user:3', 'permissions', JSON.stringify(['read', 'write']))
     
-    const hashedPassword2 = await bcrypt.hash('user2', 10)
+    const hashedPassword2 = await bcrypt.default.hash('user2', 10)
     await this.hSet('user:3', 'password', hashedPassword2)
 
     console.log('Default users initialized')

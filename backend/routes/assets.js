@@ -1,11 +1,12 @@
-const express = require('express');
+import express from 'express';
+import { createClient } from 'redis';
+import { authenticateToken } from '../middleware/auth.js';
+import { v4 as uuidv4 } from 'uuid';
+
 const router = express.Router();
-const redis = require('redis');
-const { authenticateToken } = require('../middleware/auth');
-const { v4: uuidv4 } = require('uuid');
 
 // Подключение к Redis
-const client = redis.createClient({
+const client = createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6380'
 });
 
@@ -463,4 +464,4 @@ router.get('/stats', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

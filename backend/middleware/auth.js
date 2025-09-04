@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -155,7 +155,7 @@ const rateLimit = (maxRequests = 100, windowMs = 15 * 60 * 1000) => {
   };
 };
 
-module.exports = {
+export {
   authenticateToken,
   requireAdmin,
   requirePermission,
