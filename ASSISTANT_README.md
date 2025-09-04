@@ -358,6 +358,8 @@ The assistant is designed to be easily extensible:
 
 ---
 
-**Made with ❤️ by the DefendSphere Team**
+**Версия**: 1.0.0  
+**Последнее обновление**: Сентябрь 2025  
+**Автор**: DefendSphere Team "DefendSphere — Secure Smarter, Comply Faster"
 
 *Empowering security professionals with intelligent assistance*

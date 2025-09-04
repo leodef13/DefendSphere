@@ -239,5 +239,5 @@ DefendSphere - это комплексная система мониторинг
 ---
 
 **Версия**: 1.0.0  
-**Последнее обновление**: Март 2024  
-**Автор**: DefendSphere Team
+**Последнее обновление**: Сентябрь 2025  
+**Автор**: DefendSphere Team "DefendSphere — Secure Smarter, Comply Faster"
