@@ -427,6 +427,18 @@ app.use('/api/assistant', assistantRoutes);
 const starterGuideRoutes = require('./routes/starter-guide');
 app.use('/api/starter-guide', starterGuideRoutes);
 
+// Подключаем маршрут customer trust
+const customerTrustRoutes = require('./routes/customer-trust');
+app.use('/api/customer-trust', customerTrustRoutes);
+
+// Подключаем маршрут assets
+const assetsRoutes = require('./routes/assets');
+app.use('/api/assets', assetsRoutes);
+
+// Подключаем маршрут compliance
+const complianceRoutes = require('./routes/compliance');
+app.use('/api/compliance', complianceRoutes);
+
 app.listen(PORT, () => {
   console.log(`API server running on http://0.0.0.0:${PORT}`)
   console.log('Default users:')
