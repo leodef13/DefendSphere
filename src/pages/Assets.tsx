@@ -22,7 +22,7 @@ import {
   XCircle
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { useLanguage } from '../hooks/useLanguage'
+import { useLanguage } from '../contexts/LanguageContext'
 
 interface Asset {
   id: string
