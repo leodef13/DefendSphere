@@ -1,0 +1,27 @@
+{
+  "name": "defendsphere-scripts",
+  "version": "1.0.0",
+  "description": "Utility scripts for DefendSphere system",
+  "main": "index.js",
+  "scripts": {
+    "init": "node init-redis.js",
+    "health-check": "node health-check.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "defendsphere",
+    "redis",
+    "scripts",
+    "utilities"
+  ],
+  "author": "DefendSphere Team",
+  "license": "MIT",
+  "dependencies": {
+    "redis": "^4.6.7",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
