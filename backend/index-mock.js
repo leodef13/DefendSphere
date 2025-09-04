@@ -322,9 +322,10 @@ app.use('*', (req, res) => {
 })
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 DefendSphere Backend running on port ${PORT}`)
   console.log(`📊 Health check: http://localhost:${PORT}/api/health`)
+  console.log(`🌐 External access: http://217.65.144.232:${PORT}/api/health`)
   console.log(`🔐 Mock Redis mode - no external Redis required`)
   console.log(`👤 Default users: admin/admin, user1/user1, user2/user2`)
 })
