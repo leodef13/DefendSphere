@@ -1,4 +1,4 @@
-#frontend/src/layouts/MainLayout.tsx
+// MainLayout.tsx
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { Shield, LayoutDashboard, Bell, AlertTriangle, Settings, User } from 'lucide-react'
 import { motion } from 'framer-motion'
