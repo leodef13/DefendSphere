@@ -2,6 +2,8 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { Shield, LayoutDashboard, Bell, AlertTriangle, Settings, User, BarChart3, Server, FileCheck, Users, Building2, FileText, HelpCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
+import AssistantButton from '../components/AssistantButton'
+import { useAuth } from '../components/AuthProvider'
 
 function Sidebar() {
   const navItems = [
@@ -56,21 +58,38 @@ function Sidebar() {
 
 function Header() {
   const location = useLocation()
+  const { user, logout } = useAuth()
+  
   const titleMap: Record<string, string> = {
     '/': 'Security Dashboard',
     '/dashboard': 'Security Dashboard',
+    '/assets': 'Assets Management',
+    '/compliance': 'Compliance Tracking',
+    '/customer-trust': 'Customer Trust',
+    '/suppliers': 'Suppliers Monitoring',
+    '/reports': 'Reports & Analytics',
+    '/starter-guide': 'Starter Guide',
     '/incidents': 'Incidents',
     '/alerts': 'Alerts',
     '/settings': 'Settings',
   }
   const title = titleMap[location.pathname] ?? 'DefendSphere'
+  
   return (
     <header className="flex items-center justify-between mb-4">
       <h1 className="text-2xl font-bold">{title}</h1>
-      <button className="btn-primary inline-flex items-center gap-2 px-3 py-2 rounded-md">
-        <User className="h-4 w-4" color="#fff" />
-        admin
-      </button>
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-gray-600">
+          Welcome, {user?.username || 'User'}
+        </span>
+        <button 
+          onClick={logout}
+          className="btn-primary inline-flex items-center gap-2 px-3 py-2 rounded-md"
+        >
+          <User className="h-4 w-4" color="#fff" />
+          Logout
+        </button>
+      </div>
     </header>
   )
 }
@@ -90,6 +109,7 @@ export default function MainLayout() {
           <Outlet />
         </motion.div>
       </div>
+      <AssistantButton />
     </>
   )
 }
