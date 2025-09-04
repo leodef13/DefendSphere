@@ -48,7 +48,7 @@ cd ../backend
 npm install
 
 # Iniciar Redis (si no está ejecutándose)
-docker run -d -p 6379:6379 redis:alpine
+docker run -d -p 6380:6379 redis:alpine
 # O instalar Redis localmente y ejecutar: redis-server
 
 # Iniciar el servidor backend
@@ -67,7 +67,7 @@ Crea un archivo `.env` en el directorio backend:
 
 ```env
 PORT=5000
-REDIS_URL=redis://localhost:6379
+REDIS_URL=redis://localhost:6380
 JWT_SECRET=your_secure_jwt_secret_here
 NODE_ENV=development
 ```

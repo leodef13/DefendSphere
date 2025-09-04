@@ -395,7 +395,7 @@ npm run test:middleware
 # Backend
 PORT=5000
 JWT_SECRET=your-secret-key
-REDIS_URL=redis://localhost:6379
+REDIS_URL=redis://localhost:6380
 
 # Frontend
 VITE_API_URL=http://localhost:5000/api
@@ -785,7 +785,7 @@ compliance:assessments:{userId}:{recordId} -> List с результатами �
 VITE_API_URL=http://localhost:5000/api
 
 # Redis настройки
-REDIS_URL=redis://localhost:6379
+REDIS_URL=redis://localhost:6380
 
 # JWT настройки
 JWT_SECRET=your-secret-key

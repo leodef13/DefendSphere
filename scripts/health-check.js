@@ -12,7 +12,7 @@ const http = require('http');
 const config = {
     redis: {
         host: process.env.REDIS_HOST || 'localhost',
-        port: process.env.REDIS_PORT || 6379,
+        port: process.env.REDIS_PORT || 6380,
         password: process.env.REDIS_PASSWORD || null,
         db: process.env.REDIS_DB || 0
     },
@@ -377,7 +377,7 @@ async function runHealthCheck() {
         
         if (!results.redis) {
             logWarning('• Проверьте, что Redis запущен и доступен');
-            logWarning('• Убедитесь, что порт 6379 не заблокирован');
+            logWarning('• Убедитесь, что порт 6380 не заблокирован');
         }
         
         if (!results.backend) {

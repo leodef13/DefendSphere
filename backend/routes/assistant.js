@@ -5,7 +5,7 @@ const { authenticateToken } = require('../middleware/auth');
 
 // Подключение к Redis
 const client = redis.createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379'
+  url: process.env.REDIS_URL || 'redis://localhost:6380'
 });
 
 client.on('error', (err) => console.log('Redis Client Error', err));

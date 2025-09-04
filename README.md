@@ -48,7 +48,7 @@ cd frontend && npm install
 cd ../backend && npm install
 
 # Start Redis
-docker run -d -p 6379:6379 redis:alpine
+docker run -d -p 6380:6379 redis:alpine
 
 # Start application
 # Backend: npm start (from backend directory)

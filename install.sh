@@ -19,7 +19,7 @@ PROJECT_NAME="DefendSphere"
 PROJECT_VERSION="1.0.0"
 FRONTEND_PORT=3000
 BACKEND_PORT=5000
-REDIS_PORT=6379
+REDIS_PORT=6380
 
 # Функции для вывода
 print_message() {

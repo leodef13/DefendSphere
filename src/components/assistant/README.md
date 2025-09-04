@@ -206,7 +206,7 @@ function App() {
 ```bash
 VITE_API_URL=http://localhost:5000/api
 JWT_SECRET=your-secret-key
-REDIS_URL=redis://localhost:6379
+REDIS_URL=redis://localhost:6380
 ```
 
 ### Build Process

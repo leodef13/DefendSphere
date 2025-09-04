@@ -13,7 +13,7 @@ NC = \033[0m # No Color
 PROJECT_NAME = defendsphere
 FRONTEND_PORT = 3000
 BACKEND_PORT = 5000
-REDIS_PORT = 6379
+REDIS_PORT = 6380
 
 help: ## Показать справку по командам
 	@echo "$(GREEN)DefendSphere - Команды управления проектом$(NC)"

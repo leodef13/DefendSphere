@@ -53,7 +53,7 @@ npm install
 3. **Iniciar Redis**
 ```bash
 # Usando Docker
-docker run -d -p 6379:6379 redis:alpine
+docker run -d -p 6380:6379 redis:alpine
 
 # O instalar Redis localmente
 redis-server
@@ -264,7 +264,7 @@ DefendSphere/
 #### Backend (.env)
 ```env
 PORT=5000
-REDIS_URL=redis://localhost:6379
+REDIS_URL=redis://localhost:6380
 JWT_SECRET=your_jwt_secret_here
 NODE_ENV=development
 ```
