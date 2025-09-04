@@ -55,6 +55,8 @@ docker run -d -p 6379:6379 redis:alpine
 # Frontend: npm run dev (from frontend directory)
 ```
 
+**📖 For detailed installation instructions, see [INSTALLATION.md](INSTALLATION.md)**
+
 ## 🌟 Key Features
 
 - **🔒 Real-time Security Monitoring** - Live threat detection and system health
