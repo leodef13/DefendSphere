@@ -15,7 +15,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { useLanguage } from '../hooks/useLanguage'
+import { useLanguage } from '../contexts/LanguageContext'
 
 interface CustomerTrust {
   id: string
@@ -265,7 +265,7 @@ export default function CustomerTrust() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Customer Trust</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('customerTrust.title')}</h1>
         <div className="flex items-center space-x-3">
           <button
             onClick={() => handleExport('excel')}
@@ -273,7 +273,7 @@ export default function CustomerTrust() {
             className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
           >
             <Download className="w-4 h-4 mr-2" />
-            Export Excel
+{t('customerTrust.exportExcel')}
           </button>
           <button
             onClick={() => handleExport('pdf')}
@@ -281,14 +281,14 @@ export default function CustomerTrust() {
             className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
           >
             <FileText className="w-4 h-4 mr-2" />
-            Export PDF
+{t('customerTrust.exportPdf')}
           </button>
           <button
             onClick={() => window.history.back()}
             className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+{t('customerTrust.backToDashboard')}
           </button>
         </div>
       </div>

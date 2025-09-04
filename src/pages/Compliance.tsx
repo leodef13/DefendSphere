@@ -18,7 +18,7 @@ import {
   PieChart
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { useLanguage } from '../hooks/useLanguage'
+import { useLanguage } from '../contexts/LanguageContext'
 
 interface ComplianceRecord {
   id: string
