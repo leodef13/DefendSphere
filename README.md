@@ -4,6 +4,28 @@
 
 A comprehensive cybersecurity dashboard and compliance management platform.
 
+## 🚀 Quick Start
+
+### Start Services
+```bash
+./start-services.sh
+```
+
+### Stop Services
+```bash
+./stop-services.sh
+```
+
+### Access URLs
+- **Frontend**: http://localhost:2525
+- **Backend**: http://localhost:5000
+- **Test Page**: http://localhost:2525/test-login.html
+
+### Default Users
+- **admin/admin** - Administrator
+- **user1/user1** - Regular user
+- **user2/user2** - Regular user
+
 ## 🌍 Language / Язык / Idioma
 
 Choose your preferred language:
