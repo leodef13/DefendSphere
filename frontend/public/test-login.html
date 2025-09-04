@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DefendSphere Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>DefendSphere Login Test</h1>
+    
+    <div>
+        <h3>Test Backend Connection</h3>
+        <button onclick="testBackend()">Test Backend Health</button>
+        <div id="backend-result"></div>
+    </div>
+    
+    <div>
+        <h3>Test Login</h3>
+        <input type="text" id="username" placeholder="Username" value="admin">
+        <input type="password" id="password" placeholder="Password" value="admin">
+        <button onclick="testLogin()">Test Login</button>
+        <div id="login-result"></div>
+    </div>
+    
+    <div>
+        <h3>Quick Tests</h3>
+        <button onclick="testAdmin()">Test Admin Login</button>
+        <button onclick="testUser1()">Test User1 Login</button>
+        <button onclick="testUser2()">Test User2 Login</button>
+    </div>
+
+    <script>
+        async function testBackend() {
+            const resultDiv = document.getElementById('backend-result');
+            try {
+                const response = await fetch('http://localhost:5000/api/health');
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="test-result success">✅ Backend OK: ${data.message}</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="test-result error">❌ Backend Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('login-result');
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="test-result success">✅ Login OK: ${data.user.username} (${data.user.role})</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="test-result error">❌ Login Failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="test-result error">❌ Connection Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testAdmin() {
+            document.getElementById('username').value = 'admin';
+            document.getElementById('password').value = 'admin';
+            await testLogin();
+        }
+
+        async function testUser1() {
+            document.getElementById('username').value = 'user1';
+            document.getElementById('password').value = 'user1';
+            await testLogin();
+        }
+
+        async function testUser2() {
+            document.getElementById('username').value = 'user2';
+            document.getElementById('password').value = 'user2';
+            await testLogin();
+        }
+
+        // Auto-test backend on load
+        window.onload = testBackend;
+    </script>
+</body>
+</html>
