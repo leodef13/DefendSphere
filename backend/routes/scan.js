@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const greenboneService = require('../services/greenboneService');
+const greenboneService = require('../services/greenboneService.cjs');
 const { authenticateToken } = require('../middleware/auth');
 
 // Initialize Greenbone service

@@ -15,7 +15,9 @@ import assetsRoutes from './routes/assets.js'
 import complianceRoutes from './routes/compliance.js'
 import integrationsRoutes from './routes/integrations.js'
 import reportsRoutes from './routes/reports.js'
-import scanRoutes from './routes/scan.js'
+import { createRequire } from 'module'
+const require = createRequire(import.meta.url)
+const scanRoutes = require('./routes/scan.js')
 import { authenticateToken, requireAdmin, requirePermission } from './middleware/auth.js'
 
 const app = express()
