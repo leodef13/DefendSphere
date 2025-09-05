@@ -1,9 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 import type { Language, Translations, I18nContextType } from './types'
 
-// Re-export types for convenience
-export type { Language, Translations, I18nContextType }
-
 const I18nContext = createContext<I18nContextType | undefined>(undefined)
 
 const translations: Record<Language, Translations> = {

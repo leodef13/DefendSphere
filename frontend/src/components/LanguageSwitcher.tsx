@@ -1,21 +1,21 @@
 import React from 'react'
-import { useI18n, Language } from '../i18n'
+import { useI18n, LANGUAGES } from '../i18n'
 import { Globe } from 'lucide-react'
 
 const LanguageSwitcher: React.FC = () => {
   const { language, setLanguage } = useI18n()
 
   const languages = [
-    { code: 'en' as Language, name: 'English', flag: '🇺🇸' },
-    { code: 'ru' as Language, name: 'Русский', flag: '🇷🇺' },
-    { code: 'es' as Language, name: 'Español', flag: '🇪🇸' },
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+    { code: 'es', name: 'Español', flag: '🇪🇸' },
   ]
 
   return (
     <div className="relative">
       <select
         value={language}
-        onChange={(e) => setLanguage(e.target.value as Language)}
+        onChange={(e) => setLanguage(e.target.value as any)}
         className="appearance-none bg-transparent border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         {languages.map((lang) => (
