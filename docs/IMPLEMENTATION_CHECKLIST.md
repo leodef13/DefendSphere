@@ -75,7 +75,7 @@
 
 ## 10. Known Issues (Bugs on Deployment)
 - [x] Авторизация не работает. Ошибки:  
-  - `WebSocket connection failed (ws://localhost:2525)`  
+  - `WebSocket connection failed (ws://localhost:5173)`  
   - `Failed to load resource: net::ERR_CONNECTION_REFUSED` на `/api/auth/login`  
 - [x] В админке admin не может создавать пользователей  
 - [x] В Sidebar все шрифты синие (должны быть белые)  

@@ -24,11 +24,11 @@ curl -X POST http://localhost:5000/api/auth/login \
 ps aux | grep vite | grep -v grep
 
 # Test frontend accessibility
-curl -Is http://localhost:2525/
+curl -Is http://localhost:5173/
 ```
 
 ### ✅ **Quick Test Page**
-Visit: http://localhost:2525/test-login.html
+Visit: http://localhost:5173/test-login.html
 
 This page will test:
 - Backend connectivity
@@ -42,11 +42,11 @@ This page will test:
 
 ### ✅ **Ports**
 - **Backend**: http://localhost:5000
-- **Frontend**: http://localhost:2525
-- **Test Page**: http://localhost:2525/test-login.html
+- **Frontend**: http://localhost:5173
+- **Test Page**: http://localhost:5173/test-login.html
 
 ### ✅ **CORS Configuration**
-Backend is configured to accept requests from: `http://localhost:2525`
+Backend is configured to accept requests from: `http://localhost:5173`
 
 ### ✅ **Troubleshooting Steps**
 
@@ -85,11 +85,11 @@ Backend is configured to accept requests from: `http://localhost:2525`
    - Use correct endpoint: `/api/auth/login` (not `/api/login`)
 
 2. **If CORS errors**
-   - Check `.env` file: `CORS_ORIGIN=http://localhost:2525`
+   - Check `.env` file: `CORS_ORIGIN=http://localhost:5173`
 
 3. **If "Connection error"**
    - Check if backend is running on port 5000
-   - Check if frontend is running on port 2525
+   - Check if frontend is running on port 5173
    - Use test page to verify connectivity
 
 4. **If login fails**
@@ -98,14 +98,14 @@ Backend is configured to accept requests from: `http://localhost:2525`
 
 ### ✅ **Service Status**
 - ✅ Backend: Running on port 5000 with mock Redis
-- ✅ Frontend: Running on port 2525 with Vite
+- ✅ Frontend: Running on port 5173 with Vite
 - ✅ All users: Initialized and working
 - ✅ CORS: Properly configured
 - ✅ API endpoints: All functional
 
 ### ✅ **Next Steps**
 If issues persist:
-1. Use the test page: http://localhost:2525/test-login.html
+1. Use the test page: http://localhost:5173/test-login.html
 2. Check browser console for errors
 3. Verify both services are running
 4. Try different browser or incognito mode

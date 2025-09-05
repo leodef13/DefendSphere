@@ -10,20 +10,20 @@ echo ""
 
 # Test localhost
 echo "🌐 Testing localhost..."
-if curl -s --connect-timeout 5 http://localhost:2525 > /dev/null; then
-    echo "✅ localhost:2525 - OK"
+if curl -s --connect-timeout 5 http://localhost:5173 > /dev/null; then
+    echo "✅ localhost:5173 - OK"
 else
-    echo "❌ localhost:2525 - FAILED"
+    echo "❌ localhost:5173 - FAILED"
 fi
 
 # Test each IP
 echo ""
 echo "🌐 Testing internal IPs..."
 for ip in $IPS; do
-    if curl -s --connect-timeout 5 http://$ip:2525 > /dev/null; then
-        echo "✅ $ip:2525 - OK"
+    if curl -s --connect-timeout 5 http://$ip:5173 > /dev/null; then
+        echo "✅ $ip:5173 - OK"
     else
-        echo "❌ $ip:2525 - FAILED"
+        echo "❌ $ip:5173 - FAILED"
     fi
 done
 
@@ -38,11 +38,11 @@ fi
 
 echo ""
 echo "📋 Working URLs:"
-echo "   Frontend: http://localhost:2525"
+echo "   Frontend: http://localhost:5173"
 for ip in $IPS; do
-    if curl -s --connect-timeout 5 http://$ip:2525 > /dev/null; then
-        echo "   Frontend: http://$ip:2525"
+    if curl -s --connect-timeout 5 http://$ip:5173 > /dev/null; then
+        echo "   Frontend: http://$ip:5173"
     fi
 done
 echo "   Backend:  http://localhost:5000"
-echo "   Test:     http://localhost:2525/test-login.html"
+echo "   Test:     http://localhost:5173/test-login.html"

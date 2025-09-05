@@ -29,9 +29,9 @@ else
 fi
 
 # Start frontend
-echo "🎨 Starting frontend on port 2525..."
+echo "🎨 Starting frontend on port 5173..."
 cd frontend
-npx vite --port 2525 --host 0.0.0.0 &
+npx vite --port 5173 --host 0.0.0.0 &
 FRONTEND_PID=$!
 cd ..
 
@@ -39,7 +39,7 @@ cd ..
 sleep 5
 
 # Check if frontend is running
-if curl -s http://localhost:2525/ > /dev/null; then
+if curl -s http://localhost:5173/ > /dev/null; then
     echo "✅ Frontend started successfully"
 else
     echo "❌ Frontend failed to start"
@@ -48,9 +48,9 @@ fi
 
 echo ""
 echo "🎉 DefendSphere is ready!"
-echo "📱 Frontend: http://localhost:2525"
+echo "📱 Frontend: http://localhost:5173"
 echo "🔧 Backend: http://localhost:5000"
-echo "🧪 Test page: http://localhost:2525/test-login.html"
+echo "🧪 Test page: http://localhost:5173/test-login.html"
 echo ""
 echo "👤 Default users:"
 echo "   admin/admin - Administrator"
