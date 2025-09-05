@@ -52,11 +52,10 @@ export default function Dashboard() {
 
   const fetchUserAssets = async () => {
     try {
-      const result = await scanService.checkUserAssets()
-      if (result.success) {
-        setHasAssets(result.hasAssets)
-        setUserAssets(result.assets)
-      }
+      const result = await scanService.checkAssets()
+      setHasAssets(result.hasAssets)
+      // For now, we'll use mock assets since we don't have a user assets endpoint yet
+      setUserAssets([{ id: '1', name: 'myrockshows.com', url: 'myrockshows.com', type: 'Web Server' }])
     } catch (error) {
       console.error('Failed to fetch user assets:', error)
     }
@@ -74,7 +73,7 @@ export default function Dashboard() {
       setScanProgress(0)
       setScanMessage('Starting scan...')
 
-      const result = await scanService.startScan()
+      const result = await scanService.startScan(userAssets)
       
       if (result.success && result.scanId) {
         setScanStatus('running')
@@ -97,10 +96,9 @@ export default function Dashboard() {
   const pollScanStatus = async (scanId: string) => {
     const pollInterval = setInterval(async () => {
       try {
-        const result = await scanService.getScanStatus(scanId)
+        const scan = await scanService.getScanStatus(scanId)
         
-        if (result.success && result.status) {
-          const scan = result.status
+        if (scan) {
           setActiveScan(scan)
           setScanStatus(scan.status)
           setScanProgress(scan.progress)

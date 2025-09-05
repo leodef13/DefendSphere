@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, Button } from '../components/ui'
 import { API_ENDPOINTS } from '../config/api'
 import { useAuth } from '../components/AuthProvider'
 import { useI18n } from '../i18n'
-import scanService, { ScanData, VulnerabilityReport } from '../services/scanService'
+import scanService, { ScanStatus, ScanReport } from '../services/scanService'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Download, FileText, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
 
@@ -45,8 +45,8 @@ const Reports: React.FC = () => {
   const { token, user } = useAuth()
   const [summary, setSummary] = useState<ReportSummary | null>(null)
   const [vulnerabilities, setVulnerabilities] = useState<Vulnerability[]>([])
-  const [scanReports, setScanReports] = useState<VulnerabilityReport[]>([])
-  const [activeScan, setActiveScan] = useState<ScanData | null>(null)
+  const [scanReports, setScanReports] = useState<ScanReport[]>([])
+  const [activeScan, setActiveScan] = useState<ScanStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -112,11 +112,15 @@ const Reports: React.FC = () => {
 
   const checkActiveScan = async () => {
     try {
-      const result = await scanService.getActiveScan()
-      if (result.success && result.data) {
-        setActiveScan(result.data)
-        if (result.data.status === 'completed' && result.data.reports) {
-          setScanReports(result.data.reports)
+      const history = await scanService.getScanHistory()
+      if (history.length > 0) {
+        const latestScan = history[0]
+        setActiveScan(latestScan)
+        if (latestScan.status === 'completed') {
+          const report = await scanService.getScanReport(latestScan.scanId)
+          if (report) {
+            setScanReports([report])
+          }
         }
       }
     } catch (error) {
@@ -124,21 +128,27 @@ const Reports: React.FC = () => {
     }
   }
 
-  const downloadScanReport = async (scanId: string) => {
+  const downloadScanReport = async (scanId: string, format: 'pdf' | 'excel') => {
     try {
-      const result = await scanService.getScanReport(scanId)
+      const result = format === 'pdf' 
+        ? await scanService.exportToPDF(scanId)
+        : await scanService.exportToExcel(scanId)
+      
       if (result.success && result.data) {
         // Create downloadable content
-        const reportContent = JSON.stringify(result.data, null, 2)
-        const blob = new Blob([reportContent], { type: 'application/json' })
+        const blob = new Blob([result.data], { 
+          type: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `scan-report-${scanId}.json`
+        a.download = result.filename || `scan-report-${scanId}.${format === 'pdf' ? 'pdf' : 'xlsx'}`
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
+      } else {
+        alert(result.message || 'Failed to download scan report')
       }
     } catch (error) {
       console.error('Failed to download scan report:', error)

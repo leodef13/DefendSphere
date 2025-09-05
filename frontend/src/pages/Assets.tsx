@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from '../components/ui'
 import { useAuth } from '../components/AuthProvider'
 import { useI18n } from '../i18n'
 import { API_ENDPOINTS } from '../config/api'
-import scanService, { ScanData } from '../services/scanService'
+import scanService, { ScanStatus } from '../services/scanService'
 import { Server, Shield, AlertTriangle, CheckCircle, Clock, Globe, Database, Monitor, RefreshCw } from 'lucide-react'
 
 interface Asset {
@@ -28,7 +28,7 @@ const Assets: React.FC = () => {
   const { t } = useI18n()
   const { token, user } = useAuth()
   const [assets, setAssets] = useState<Asset[]>([])
-  const [activeScan, setActiveScan] = useState<ScanData | null>(null)
+  const [activeScan, setActiveScan] = useState<ScanStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -94,13 +94,17 @@ const Assets: React.FC = () => {
 
   const checkActiveScan = async () => {
     try {
-      const result = await scanService.getActiveScan()
-      if (result.success && result.data) {
-        setActiveScan(result.data)
+      const history = await scanService.getScanHistory()
+      if (history.length > 0) {
+        const latestScan = history[0]
+        setActiveScan(latestScan)
         
         // Update asset information based on scan results
-        if (result.data.status === 'completed' && result.data.reports) {
-          updateAssetsFromScan(result.data.reports)
+        if (latestScan.status === 'completed') {
+          const report = await scanService.getScanReport(latestScan.scanId)
+          if (report) {
+            updateAssetsFromScan([report])
+          }
         }
       }
     } catch (error) {

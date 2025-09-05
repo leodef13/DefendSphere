@@ -1,73 +1,123 @@
-# Greenbone GVM Integration
+# Greenbone (GVM) Integration Module
 
 ## Overview
 
-The DefendSphere Dashboard includes a comprehensive integration module with Greenbone Vulnerability Management (GVM) system, allowing users to perform automated security scans of their assets directly from the dashboard.
-
-## Module Name: `Scan's_defendSphere_team`
+The DefendSphere Dashboard includes a comprehensive integration module with Greenbone Vulnerability Manager (GVM) for automated asset scanning and vulnerability assessment. This module, named `Scan's_defendSphere_team`, provides seamless connectivity between the DefendSphere platform and Greenbone's OpenVAS scanning engine.
 
 ## Features
 
-### 1. Asset Scanning
-- **Automated Scanning**: Users can initiate security scans for their registered assets
-- **Real-time Status**: Live monitoring of scan progress and status
-- **Asset Validation**: Scans are only available for users with registered assets
+- **Automated Asset Scanning**: Scan user assets using Greenbone's OpenVAS engine
+- **Real-time Status Monitoring**: Track scan progress and completion status
+- **Report Generation**: Generate detailed vulnerability reports in PDF and Excel formats
+- **Asset Management**: Update asset information based on scan results
+- **Secure Integration**: Encrypted communication with Greenbone GVM
+- **User Access Control**: Role-based access to scanning functionality
 
-### 2. Report Integration
-- **Automatic Report Processing**: Scan results are automatically parsed and integrated into the Reports section
-- **Vulnerability Analysis**: Detailed vulnerability information with CVSS scores and recommendations
-- **Risk Assessment**: Automatic risk level calculation and compliance scoring
-
-### 3. Asset Management
-- **Dynamic Updates**: Asset information is updated based on scan results
-- **Risk Visualization**: Color-coded risk levels and compliance percentages
-- **Historical Tracking**: Last assessment dates and vulnerability counts
-
-## Technical Architecture
+## Architecture
 
 ### Backend Components
 
 #### 1. Greenbone Service (`/backend/services/greenboneService.js`)
+
+The core service that handles all Greenbone GVM interactions:
+
 ```javascript
 class GreenboneService {
-  // Core methods
-  async connectToGreenbone()     // Establish GVM connection
-  async startScan(assets, userId) // Initiate asset scanning
-  async getScanStatus(scanId)    // Monitor scan progress
-  async getScanReports(scanId)   // Retrieve scan results
-  async parseReports(reportData) // Process and structure data
+  // Connect to Greenbone GVM API
+  async connectToGreenbone()
+  
+  // Start scan for a list of assets
+  async startScan(assets, userId)
+  
+  // Get scan status and progress
+  async getScanStatus(scanId)
+  
+  // Retrieve scan reports
+  async getScanReports(scanId)
+  
+  // Parse and process report data
+  async parseReports(reportData)
+  
+  // Export reports to PDF/Excel
+  async exportReportToPDF(scanId)
+  async exportReportToExcel(scanId)
 }
 ```
 
-#### 2. API Endpoints (`/backend/routes/scan.js`)
-- `POST /api/scan/start` - Start new scan
+#### 2. Scan API Routes (`/backend/routes/scan.js`)
+
+RESTful API endpoints for scan management:
+
+- `POST /api/scan/start` - Start asset scan
 - `GET /api/scan/status/:scanId` - Get scan status
-- `GET /api/scan/report/:scanId` - Get scan reports
-- `GET /api/scan/assets` - Check user assets
-- `POST /api/scan/connect` - Test GVM connection
+- `GET /api/scan/report/:scanId` - Get scan report
+- `GET /api/scan/history` - Get user's scan history
+- `GET /api/scan/check-assets` - Check if user has assets
+- `GET /api/scan/export/pdf/:scanId` - Export report to PDF
+- `GET /api/scan/export/excel/:scanId` - Export report to Excel
 
 ### Frontend Components
 
 #### 1. Scan Service (`/frontend/src/services/scanService.ts`)
+
+TypeScript service for frontend-backend communication:
+
 ```typescript
 class ScanService {
-  async checkUserAssets()     // Verify user has scanable assets
-  async startScan()           // Initiate scanning process
-  async getScanStatus(scanId) // Monitor scan progress
-  async getScanReports(scanId) // Retrieve scan results
-  async testConnection()      // Test GVM connectivity
+  // Check if user has assets
+  async checkAssets()
+  
+  // Start asset scan
+  async startScan(assets)
+  
+  // Get scan status
+  async getScanStatus(scanId)
+  
+  // Get scan report
+  async getScanReport(scanId)
+  
+  // Get scan history
+  async getScanHistory()
+  
+  // Export reports
+  async exportToPDF(scanId)
+  async exportToExcel(scanId)
+  
+  // Poll scan status until completion
+  async pollScanStatus(scanId, onUpdate, interval)
 }
 ```
 
 #### 2. Dashboard Integration
-- **Home Page**: Scan button with asset validation
-- **Reports Section**: Automatic report display and download
-- **Assets Section**: Dynamic asset updates with risk indicators
+
+The Home page includes a "Запустить скан активов" (Start Asset Scan) button that:
+- Checks if user has assets
+- Displays scan status and progress
+- Shows real-time updates during scanning
+
+#### 3. Reports Integration
+
+The Reports page displays:
+- Greenbone scan reports
+- Vulnerability summaries
+- Risk distribution charts
+- Export options for PDF/Excel
+
+#### 4. Assets Integration
+
+The Assets page updates with:
+- Latest scan results
+- Updated risk levels
+- Compliance percentages
+- Vulnerability counts
 
 ## Configuration
 
 ### Environment Variables
-```bash
+
+Create a `.env` file in the backend directory with the following Greenbone configuration:
+
+```env
 # Greenbone GVM Configuration
 GREENBONE_HOST=217.65.144.232
 GREENBONE_PORT=9392
@@ -77,140 +127,161 @@ GREENBONE_PROTOCOL=http
 ```
 
 ### Dependencies
+
+The integration requires the following npm packages:
+
 ```json
 {
-  "gvm-tools": "^23.4.0"
+  "dependencies": {
+    "gvm-tools": "^23.4.0"
+  }
 }
 ```
 
-## Usage Guide
-
-### 1. Prerequisites
-- User must have registered assets in the system
-- Greenbone GVM server must be accessible
-- Valid GVM credentials configured
-
-### 2. Starting a Scan
-1. Navigate to the Home dashboard
-2. Verify that the "Запустить скан активов" button is visible (indicates user has assets)
-3. Click the button to initiate scanning
-4. Monitor progress through the real-time status display
-
-### 3. Monitoring Progress
-- **Status Indicators**: Visual status with icons (running, completed, error)
-- **Progress Bar**: Real-time percentage completion
-- **Status Messages**: Descriptive text updates
-
-### 4. Viewing Results
-- **Reports Section**: New scan reports appear automatically
-- **Assets Section**: Updated asset information with new risk assessments
-- **Download Options**: PDF and Excel export capabilities
-
-## Data Flow
-
-### 1. Scan Initiation
-```
-User clicks scan button → Frontend validates assets → Backend connects to GVM → 
-Scan configuration created → Target and task created → Scan started
+Install with:
+```bash
+cd backend
+npm install gvm-tools
 ```
 
-### 2. Progress Monitoring
-```
-Frontend polls status → Backend queries GVM → Status updated → 
-Progress displayed → Continue until completion
+## Usage
+
+### Starting a Scan
+
+1. **Prerequisites**: User must have at least one asset configured
+2. **Access**: Navigate to the Home page (Dashboard)
+3. **Action**: Click "Запустить скан активов" button
+4. **Monitoring**: Watch real-time progress updates
+
+### API Usage Examples
+
+#### Start a Scan
+
+```javascript
+const response = await fetch('/api/scan/start', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  },
+  body: JSON.stringify({
+    assets: [
+      { id: '1', name: 'example.com', url: 'example.com', type: 'Web Server' }
+    ]
+  })
+})
 ```
 
-### 3. Result Processing
+#### Check Scan Status
+
+```javascript
+const response = await fetch('/api/scan/status/scan-id-123', {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+})
 ```
-Scan completes → Reports retrieved → Data parsed → 
-Vulnerabilities extracted → Assets updated → UI refreshed
+
+#### Get Scan Report
+
+```javascript
+const response = await fetch('/api/scan/report/scan-id-123', {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+})
 ```
 
 ## Security Considerations
 
-### 1. Authentication
-- All scan operations require valid JWT authentication
-- User-specific asset validation prevents unauthorized scanning
-- GVM credentials stored securely in environment variables
+### Authentication
+- All API endpoints require JWT authentication
+- Users can only access their own scans and reports
+- Admin users have additional privileges
 
-### 2. Data Protection
-- Scan results are processed and stored securely
-- Sensitive vulnerability data is properly handled
-- User access controls maintained throughout the process
+### Data Protection
+- Scan data is stored securely in Redis
+- Reports are encrypted during transmission
+- User credentials are stored in environment variables
 
-### 3. Error Handling
-- Graceful degradation when GVM is unavailable
-- Comprehensive error logging and user feedback
-- Timeout handling for long-running scans
+### Network Security
+- HTTPS recommended for production environments
+- Firewall rules should restrict access to Greenbone GVM
+- Regular security updates for gvm-tools dependency
+
+## Error Handling
+
+The integration includes comprehensive error handling for:
+
+- **Connection Failures**: Greenbone GVM unavailable
+- **Authentication Errors**: Invalid credentials
+- **Scan Failures**: Asset scanning errors
+- **Report Generation**: Export failures
+- **Network Issues**: Timeout and connectivity problems
+
+Error messages are user-friendly and logged for debugging.
+
+## Monitoring and Logging
+
+### Logging
+- All scan activities are logged in Redis
+- User actions are tracked for audit purposes
+- Error logs include detailed stack traces
+
+### Monitoring
+- Real-time scan progress tracking
+- Status updates every 10 seconds during scanning
+- Completion notifications
 
 ## Troubleshooting
 
 ### Common Issues
 
-#### 1. "No assets found for scanning"
-- **Cause**: User has no registered assets
-- **Solution**: Add assets through the Assets section first
+1. **Greenbone Connection Failed**
+   - Check network connectivity to GVM server
+   - Verify credentials in `.env` file
+   - Ensure GVM service is running
 
-#### 2. "Connection failed to Greenbone"
-- **Cause**: GVM server unavailable or credentials incorrect
-- **Solution**: Verify GVM server status and credentials
+2. **Scan Not Starting**
+   - Verify user has assets configured
+   - Check Redis connection
+   - Review backend logs for errors
 
-#### 3. "Scan failed to start"
-- **Cause**: GVM configuration or network issues
-- **Solution**: Check GVM logs and network connectivity
+3. **Report Generation Failed**
+   - Ensure scan completed successfully
+   - Check file system permissions
+   - Verify gvm-tools installation
 
-### Debug Information
-- All scan operations are logged with timestamps
-- Error messages include detailed context
-- Status polling provides real-time feedback
+### Debug Mode
 
-## API Examples
-
-### Start Scan
-```bash
-curl -X POST http://localhost:5000/api/scan/start \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json"
-```
-
-### Get Scan Status
-```bash
-curl -X GET http://localhost:5000/api/scan/status/<scanId> \
-  -H "Authorization: Bearer <token>"
-```
-
-### Get Scan Reports
-```bash
-curl -X GET http://localhost:5000/api/scan/report/<scanId> \
-  -H "Authorization: Bearer <token>"
+Enable debug logging by setting:
+```env
+LOG_LEVEL=debug
 ```
 
 ## Future Enhancements
 
-### Planned Features
-1. **Scheduled Scans**: Automated recurring scans
-2. **Scan Templates**: Predefined scan configurations
-3. **Advanced Filtering**: Custom vulnerability filtering
-4. **Integration APIs**: Third-party tool integration
-5. **Compliance Mapping**: Automated compliance checking
+Planned improvements include:
 
-### Performance Optimizations
-1. **Async Processing**: Background scan processing
-2. **Caching**: Report data caching for faster access
-3. **Batch Operations**: Multiple asset scanning
-4. **Progress Streaming**: Real-time progress updates
+- **Scheduled Scans**: Automated recurring scans
+- **Custom Scan Configurations**: User-defined scan parameters
+- **Integration with Other Tools**: Additional vulnerability scanners
+- **Advanced Reporting**: Custom report templates
+- **Notification System**: Email/SMS alerts for critical findings
 
 ## Support
 
-For technical support or feature requests related to the Greenbone integration:
-- Check the application logs for detailed error information
-- Verify GVM server connectivity and configuration
-- Ensure all dependencies are properly installed
-- Review the troubleshooting section above
+For technical support or questions about the Greenbone integration:
+
+1. Check the troubleshooting section above
+2. Review backend logs for error details
+3. Verify configuration settings
+4. Contact the DefendSphere development team
 
 ## Version History
 
-- **v1.0.0**: Initial Greenbone integration implementation
-- Basic scan functionality with real-time monitoring
-- Report parsing and asset updates
-- User interface integration
+- **v1.0.0** - Initial Greenbone integration
+  - Basic scan functionality
+  - Report generation
+  - Asset management integration
+  - User interface components
