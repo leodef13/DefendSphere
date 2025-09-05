@@ -11,11 +11,6 @@ await redis.connect()
 // Get report summary
 router.get('/summary', authenticateToken, requirePermission('access.reports'), async (req, res) => {
   try {
-    // Check if user is user1 (has access to this specific report)
-    if (req.user.username !== 'user1') {
-      return res.status(403).json({ message: 'Access denied to this report' })
-    }
-
     res.json({
       summary: reportData.summary,
       reportDate: reportData.reportDate,
@@ -30,10 +25,6 @@ router.get('/summary', authenticateToken, requirePermission('access.reports'), a
 // Get detailed vulnerabilities
 router.get('/vulnerabilities', authenticateToken, requirePermission('access.reports'), async (req, res) => {
   try {
-    if (req.user.username !== 'user1') {
-      return res.status(403).json({ message: 'Access denied to this report' })
-    }
-
     res.json({
       vulnerabilities: reportData.vulnerabilities,
       totalCount: reportData.vulnerabilities.length
@@ -47,10 +38,6 @@ router.get('/vulnerabilities', authenticateToken, requirePermission('access.repo
 // Get assets data
 router.get('/assets', authenticateToken, requirePermission('access.reports'), async (req, res) => {
   try {
-    if (req.user.username !== 'user1') {
-      return res.status(403).json({ message: 'Access denied to this report' })
-    }
-
     res.json({
       assets: reportData.assets,
       totalCount: reportData.assets.length
@@ -64,10 +51,6 @@ router.get('/assets', authenticateToken, requirePermission('access.reports'), as
 // Get user profile data
 router.get('/profile', authenticateToken, requirePermission('access.reports'), async (req, res) => {
   try {
-    if (req.user.username !== 'user1') {
-      return res.status(403).json({ message: 'Access denied to this report' })
-    }
-
     res.json({
       profile: reportData.userProfile
     })
@@ -80,10 +63,6 @@ router.get('/profile', authenticateToken, requirePermission('access.reports'), a
 // Get compliance data
 router.get('/compliance', authenticateToken, requirePermission('access.reports'), async (req, res) => {
   try {
-    if (req.user.username !== 'user1') {
-      return res.status(403).json({ message: 'Access denied to this report' })
-    }
-
     res.json({
       compliance: reportData.compliance
     })
@@ -96,10 +75,6 @@ router.get('/compliance', authenticateToken, requirePermission('access.reports')
 // Get full report data
 router.get('/full', authenticateToken, requirePermission('access.reports'), async (req, res) => {
   try {
-    if (req.user.username !== 'user1') {
-      return res.status(403).json({ message: 'Access denied to this report' })
-    }
-
     res.json({
       report: reportData
     })
@@ -112,10 +87,6 @@ router.get('/full', authenticateToken, requirePermission('access.reports'), asyn
 // Export report as PDF (mock endpoint)
 router.get('/export/pdf', authenticateToken, requirePermission('access.reports'), async (req, res) => {
   try {
-    if (req.user.username !== 'user1') {
-      return res.status(403).json({ message: 'Access denied to this report' })
-    }
-
     // Mock PDF export - in real implementation, you would generate actual PDF
     res.json({
       message: 'PDF export initiated',
@@ -131,10 +102,6 @@ router.get('/export/pdf', authenticateToken, requirePermission('access.reports')
 // Export report as Excel (mock endpoint)
 router.get('/export/excel', authenticateToken, requirePermission('access.reports'), async (req, res) => {
   try {
-    if (req.user.username !== 'user1') {
-      return res.status(403).json({ message: 'Access denied to this report' })
-    }
-
     // Mock Excel export - in real implementation, you would generate actual Excel file
     res.json({
       message: 'Excel export initiated',
