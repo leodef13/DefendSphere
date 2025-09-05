@@ -3,6 +3,24 @@ import { MessageCircle, X } from 'lucide-react'
 
 const AssistantButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const [messages, setMessages] = useState<{ role: 'user' | 'ai', text: string }[]>([
+    { role: 'ai', text: "👋 Hello! I'm your Security Assistant. How can I help you today?" }
+  ])
+  const [input, setInput] = useState('')
+
+  const send = () => {
+    const text = input.trim()
+    if (!text) return
+    setMessages((prev) => [...prev, { role: 'user', text }, { role: 'ai', text: '…' }])
+    setInput('')
+    setTimeout(() => {
+      setMessages((prev) => {
+        const copy = [...prev]
+        copy[copy.length - 1] = { role: 'ai', text: 'Thanks! I will process your request.' }
+        return copy
+      })
+    }, 600)
+  }
 
   return (
     <>
@@ -17,18 +35,18 @@ const AssistantButton: React.FC = () => {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-20 right-6 w-80 h-96 bg-white rounded-lg shadow-xl border border-gray-200 z-40 flex flex-col">
+        <div className="fixed bottom-20 right-6 w-80 h-96 bg-white rounded-lg shadow-xl border border-gray-200 z-40 flex flex-col slide-in">
           {/* Chat Header */}
-          <div className="bg-blue-500 text-white p-3 rounded-t-lg flex items-center gap-2">
+          <div className="bg-blue-500 text-white p-3 rounded-t-lg flex items-center gap-2" style={{ backgroundColor: '#56a3d9' }}>
             <MessageCircle size={20} />
             <span className="font-medium">Security Assistant</span>
           </div>
 
           {/* Chat Messages */}
           <div className="flex-1 p-3 overflow-y-auto space-y-3">
-            <div className="bg-gray-100 p-2 rounded-lg text-sm">
-              👋 Hello! I'm your Security Assistant. How can I help you today?
-            </div>
+            {messages.map((m, i) => (
+              <div key={i} className={`message ${m.role === 'user' ? 'user-message' : 'ai-message'} fade-in`}>{m.text}</div>
+            ))}
           </div>
 
           {/* Chat Input */}
@@ -36,11 +54,14 @@ const AssistantButton: React.FC = () => {
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Ask about security..."
+                placeholder="Введите сообщение..."
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') send() }}
               />
-              <button className="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
-                Send
+              <button className="btn-primary px-4 py-2 rounded-lg transition-colors duration-200" onClick={send}>
+                Отправить
               </button>
             </div>
           </div>

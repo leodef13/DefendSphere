@@ -20,8 +20,6 @@ function Sidebar() {
     { to: '/reports', label: t('nav.reports'), icon: FileText, permission: 'access.reports' },
     { to: '/starter-guide', label: t('nav.starterGuide'), icon: HelpCircle, permission: 'access.dashboard' },
     { to: '/integrations', label: t('nav.integrations'), icon: Plug, permission: 'access.integrations' },
-    { to: '/incidents', label: t('nav.incidents'), icon: AlertTriangle, permission: 'access.incidents' },
-    { to: '/alerts', label: t('nav.alerts'), icon: Bell, permission: 'access.alerts' },
     { to: '/settings', label: t('nav.settings'), icon: Settings, permission: 'access.dashboard' },
   ]
 
@@ -81,7 +79,10 @@ function Sidebar() {
         <div className="space-y-3">
           <div className="flex items-center gap-3" style={{color: 'rgba(255,255,255,.9)'}}>
             <div className="w-8 h-8 rounded-full bg-white" style={{color: '#003a6a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700}}>
-              {user?.username?.charAt(0).toUpperCase() || 'U'}
+              {(() => {
+                const name = user?.username || ''
+                return name ? name.split(/\s|_/).map(s => s.charAt(0).toUpperCase()).slice(0,2).join('') : 'U'
+              })()}
             </div>
             <div>
               <p className="text-sm font-medium">{user?.username || 'User'}</p>
@@ -90,12 +91,12 @@ function Sidebar() {
           </div>
           <div className="flex items-center justify-between">
             <LanguageSwitcher />
-            <NavLink
-              to="/user-dashboard"
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('app:logout'))}
               className="text-xs text-white/70 hover:text-white transition-colors"
             >
-              Profile
-            </NavLink>
+              Выход
+            </button>
           </div>
         </div>
       </div>
