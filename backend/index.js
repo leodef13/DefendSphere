@@ -2,6 +2,8 @@ import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
+import https from 'https'
+import fs from 'fs'
 import { createClient } from 'redis'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
@@ -10,6 +12,8 @@ import starterGuideRoutes from './routes/starter-guide.js'
 import customerTrustRoutes from './routes/customer-trust.js'
 import assetsRoutes from './routes/assets.js'
 import complianceRoutes from './routes/compliance.js'
+import integrationsRoutes from './routes/integrations.js'
+import { authenticateToken, requireAdmin, requirePermission } from './middleware/auth.js'
 
 const app = express()
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }))
@@ -17,45 +21,15 @@ app.use(express.json())
 app.use(morgan('dev'))
 
 const PORT = process.env.PORT || 5000
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6380'
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379'
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
 
 const redis = createClient({ url: REDIS_URL })
 redis.on('error', (e) => console.error('Redis error:', e))
 await redis.connect()
 
-// Middleware to verify JWT token
-const authenticateToken = async (req, res, next) => {
-  const authHeader = req.headers['authorization']
-  const token = authHeader && authHeader.split(' ')[1]
-
-  if (!token) {
-    return res.status(401).json({ message: 'Access token required' })
-  }
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET)
-    const user = await redis.hGetAll(`user:${decoded.userId}`)
-    
-    if (!user.id) {
-      return res.status(401).json({ message: 'Invalid token' })
-    }
-
-    req.user = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      permissions: user.permissions ? JSON.parse(user.permissions) : []
-    }
-    next()
-  } catch (error) {
-    return res.status(403).json({ message: 'Invalid token' })
-  }
-}
-
-// Middleware to check admin role
-const requireAdmin = (req, res, next) => {
+// Middleware to check admin role (local version for compatibility)
+const requireAdminLocal = (req, res, next) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ message: 'Admin access required' })
   }
@@ -184,7 +158,7 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 })
 
 // User management endpoints (admin only)
-app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+app.get('/api/admin/users', authenticateToken, requireAdminLocal, async (req, res) => {
   try {
     const usernames = await redis.sMembers('users')
     const users = []
@@ -207,7 +181,7 @@ app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =>
   }
 })
 
-app.post('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+app.post('/api/admin/users', authenticateToken, requireAdminLocal, async (req, res) => {
   try {
     const { username, email, password, role, permissions } = req.body
 
@@ -253,7 +227,7 @@ app.post('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =
   }
 })
 
-app.put('/api/admin/users/:username', authenticateToken, requireAdmin, async (req, res) => {
+app.put('/api/admin/users/:username', authenticateToken, requireAdminLocal, async (req, res) => {
   try {
     const { username } = req.params
     const { email, role, permissions, status } = req.body
@@ -288,7 +262,7 @@ app.put('/api/admin/users/:username', authenticateToken, requireAdmin, async (re
   }
 })
 
-app.delete('/api/admin/users/:username', authenticateToken, requireAdmin, async (req, res) => {
+app.delete('/api/admin/users/:username', authenticateToken, requireAdminLocal, async (req, res) => {
   try {
     const { username } = req.params
 
@@ -430,11 +404,45 @@ app.use('/api/starter-guide', starterGuideRoutes);
 app.use('/api/customer-trust', customerTrustRoutes);
 app.use('/api/assets', assetsRoutes);
 app.use('/api/compliance', complianceRoutes);
+app.use('/api/integrations', integrationsRoutes);
 
-app.listen(PORT, () => {
-  console.log(`API server running on http://0.0.0.0:${PORT}`)
-  console.log('Default users:')
-  console.log('- admin/admin (Super Admin)')
-  console.log('- user1/user1 (Security Analyst)')
-  console.log('- user2/user2 (Standard User)')
-})
+// Start server with HTTPS if configured
+const HTTPS_ENABLED = process.env.HTTPS === 'true'
+const SSL_KEY_PATH = process.env.SSL_KEY_PATH || './certs/private-key.pem'
+const SSL_CERT_PATH = process.env.SSL_CERT_PATH || './certs/certificate.pem'
+
+if (HTTPS_ENABLED) {
+  try {
+    const options = {
+      key: fs.readFileSync(SSL_KEY_PATH),
+      cert: fs.readFileSync(SSL_CERT_PATH)
+    }
+    
+    https.createServer(options, app).listen(PORT, () => {
+      console.log(`🔐 HTTPS API server running on https://0.0.0.0:${PORT}`)
+      console.log('Default users:')
+      console.log('- admin/admin (Super Admin)')
+      console.log('- user1/user1 (Security Analyst)')
+      console.log('- user2/user2 (Standard User)')
+    })
+  } catch (error) {
+    console.error('❌ Failed to start HTTPS server:', error.message)
+    console.log('🔄 Falling back to HTTP server...')
+    
+    app.listen(PORT, () => {
+      console.log(`🌐 HTTP API server running on http://0.0.0.0:${PORT}`)
+      console.log('Default users:')
+      console.log('- admin/admin (Super Admin)')
+      console.log('- user1/user1 (Security Analyst)')
+      console.log('- user2/user2 (Standard User)')
+    })
+  }
+} else {
+  app.listen(PORT, () => {
+    console.log(`🌐 HTTP API server running on http://0.0.0.0:${PORT}`)
+    console.log('Default users:')
+    console.log('- admin/admin (Super Admin)')
+    console.log('- user1/user1 (Security Analyst)')
+    console.log('- user2/user2 (Standard User)')
+  })
+}

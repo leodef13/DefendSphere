@@ -6,25 +6,43 @@ A comprehensive cybersecurity dashboard and compliance management platform.
 
 ## 🚀 Quick Start
 
-### Start Services
-```bash
-./start-services.sh
-```
+### Prerequisites
+- Node.js 18+
+- Redis 6+
+- Git
 
-### Stop Services
+### Installation
 ```bash
-./stop-services.sh
+# Clone repository
+git clone https://github.com/leodef13/DefendSphere.git
+cd DefendSphere
+
+# Install dependencies
+cd frontend && npm install
+cd ../backend && npm install
+
+# Initialize Redis with default users
+cd backend && npm run init-redis
+
+# Start Redis server
+redis-server
+
+# Start backend (in one terminal)
+cd backend && npm start
+
+# Start frontend (in another terminal)
+cd frontend && npm run dev
 ```
 
 ### Access URLs
-- **Frontend**: http://localhost:2525
+- **Frontend**: http://localhost:5173
 - **Backend**: http://localhost:5000
-- **Test Page**: http://localhost:2525/test-login.html
+- **Admin Panel**: http://localhost:5173/admin
 
 ### Default Users
-- **admin/admin** - Administrator
-- **user1/user1** - Regular user
-- **user2/user2** - Regular user
+- **admin/admin** - Full administrative access
+- **user1/user1** - Security Analyst (Dashboard, Assets, Incidents, Alerts)
+- **user2/user2** - Standard User (Dashboard, Reports, Assets, Suppliers)
 
 ## 🌍 Language / Язык / Idioma
 
@@ -89,8 +107,11 @@ docker run -d -p 6380:6379 redis:alpine
 - **🏢 Asset Management** - IT assets, servers, cloud resources, IoT devices
 - **👥 Customer Trust** - Client and partner relationship management
 - **🏭 Supplier Management** - Third-party supplier monitoring
+- **🔌 Integrations** - SIEM, Cloud services, Monitoring tools
 - **📈 Reports & Analytics** - Comprehensive security reports
 - **📝 Starter Guide** - Interactive security assessment
+- **👤 User Management** - Role-based access control and admin panel
+- **🔐 Advanced Security** - JWT authentication, HTTPS support, audit logging
 
 ## 🏗️ Technology Stack
 
@@ -109,23 +130,31 @@ docker run -d -p 6380:6379 redis:alpine
 4. **Customer Trust** - Client relationship management
 5. **Suppliers** - Third-party supplier monitoring
 6. **Reports** - Security reports and analytics
-7. **Starter Guide** - Interactive security assessment
+7. **Integrations** - SIEM, Cloud services, and monitoring tools
+8. **Starter Guide** - Interactive security assessment
+9. **Admin Panel** - User management and system administration
+10. **User Dashboard** - Personal profile and settings
 
 ## 🔐 Security Features
 
 - JWT-based authentication
 - Role-based access control (Admin/User)
+- Granular permission system
 - Input validation and sanitization
 - Rate limiting and CORS protection
+- HTTPS support for production
 - Comprehensive audit logging
 - Password security with bcrypt
+- SQL injection protection
+- XSS prevention
 
 ## 📚 Documentation
 
-- **Main Documentation**: See language-specific README files above
-- **Wiki**: Comprehensive guides and tutorials
-- **API Documentation**: Complete API reference
-- **Development Guide**: Setup and contribution guidelines
+- **[User Guide](docs/USER_GUIDE.md)** - Complete user manual
+- **[Admin Guide](docs/ADMIN_GUIDE.md)** - Administrator documentation
+- **[API Guide](docs/API_GUIDE.md)** - Complete API reference
+- **[Installation Guide](INSTALLATION.md)** - Setup and deployment
+- **[Implementation Checklist](docs/IMPLEMENTATION_CHECKLIST.md)** - Feature completion status
 
 ## 🤝 Contributing
 

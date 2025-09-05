@@ -1,23 +1,36 @@
 // MainLayout.tsx
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { Shield, LayoutDashboard, Bell, AlertTriangle, Settings, User, BarChart3, Server, FileCheck, Users, Building2, FileText, HelpCircle } from 'lucide-react'
+import { Shield, LayoutDashboard, Bell, AlertTriangle, Settings, User, BarChart3, Server, FileCheck, Users, Building2, FileText, HelpCircle, Plug } from 'lucide-react'
 import { motion } from 'framer-motion'
 import AssistantButton from '../components/AssistantButton'
 import { useAuth } from '../components/AuthProvider'
+import { useI18n } from '../i18n'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 function Sidebar() {
+  const { t } = useI18n()
+  const { user } = useAuth()
+  
   const navItems = [
-    { to: '/dashboard', label: 'Home - Security health overview and metrics', icon: LayoutDashboard },
-    { to: '/assets', label: 'Assets - IT asset management and monitoring', icon: Server },
-    { to: '/compliance', label: 'Compliance - Regulatory compliance tracking', icon: FileCheck },
-    { to: '/customer-trust', label: 'Customer Trust - Client relationship management', icon: Users },
-    { to: '/suppliers', label: 'Suppliers - Third-party supplier monitoring', icon: Building2 },
-    { to: '/reports', label: 'Reports - Security reports and analytics', icon: FileText },
-    { to: '/starter-guide', label: 'Starter Guide - Interactive security assessment', icon: HelpCircle },
-    { to: '/incidents', label: 'Incidents', icon: AlertTriangle },
-    { to: '/alerts', label: 'Alerts', icon: Bell },
-    { to: '/settings', label: 'Settings', icon: Settings },
+    { to: '/dashboard', label: t('nav.home'), icon: LayoutDashboard, permission: 'access.dashboard' },
+    { to: '/assets', label: t('nav.assets'), icon: Server, permission: 'access.assets' },
+    { to: '/compliance', label: t('nav.compliance'), icon: FileCheck, permission: 'access.compliance' },
+    { to: '/customer-trust', label: t('nav.customerTrust'), icon: Users, permission: 'access.customerTrust' },
+    { to: '/suppliers', label: t('nav.suppliers'), icon: Building2, permission: 'access.suppliers' },
+    { to: '/reports', label: t('nav.reports'), icon: FileText, permission: 'access.reports' },
+    { to: '/starter-guide', label: t('nav.starterGuide'), icon: HelpCircle, permission: 'access.dashboard' },
+    { to: '/integrations', label: t('nav.integrations'), icon: Plug, permission: 'access.integrations' },
+    { to: '/incidents', label: t('nav.incidents'), icon: AlertTriangle, permission: 'access.incidents' },
+    { to: '/alerts', label: t('nav.alerts'), icon: Bell, permission: 'access.alerts' },
+    { to: '/settings', label: t('nav.settings'), icon: Settings, permission: 'access.dashboard' },
   ]
+
+  // Filter navigation items based on user permissions
+  const filteredNavItems = navItems.filter(item => {
+    if (!user) return false
+    if (user.role === 'admin') return true
+    return user.permissions.includes(item.permission) || user.permissions.includes('all')
+  })
   return (
     <aside className="sidebar">
       <div className="h-16 flex items-center gap-3 px-5" style={{borderBottom: '1px solid #134876'}}>
@@ -25,7 +38,7 @@ function Sidebar() {
         <span className="font-semibold" style={{color: '#fff'}}>DefendSphere</span>
       </div>
       <nav className="p-3" style={{display: 'grid', rowGap: '4px'}}>
-        {navItems.map(({ to, label, icon: Icon }) => (
+        {filteredNavItems.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -42,13 +55,47 @@ function Sidebar() {
             {label}
           </NavLink>
         ))}
+        
+        {/* Admin Panel Link */}
+        {user?.role === 'admin' && (
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                isActive ? 'text-white' : 'text-white/90'
+              }`
+            }
+            style={({ isActive }) => ({
+              backgroundColor: isActive ? '#134876' : 'transparent',
+              borderTop: '1px solid #134876',
+              marginTop: '8px',
+              paddingTop: '12px'
+            })}
+          >
+            <Settings className="h-4 w-4" color="#fff" />
+            {t('nav.admin')}
+          </NavLink>
+        )}
       </nav>
       <div className="absolute bottom-0 left-0 w-full p-5" style={{borderTop: '1px solid #134876'}}>
-        <div className="flex items-center gap-3" style={{color: 'rgba(255,255,255,.9)'}}>
-          <div className="w-8 h-8 rounded-full bg-white" style={{color: '#003a6a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700}}>AD</div>
-          <div>
-            <p className="text-sm font-medium">Admin</p>
-            <p className="text-xs" style={{opacity: .8}}>Security Admin</p>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3" style={{color: 'rgba(255,255,255,.9)'}}>
+            <div className="w-8 h-8 rounded-full bg-white" style={{color: '#003a6a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700}}>
+              {user?.username?.charAt(0).toUpperCase() || 'U'}
+            </div>
+            <div>
+              <p className="text-sm font-medium">{user?.username || 'User'}</p>
+              <p className="text-xs" style={{opacity: .8}}>{user?.role === 'admin' ? 'Security Admin' : 'User'}</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <LanguageSwitcher />
+            <NavLink
+              to="/user-dashboard"
+              className="text-xs text-white/70 hover:text-white transition-colors"
+            >
+              Profile
+            </NavLink>
           </div>
         </div>
       </div>
@@ -59,19 +106,23 @@ function Sidebar() {
 function Header() {
   const location = useLocation()
   const { user, logout } = useAuth()
+  const { t } = useI18n()
   
   const titleMap: Record<string, string> = {
-    '/': 'Security Dashboard',
-    '/dashboard': 'Security Dashboard',
-    '/assets': 'Assets Management',
-    '/compliance': 'Compliance Tracking',
-    '/customer-trust': 'Customer Trust',
-    '/suppliers': 'Suppliers Monitoring',
-    '/reports': 'Reports & Analytics',
-    '/starter-guide': 'Starter Guide',
-    '/incidents': 'Incidents',
-    '/alerts': 'Alerts',
-    '/settings': 'Settings',
+    '/': t('dashboard.title'),
+    '/dashboard': t('dashboard.title'),
+    '/assets': t('nav.assets'),
+    '/compliance': t('nav.compliance'),
+    '/customer-trust': t('nav.customerTrust'),
+    '/suppliers': t('nav.suppliers'),
+    '/reports': t('nav.reports'),
+    '/starter-guide': t('nav.starterGuide'),
+    '/integrations': t('nav.integrations'),
+    '/incidents': t('nav.incidents'),
+    '/alerts': t('nav.alerts'),
+    '/settings': t('nav.settings'),
+    '/admin': t('nav.admin'),
+    '/user-dashboard': 'User Dashboard',
   }
   const title = titleMap[location.pathname] ?? 'DefendSphere'
   
@@ -80,14 +131,14 @@ function Header() {
       <h1 className="text-2xl font-bold">{title}</h1>
       <div className="flex items-center gap-3">
         <span className="text-sm text-gray-600">
-          Welcome, {user?.username || 'User'}
+          {t('auth.welcome')}, {user?.username || 'User'}
         </span>
         <button 
           onClick={logout}
           className="btn-primary inline-flex items-center gap-2 px-3 py-2 rounded-md"
         >
           <User className="h-4 w-4" color="#fff" />
-          Logout
+          {t('auth.logout')}
         </button>
       </div>
     </header>

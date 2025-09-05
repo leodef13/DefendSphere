@@ -1,8 +1,11 @@
 import React, { useState } from 'react'
 import { Shield } from 'lucide-react'
 import { API_ENDPOINTS } from '../config/api'
+import { useI18n } from '../i18n'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 const Login: React.FC = () => {
+  const { t } = useI18n()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -29,10 +32,10 @@ const Login: React.FC = () => {
         localStorage.setItem('user', JSON.stringify(data.user))
         window.location.href = '/dashboard'
       } else {
-        setError(data.message || 'Login failed')
+        setError(data.message || t('auth.loginFailed'))
       }
     } catch (err) {
-      setError('Connection error. Please try again.')
+      setError(t('auth.connectionError'))
     } finally {
       setLoading(false)
     }
@@ -49,8 +52,11 @@ const Login: React.FC = () => {
             DefendSphere
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Sign in to your security dashboard
+            {t('auth.signInToDashboard')}
           </p>
+          <div className="mt-4">
+            <LanguageSwitcher />
+          </div>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -58,7 +64,7 @@ const Login: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                  Username
+                  {t('auth.username')}
                 </label>
                 <input
                   id="username"
@@ -68,13 +74,13 @@ const Login: React.FC = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
-                  placeholder="Enter your username"
+                  placeholder={t('auth.username')}
                 />
               </div>
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password
+                  {t('auth.password')}
                 </label>
                 <input
                   id="password"
@@ -84,7 +90,7 @@ const Login: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
-                  placeholder="Enter your password"
+                  placeholder={t('auth.password')}
                 />
               </div>
 
@@ -100,12 +106,12 @@ const Login: React.FC = () => {
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors duration-200"
                 style={{ backgroundColor: '#56a3d9' }}
               >
-                {loading ? 'Signing in...' : 'Sign in'}
+                {loading ? t('auth.signingIn') : t('auth.login')}
               </button>
             </div>
 
             <div className="mt-6 text-center text-sm text-gray-600">
-              <p>Default users:</p>
+              <p>{t('auth.defaultUsers')}</p>
               <p>admin/admin, user1/user1, user2/user2</p>
             </div>
           </div>
