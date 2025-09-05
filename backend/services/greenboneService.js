@@ -1,395 +1,495 @@
 const axios = require('axios');
-const xml2js = require('xml2js');
-const fs = require('fs').promises;
-const path = require('path');
+const redis = require('redis');
+const { parseString } = require('xml2js');
 
 class GreenboneService {
   constructor() {
+    this.client = null;
+    this.redisClient = null;
     this.isConnected = false;
-    this.scanStatuses = new Map(); // Store scan statuses in memory
-    this.parser = new xml2js.Parser();
-    this.builder = new xml2js.Builder();
+    this.scanStatuses = new Map(); // In-memory cache for scan statuses
   }
 
-  /**
-   * Connect to Greenbone GVM API
-   */
-  async connectToGreenbone() {
+  async initialize() {
     try {
-      const config = {
-        host: process.env.GREENBONE_HOST || '217.65.144.232',
-        port: process.env.GREENBONE_PORT || 9392,
-        username: process.env.GREENBONE_USERNAME || 'admin',
-        password: process.env.GREENBONE_PASSWORD || 'admin',
-        protocol: 'http'
-      };
-
-      // For now, we'll simulate a connection since we don't have actual GVM access
-      // In a real implementation, you would use SSH or HTTP to connect to GVM
-      this.isConnected = true;
+      // Initialize Redis client
+      this.redisClient = redis.createClient({
+        url: process.env.REDIS_URL || 'redis://localhost:6379'
+      });
       
-      console.log('✅ Connected to Greenbone GVM successfully (simulated)');
-      return { success: true, message: 'Connected to Greenbone GVM' };
+      await this.redisClient.connect();
+      console.log('GreenboneService: Redis connected');
+      
+      // Initialize HTTP client for GVM API
+      this.client = axios.create({
+        baseURL: `http://${process.env.GREENBONE_HOST || '217.65.144.232'}:${process.env.GREENBONE_PORT || 9392}`,
+        auth: {
+          username: process.env.GREENBONE_USERNAME || 'admin',
+          password: process.env.GREENBONE_PASSWORD || 'admin'
+        },
+        timeout: 30000,
+        headers: {
+          'Content-Type': 'application/xml'
+        }
+      });
+      
+      console.log('GreenboneService: GVM HTTP client initialized');
     } catch (error) {
-      console.error('❌ Failed to connect to Greenbone GVM:', error.message);
-      this.isConnected = false;
-      return { success: false, message: `Connection failed: ${error.message}` };
+      console.error('GreenboneService initialization error:', error);
+      throw error;
     }
   }
 
-  /**
-   * Start scan for a list of assets
-   */
+  async connectToGreenbone() {
+    try {
+      if (!this.client) {
+        await this.initialize();
+      }
+
+      // Test connection by getting version
+      const response = await this.client.get('/gmp');
+      this.isConnected = true;
+      console.log('GreenboneService: Connected to GVM');
+      
+      return {
+        success: true,
+        version: 'GVM API',
+        message: 'Successfully connected to Greenbone GVM'
+      };
+    } catch (error) {
+      this.isConnected = false;
+      console.error('GreenboneService: Connection failed:', error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to connect to Greenbone GVM'
+      };
+    }
+  }
+
   async startScan(assets, userId) {
     try {
       if (!this.isConnected) {
         const connectionResult = await this.connectToGreenbone();
         if (!connectionResult.success) {
-          throw new Error(connectionResult.message);
+          throw new Error('Cannot connect to Greenbone GVM');
         }
       }
 
-      // Create scan configuration
-      const scanConfig = {
-        name: `DefendSphere_Scan_${userId}_${Date.now()}`,
-        targets: assets.map(asset => asset.url || asset.ip),
-        scanner: 'OpenVAS Default',
-        config: 'Full and fast'
-      };
-
+      // Generate unique scan ID
+      const scanId = `scan_${userId}_${Date.now()}`;
+      
       // Create target
-      const target = await this.gmp.createTarget({
-        name: `DefendSphere_Target_${userId}_${Date.now()}`,
-        hosts: scanConfig.targets,
-        port_list: 'All IANA assigned TCP'
-      });
+      const targetName = `DefendSphere_${userId}_${Date.now()}`;
+      const targetHosts = assets.map(asset => asset.ip || asset.domain).join(',');
+      
+      const createTargetXML = `
+        <create_target>
+          <name>${targetName}</name>
+          <hosts>${targetHosts}</hosts>
+          <comment>DefendSphere scan for user ${userId}</comment>
+        </create_target>
+      `;
+
+      const targetResponse = await this.client.post('/gmp', createTargetXML);
+      const targetId = this.extractIdFromResponse(targetResponse.data);
 
       // Create task
-      const task = await this.gmp.createTask({
-        name: scanConfig.name,
-        target: target.id,
-        scanner: scanConfig.scanner,
-        config: scanConfig.config
-      });
+      const taskName = `DefendSphere_Task_${userId}_${Date.now()}`;
+      const createTaskXML = `
+        <create_task>
+          <name>${taskName}</name>
+          <target id="${targetId}"/>
+          <config id="daba56c8-73ec-11df-a475-002264764cea"/>
+          <comment>DefendSphere task for user ${userId}</comment>
+        </create_task>
+      `;
+
+      const taskResponse = await this.client.post('/gmp', createTaskXML);
+      const taskId = this.extractIdFromResponse(taskResponse.data);
 
       // Start scan
-      const scan = await this.gmp.startTask(task.id);
+      const startTaskXML = `<start_task task_id="${taskId}"/>`;
+      await this.client.post('/gmp', startTaskXML);
 
-      // Store scan status
-      const scanId = scan.id;
-      this.scanStatuses.set(scanId, {
-        id: scanId,
+      // Store scan info in Redis
+      const scanInfo = {
+        scanId,
         userId,
-        status: 'running',
-        startTime: new Date(),
+        taskId,
+        targetId,
+        status: 'queued',
+        startTime: new Date().toISOString(),
         assets: assets,
-        targetId: target.id,
-        taskId: task.id,
         progress: 0
-      });
+      };
 
-      console.log(`✅ Scan started successfully: ${scanId}`);
+      await this.redisClient.setEx(`scan:${scanId}`, 3600, JSON.stringify(scanInfo));
+      this.scanStatuses.set(scanId, scanInfo);
+
+      console.log(`GreenboneService: Scan started with ID ${scanId}`);
+      
       return {
         success: true,
         scanId,
+        taskId,
         message: 'Scan started successfully'
       };
-
     } catch (error) {
-      console.error('❌ Failed to start scan:', error.message);
+      console.error('GreenboneService: Start scan error:', error);
       return {
         success: false,
-        message: `Scan failed: ${error.message}`
+        error: error.message,
+        message: 'Failed to start scan'
       };
     }
   }
 
-  /**
-   * Get scan status
-   */
   async getScanStatus(scanId) {
     try {
-      if (!this.isConnected) {
-        const connectionResult = await this.connectToGreenbone();
-        if (!connectionResult.success) {
-          throw new Error(connectionResult.message);
+      // Check in-memory cache first
+      if (this.scanStatuses.has(scanId)) {
+        const scanInfo = this.scanStatuses.get(scanId);
+        
+        // Update status from GVM if scan is running
+        if (scanInfo.status === 'running' || scanInfo.status === 'queued') {
+          const updatedStatus = await this.updateScanStatusFromGVM(scanInfo);
+          return updatedStatus;
         }
+        
+        return scanInfo;
       }
 
-      const scanInfo = this.scanStatuses.get(scanId);
-      if (!scanInfo) {
-        throw new Error('Scan not found');
+      // Check Redis
+      const scanData = await this.redisClient.get(`scan:${scanId}`);
+      if (scanData) {
+        const scanInfo = JSON.parse(scanData);
+        this.scanStatuses.set(scanId, scanInfo);
+        
+        // Update status from GVM if scan is running
+        if (scanInfo.status === 'running' || scanInfo.status === 'queued') {
+          const updatedStatus = await this.updateScanStatusFromGVM(scanInfo);
+          return updatedStatus;
+        }
+        
+        return scanInfo;
       }
 
-      // Get task status from GVM
-      const task = await this.gmp.getTask(scanInfo.taskId);
-      const progress = task.progress || 0;
-      const status = task.status || 'unknown';
-
-      // Update stored status
-      scanInfo.progress = progress;
-      scanInfo.status = status;
-
-      if (status === 'Done') {
-        scanInfo.endTime = new Date();
-        scanInfo.status = 'completed';
-      }
-
-      return {
-        success: true,
-        scanId,
-        status: scanInfo.status,
-        progress,
-        startTime: scanInfo.startTime,
-        endTime: scanInfo.endTime,
-        assets: scanInfo.assets
-      };
-
-    } catch (error) {
-      console.error('❌ Failed to get scan status:', error.message);
       return {
         success: false,
-        message: `Failed to get scan status: ${error.message}`
+        error: 'Scan not found',
+        message: 'Scan ID not found'
+      };
+    } catch (error) {
+      console.error('GreenboneService: Get scan status error:', error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to get scan status'
       };
     }
   }
 
-  /**
-   * Get scan reports
-   */
-  async getScanReports(scanId) {
+  async updateScanStatusFromGVM(scanInfo) {
     try {
       if (!this.isConnected) {
-        const connectionResult = await this.connectToGreenbone();
-        if (!connectionResult.success) {
-          throw new Error(connectionResult.message);
-        }
+        return scanInfo;
       }
 
-      const scanInfo = this.scanStatuses.get(scanId);
-      if (!scanInfo) {
-        throw new Error('Scan not found');
+      const getTaskXML = `<get_tasks task_id="${scanInfo.taskId}"/>`;
+      const response = await this.client.post('/gmp', getTaskXML);
+      
+      // Parse XML response to get status
+      const statusMatch = response.data.match(/<status>([^<]+)<\/status>/);
+      const progressMatch = response.data.match(/<progress>(\d+)<\/progress>/);
+      
+      const status = statusMatch ? statusMatch[1] : 'Unknown';
+      const progress = progressMatch ? parseInt(progressMatch[1]) : scanInfo.progress;
+      
+      let newStatus = scanInfo.status;
+
+      switch (status) {
+        case 'Running':
+          newStatus = 'running';
+          break;
+        case 'Done':
+          newStatus = 'completed';
+          break;
+        case 'Stopped':
+        case 'Interrupted':
+          newStatus = 'failed';
+          break;
+        default:
+          newStatus = 'queued';
       }
 
-      // Get reports for the task
-      const reports = await this.gmp.getReports({
-        task: scanInfo.taskId,
-        format: 'xml'
-      });
+      // Update scan info
+      const updatedScanInfo = {
+        ...scanInfo,
+        status: newStatus,
+        progress,
+        lastUpdate: new Date().toISOString()
+      };
 
-      if (!reports || reports.length === 0) {
+      // Update Redis and cache
+      await this.redisClient.setEx(`scan:${scanInfo.scanId}`, 3600, JSON.stringify(updatedScanInfo));
+      this.scanStatuses.set(scanInfo.scanId, updatedScanInfo);
+
+      return updatedScanInfo;
+    } catch (error) {
+      console.error('GreenboneService: Update scan status error:', error);
+      return scanInfo;
+    }
+  }
+
+  async getReports(scanId) {
+    try {
+      const scanInfo = await this.getScanStatus(scanId);
+      if (!scanInfo.success && scanInfo.status !== 'completed') {
         return {
           success: false,
-          message: 'No reports found for this scan'
+          error: 'Scan not completed',
+          message: 'Scan must be completed to get reports'
         };
       }
 
-      // Parse the first report
-      const report = reports[0];
-      const parsedData = await this.parseReports(report);
+      if (!this.isConnected) {
+        const connectionResult = await this.connectToGreenbone();
+        if (!connectionResult.success) {
+          throw new Error('Cannot connect to Greenbone GVM');
+        }
+      }
+
+      // Get reports for the task
+      const getReportsXML = `<get_reports task_id="${scanInfo.taskId}"/>`;
+      const response = await this.client.post('/gmp', getReportsXML);
+      
+      // Parse XML response to get report IDs
+      const reportIdMatches = response.data.match(/id="([^"]+)"/g);
+      const reportIds = reportIdMatches ? reportIdMatches.map(match => match.match(/id="([^"]+)"/)[1]) : [];
+
+      const reports = [];
+      for (const reportId of reportIds) {
+        const getReportXML = `<get_reports report_id="${reportId}"/>`;
+        const reportResponse = await this.client.post('/gmp', getReportXML);
+        reports.push({
+          id: reportId,
+          content: reportResponse.data,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      // Parse reports
+      const parsedReports = await this.parseReports(reports, scanInfo.assets);
+
+      // Store reports in Redis
+      await this.redisClient.setEx(`reports:${scanId}`, 7200, JSON.stringify(parsedReports));
 
       return {
         success: true,
-        scanId,
-        reports: [{
+        reports: parsedReports,
+        message: 'Reports retrieved successfully'
+      };
+    } catch (error) {
+      console.error('GreenboneService: Get reports error:', error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to get reports'
+      };
+    }
+  }
+
+  async parseReports(reports, assets) {
+    try {
+      const parsedReports = [];
+
+      for (const report of reports) {
+        const vulnerabilities = [];
+        const assetVulnerabilities = new Map();
+
+        // Parse XML report (simplified parsing)
+        if (report.content && report.content.includes('<result>')) {
+          const resultMatches = report.content.match(/<result>[\s\S]*?<\/result>/g);
+          
+          if (resultMatches) {
+            for (const result of resultMatches) {
+              const nameMatch = result.match(/<name>(.*?)<\/name>/);
+              const cveMatch = result.match(/<cve>(.*?)<\/cve>/);
+              const severityMatch = result.match(/<severity>(.*?)<\/severity>/);
+              const hostMatch = result.match(/<host>(.*?)<\/host>/);
+              const descriptionMatch = result.match(/<description>(.*?)<\/description>/);
+
+              if (nameMatch && severityMatch) {
+                const vulnerability = {
+                  name: nameMatch[1],
+                  cve: cveMatch ? cveMatch[1] : 'N/A',
+                  severity: severityMatch[1],
+                  host: hostMatch ? hostMatch[1] : 'Unknown',
+                  description: descriptionMatch ? descriptionMatch[1] : 'No description available',
+                  riskLevel: this.mapSeverityToRiskLevel(severityMatch[1]),
+                  cvss: this.mapSeverityToCVSS(severityMatch[1]),
+                  status: 'open',
+                  recommendations: this.generateRecommendations(severityMatch[1])
+                };
+
+                vulnerabilities.push(vulnerability);
+
+                // Group by asset
+                const asset = assets.find(a => a.ip === vulnerability.host || a.domain === vulnerability.host);
+                if (asset) {
+                  if (!assetVulnerabilities.has(asset.id)) {
+                    assetVulnerabilities.set(asset.id, []);
+                  }
+                  assetVulnerabilities.get(asset.id).push(vulnerability);
+                }
+              }
+            }
+          }
+        }
+
+        parsedReports.push({
           id: report.id,
           name: report.name,
           timestamp: report.timestamp,
-          ...parsedData
-        }]
-      };
-
-    } catch (error) {
-      console.error('❌ Failed to get scan reports:', error.message);
-      return {
-        success: false,
-        message: `Failed to get scan reports: ${error.message}`
-      };
-    }
-  }
-
-  /**
-   * Parse reports data
-   */
-  async parseReports(reportData) {
-    try {
-      // This is a simplified parser - in real implementation you'd parse XML
-      const vulnerabilities = [];
-      const assets = [];
-
-      // Mock parsing based on report structure
-      if (reportData.vulnerabilities) {
-        reportData.vulnerabilities.forEach(vuln => {
-          vulnerabilities.push({
-            name: vuln.name || 'Unknown Vulnerability',
-            cve: vuln.cve || 'N/A',
-            risk: vuln.severity || 'Medium',
-            cvss: vuln.cvss || '5.0',
-            status: 'Open',
-            description: vuln.description || 'No description available',
-            recommendation: vuln.recommendation || 'Review and patch if necessary'
-          });
+          vulnerabilities,
+          assetVulnerabilities: Object.fromEntries(assetVulnerabilities),
+          summary: {
+            totalVulnerabilities: vulnerabilities.length,
+            critical: vulnerabilities.filter(v => v.riskLevel === 'Critical').length,
+            high: vulnerabilities.filter(v => v.riskLevel === 'High').length,
+            medium: vulnerabilities.filter(v => v.riskLevel === 'Medium').length,
+            low: vulnerabilities.filter(v => v.riskLevel === 'Low').length
+          }
         });
       }
 
-      if (reportData.hosts) {
-        reportData.hosts.forEach(host => {
-          assets.push({
-            name: host.hostname || host.ip,
-            ip: host.ip,
-            type: 'Web Server',
-            environment: 'Production',
-            riskLevel: this.calculateRiskLevel(vulnerabilities.filter(v => v.risk)),
-            compliance: this.calculateCompliance(vulnerabilities),
-            lastScan: new Date().toISOString(),
-            vulnerabilities: vulnerabilities.filter(v => v.risk)
-          });
-        });
-      }
-
-      return {
-        summary: {
-          totalAssets: assets.length,
-          totalVulnerabilities: vulnerabilities.length,
-          riskDistribution: this.calculateRiskDistribution(vulnerabilities)
-        },
-        vulnerabilities,
-        assets
-      };
-
+      return parsedReports;
     } catch (error) {
-      console.error('❌ Failed to parse reports:', error.message);
-      return {
-        summary: { totalAssets: 0, totalVulnerabilities: 0, riskDistribution: {} },
-        vulnerabilities: [],
-        assets: []
-      };
+      console.error('GreenboneService: Parse reports error:', error);
+      throw error;
     }
   }
 
-  /**
-   * Calculate risk level for an asset
-   */
-  calculateRiskLevel(vulnerabilities) {
-    if (!vulnerabilities || vulnerabilities.length === 0) {
-      return 'Low';
-    }
-
-    const hasCritical = vulnerabilities.some(v => v.risk === 'Critical');
-    const hasHigh = vulnerabilities.some(v => v.risk === 'High');
-    const hasMedium = vulnerabilities.some(v => v.risk === 'Medium');
-
-    if (hasCritical) return 'Critical';
-    if (hasHigh) return 'High';
-    if (hasMedium) return 'Medium';
+  mapSeverityToRiskLevel(severity) {
+    const severityNum = parseFloat(severity);
+    if (severityNum >= 9.0) return 'Critical';
+    if (severityNum >= 7.0) return 'High';
+    if (severityNum >= 4.0) return 'Medium';
     return 'Low';
   }
 
-  /**
-   * Calculate compliance percentage
-   */
+  mapSeverityToCVSS(severity) {
+    return parseFloat(severity).toFixed(1);
+  }
+
+  generateRecommendations(severity) {
+    const severityNum = parseFloat(severity);
+    if (severityNum >= 9.0) {
+      return 'Immediate action required. Apply security patches and implement additional monitoring.';
+    } else if (severityNum >= 7.0) {
+      return 'High priority. Schedule security updates and review system configuration.';
+    } else if (severityNum >= 4.0) {
+      return 'Medium priority. Plan security updates during next maintenance window.';
+    } else {
+      return 'Low priority. Monitor and address during regular maintenance.';
+    }
+  }
+
+  async getUserAssets(userId) {
+    try {
+      const assetsData = await this.redisClient.get(`user:${userId}:assets`);
+      if (assetsData) {
+        return JSON.parse(assetsData);
+      }
+      return [];
+    } catch (error) {
+      console.error('GreenboneService: Get user assets error:', error);
+      return [];
+    }
+  }
+
+  async updateUserAssets(userId, scanId) {
+    try {
+      const reports = await this.getReports(scanId);
+      if (!reports.success) {
+        return { success: false, error: reports.error };
+      }
+
+      const userAssets = await this.getUserAssets(userId);
+      const updatedAssets = [...userAssets];
+
+      // Update assets with scan results
+      for (const report of reports.reports) {
+        for (const [assetId, vulnerabilities] of Object.entries(report.assetVulnerabilities)) {
+          const assetIndex = updatedAssets.findIndex(a => a.id === assetId);
+          if (assetIndex !== -1) {
+            updatedAssets[assetIndex] = {
+              ...updatedAssets[assetIndex],
+              lastScan: new Date().toISOString(),
+              vulnerabilities: vulnerabilities,
+              riskLevel: this.calculateAssetRiskLevel(vulnerabilities),
+              compliance: this.calculateCompliance(vulnerabilities)
+            };
+          }
+        }
+      }
+
+      // Save updated assets
+      await this.redisClient.setEx(`user:${userId}:assets`, 3600, JSON.stringify(updatedAssets));
+
+      return {
+        success: true,
+        assets: updatedAssets,
+        message: 'Assets updated successfully'
+      };
+    } catch (error) {
+      console.error('GreenboneService: Update user assets error:', error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to update user assets'
+      };
+    }
+  }
+
+  calculateAssetRiskLevel(vulnerabilities) {
+    if (vulnerabilities.some(v => v.riskLevel === 'Critical')) return 'Critical';
+    if (vulnerabilities.some(v => v.riskLevel === 'High')) return 'High';
+    if (vulnerabilities.some(v => v.riskLevel === 'Medium')) return 'Medium';
+    return 'Low';
+  }
+
   calculateCompliance(vulnerabilities) {
-    if (!vulnerabilities || vulnerabilities.length === 0) {
-      return 100;
-    }
-
-    const criticalCount = vulnerabilities.filter(v => v.risk === 'Critical').length;
-    const highCount = vulnerabilities.filter(v => v.risk === 'High').length;
-    const mediumCount = vulnerabilities.filter(v => v.risk === 'Medium').length;
-    const lowCount = vulnerabilities.filter(v => v.risk === 'Low').length;
-
-    const totalWeight = criticalCount * 4 + highCount * 3 + mediumCount * 2 + lowCount * 1;
-    const maxWeight = vulnerabilities.length * 4;
+    const total = vulnerabilities.length;
+    if (total === 0) return 100;
     
-    return Math.max(0, Math.round(100 - (totalWeight / maxWeight) * 100));
+    const critical = vulnerabilities.filter(v => v.riskLevel === 'Critical').length;
+    const high = vulnerabilities.filter(v => v.riskLevel === 'High').length;
+    
+    // Calculate compliance based on critical and high vulnerabilities
+    const compliance = Math.max(0, 100 - (critical * 20) - (high * 10));
+    return Math.round(compliance);
   }
 
-  /**
-   * Calculate risk distribution
-   */
-  calculateRiskDistribution(vulnerabilities) {
-    const distribution = {
-      Critical: 0,
-      High: 0,
-      Medium: 0,
-      Low: 0
-    };
-
-    vulnerabilities.forEach(vuln => {
-      if (distribution.hasOwnProperty(vuln.risk)) {
-        distribution[vuln.risk]++;
-      }
-    });
-
-    return distribution;
-  }
-
-  /**
-   * Export report to PDF
-   */
-  async exportReportToPDF(scanId) {
+  extractIdFromResponse(xmlResponse) {
     try {
-      const reportsResult = await this.getScanReports(scanId);
-      if (!reportsResult.success) {
-        throw new Error(reportsResult.message);
-      }
-
-      // In real implementation, you'd generate actual PDF
-      // For now, return mock PDF data
-      return {
-        success: true,
-        filename: `DefendSphere_Report_${scanId}.pdf`,
-        data: 'Mock PDF data - in real implementation this would be actual PDF content'
-      };
-
+      const idMatch = xmlResponse.match(/id="([^"]+)"/);
+      return idMatch ? idMatch[1] : null;
     } catch (error) {
-      console.error('❌ Failed to export report to PDF:', error.message);
-      return {
-        success: false,
-        message: `Failed to export PDF: ${error.message}`
-      };
+      console.error('Error extracting ID from response:', error);
+      return null;
     }
   }
 
-  /**
-   * Export report to Excel
-   */
-  async exportReportToExcel(scanId) {
+  async cleanup() {
     try {
-      const reportsResult = await this.getScanReports(scanId);
-      if (!reportsResult.success) {
-        throw new Error(reportsResult.message);
+      if (this.redisClient) {
+        await this.redisClient.quit();
       }
-
-      // In real implementation, you'd generate actual Excel
-      // For now, return mock Excel data
-      return {
-        success: true,
-        filename: `DefendSphere_Report_${scanId}.xlsx`,
-        data: 'Mock Excel data - in real implementation this would be actual Excel content'
-      };
-
+      console.log('GreenboneService: Cleanup completed');
     } catch (error) {
-      console.error('❌ Failed to export report to Excel:', error.message);
-      return {
-        success: false,
-        message: `Failed to export Excel: ${error.message}`
-      };
-    }
-  }
-
-  /**
-   * Disconnect from Greenbone
-   */
-  async disconnect() {
-    try {
-      if (this.gmp && this.isConnected) {
-        await this.gmp.disconnect();
-        this.isConnected = false;
-        console.log('✅ Disconnected from Greenbone GVM');
-      }
-    } catch (error) {
-      console.error('❌ Error disconnecting from Greenbone:', error.message);
+      console.error('GreenboneService: Cleanup error:', error);
     }
   }
 }

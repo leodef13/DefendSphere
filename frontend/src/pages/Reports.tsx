@@ -352,6 +352,118 @@ const Reports: React.FC = () => {
         </Card>
       </div>
 
+      {/* Greenbone Scan Reports Section */}
+      {user?.username === 'user1' && scanReports.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Greenbone Scan Reports</h3>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => downloadScanReport(scanReports[0].id, 'pdf')}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  PDF
+                </Button>
+                <Button
+                  onClick={() => downloadScanReport(scanReports[0].id, 'excel')}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Excel
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {scanReports.map((report) => (
+              <div key={report.id} className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-500/10 rounded-lg">
+                  <div>
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100">{report.name}</h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Scan completed: {new Date(report.timestamp).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                      {report.summary.totalVulnerabilities}
+                    </div>
+                    <div className="text-sm text-blue-700 dark:text-blue-300">Vulnerabilities</div>
+                  </div>
+                </div>
+
+                {/* Scan Report Summary */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-3 bg-red-50 dark:bg-red-500/10 rounded-lg">
+                    <div className="text-xl font-bold text-red-600 dark:text-red-400">
+                      {report.summary.critical}
+                    </div>
+                    <div className="text-sm text-red-700 dark:text-red-300">Critical</div>
+                  </div>
+                  <div className="text-center p-3 bg-orange-50 dark:bg-orange-500/10 rounded-lg">
+                    <div className="text-xl font-bold text-orange-600 dark:text-orange-400">
+                      {report.summary.high}
+                    </div>
+                    <div className="text-sm text-orange-700 dark:text-orange-300">High</div>
+                  </div>
+                  <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-500/10 rounded-lg">
+                    <div className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+                      {report.summary.medium}
+                    </div>
+                    <div className="text-sm text-yellow-700 dark:text-yellow-300">Medium</div>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 dark:bg-green-500/10 rounded-lg">
+                    <div className="text-xl font-bold text-green-600 dark:text-green-400">
+                      {report.summary.low}
+                    </div>
+                    <div className="text-sm text-green-700 dark:text-green-300">Low</div>
+                  </div>
+                </div>
+
+                {/* Scan Report Vulnerabilities */}
+                {report.vulnerabilities.length > 0 && (
+                  <div className="mt-4">
+                    <h5 className="font-medium mb-2">Vulnerabilities Found:</h5>
+                    <div className="space-y-2">
+                      {report.vulnerabilities.slice(0, 5).map((vuln, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                          <div>
+                            <div className="font-medium">{vuln.name}</div>
+                            <div className="text-sm text-gray-600 dark:text-neutral-400">
+                              {vuln.host} • {vuln.cve}
+                            </div>
+                          </div>
+                          <span 
+                            className="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium"
+                            style={{ 
+                              backgroundColor: `${COLORS[vuln.riskLevel]}20`,
+                              color: COLORS[vuln.riskLevel]
+                            }}
+                          >
+                            {vuln.riskLevel}
+                          </span>
+                        </div>
+                      ))}
+                      {report.vulnerabilities.length > 5 && (
+                        <div className="text-center text-sm text-gray-500 dark:text-neutral-400">
+                          ... and {report.vulnerabilities.length - 5} more vulnerabilities
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Vulnerabilities Table */}
       <Card>
         <CardHeader>

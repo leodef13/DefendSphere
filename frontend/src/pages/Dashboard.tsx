@@ -52,12 +52,34 @@ export default function Dashboard() {
 
   const fetchUserAssets = async () => {
     try {
-      const result = await scanService.checkAssets()
-      setHasAssets(result.hasAssets)
-      // For now, we'll use mock assets since we don't have a user assets endpoint yet
-      setUserAssets([{ id: '1', name: 'myrockshows.com', url: 'myrockshows.com', type: 'Web Server' }])
+      const result = await scanService.getUserAssets()
+      if (result.success && result.assets) {
+        setUserAssets(result.assets)
+        setHasAssets(result.assets.length > 0)
+      } else {
+        // Fallback to mock assets for user1
+        setUserAssets([{ 
+          id: '1', 
+          name: 'myrockshows.com', 
+          domain: 'myrockshows.com', 
+          ip: '116.203.242.207',
+          type: 'Web Server',
+          environment: 'Production'
+        }])
+        setHasAssets(true)
+      }
     } catch (error) {
       console.error('Failed to fetch user assets:', error)
+      // Fallback to mock assets for user1
+      setUserAssets([{ 
+        id: '1', 
+        name: 'myrockshows.com', 
+        domain: 'myrockshows.com', 
+        ip: '116.203.242.207',
+        type: 'Web Server',
+        environment: 'Production'
+      }])
+      setHasAssets(true)
     }
   }
 
@@ -76,13 +98,23 @@ export default function Dashboard() {
       const result = await scanService.startScan(userAssets)
       
       if (result.success && result.scanId) {
+        setActiveScan({
+          scanId: result.scanId,
+          userId: user?.id || '',
+          taskId: '',
+          targetId: '',
+          status: 'queued',
+          startTime: new Date().toISOString(),
+          progress: 0,
+          assets: userAssets
+        })
         setScanStatus('running')
         setScanMessage('Scan started successfully')
         // Start polling for status
         pollScanStatus(result.scanId)
       } else {
         setScanStatus('error')
-        setScanMessage(result.message || 'Failed to start scan')
+        setScanMessage(result.error || result.message || 'Failed to start scan')
       }
     } catch (error) {
       console.error('Failed to start scan:', error)
@@ -96,9 +128,10 @@ export default function Dashboard() {
   const pollScanStatus = async (scanId: string) => {
     const pollInterval = setInterval(async () => {
       try {
-        const scan = await scanService.getScanStatus(scanId)
+        const result = await scanService.getScanStatus(scanId)
         
-        if (scan) {
+        if (result.success && result.scan) {
+          const scan = result.scan
           setActiveScan(scan)
           setScanStatus(scan.status)
           setScanProgress(scan.progress)
@@ -107,6 +140,8 @@ export default function Dashboard() {
           if (scan.status === 'completed' || scan.status === 'failed') {
             clearInterval(pollInterval)
             if (scan.status === 'completed') {
+              // Update user assets with scan results
+              await scanService.updateUserAssets(scanId)
               // Refresh report data with new scan results
               fetchReportData()
               setScanMessage('Scan completed successfully')
@@ -114,6 +149,11 @@ export default function Dashboard() {
               setScanMessage('Scan failed')
             }
           }
+        } else {
+          console.error('Failed to get scan status:', result.error)
+          clearInterval(pollInterval)
+          setScanStatus('error')
+          setScanMessage('Failed to get scan status')
         }
       } catch (error) {
         console.error('Failed to poll scan status:', error)

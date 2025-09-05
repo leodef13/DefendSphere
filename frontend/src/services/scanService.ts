@@ -1,68 +1,75 @@
 import { API_ENDPOINTS } from '../config/api'
 
-export interface ScanAsset {
+export interface Asset {
   id: string
   name: string
-  url?: string
+  domain?: string
   ip?: string
   type: string
+  environment: string
 }
 
 export interface ScanStatus {
   scanId: string
-  status: 'running' | 'completed' | 'failed' | 'queued'
-  progress: number
+  userId: string
+  taskId: string
+  targetId: string
+  status: 'queued' | 'running' | 'completed' | 'failed'
   startTime: string
-  endTime?: string
-  assets: ScanAsset[]
+  lastUpdate?: string
+  progress: number
+  assets: Asset[]
+}
+
+export interface Vulnerability {
+  name: string
+  cve: string
+  severity: string
+  host: string
+  description: string
+  riskLevel: 'Critical' | 'High' | 'Medium' | 'Low'
+  cvss: string
+  status: string
+  recommendations: string
 }
 
 export interface ScanReport {
   id: string
   name: string
   timestamp: string
+  vulnerabilities: Vulnerability[]
+  assetVulnerabilities: Record<string, Vulnerability[]>
   summary: {
-    totalAssets: number
     totalVulnerabilities: number
-    riskDistribution: {
-      Critical: number
-      High: number
-      Medium: number
-      Low: number
-    }
+    critical: number
+    high: number
+    medium: number
+    low: number
   }
-  vulnerabilities: Array<{
-    name: string
-    cve: string
-    risk: 'Critical' | 'High' | 'Medium' | 'Low'
-    cvss: string
-    status: string
-    description: string
-    recommendation: string
-  }>
-  assets: Array<{
-    name: string
-    ip: string
-    type: string
-    environment: string
-    riskLevel: string
-    compliance: number
-    lastScan: string
-    vulnerabilities: any[]
-  }>
 }
 
-export interface ScanHistoryItem {
-  scanId: string
-  status: string
-  startTime: string
-  endTime?: string
-  progress: number
-  assets: ScanAsset[]
+export interface ScanResult {
+  success: boolean
+  scanId?: string
+  message?: string
+  error?: string
+}
+
+export interface ScanStatusResult {
+  success: boolean
+  scan?: ScanStatus
+  error?: string
+}
+
+export interface ScanReportResult {
+  success: boolean
+  reports?: ScanReport[]
+  message?: string
+  error?: string
 }
 
 class ScanService {
-  private getAuthHeaders() {
+  private getAuthHeaders(): HeadersInit {
     const token = localStorage.getItem('token')
     return {
       'Content-Type': 'application/json',
@@ -70,34 +77,7 @@ class ScanService {
     }
   }
 
-  /**
-   * Check if user has assets
-   */
-  async checkAssets(): Promise<{ hasAssets: boolean; assetCount: number }> {
-    try {
-      const response = await fetch(API_ENDPOINTS.SCAN_CHECK_ASSETS, {
-        headers: this.getAuthHeaders()
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to check assets')
-      }
-
-      const data = await response.json()
-      return {
-        hasAssets: data.hasAssets,
-        assetCount: data.assetCount
-      }
-    } catch (error) {
-      console.error('Error checking assets:', error)
-      return { hasAssets: false, assetCount: 0 }
-    }
-  }
-
-  /**
-   * Start asset scan
-   */
-  async startScan(assets: ScanAsset[]): Promise<{ success: boolean; scanId?: string; message: string }> {
+  async startScan(assets: Asset[]): Promise<ScanResult> {
     try {
       const response = await fetch(API_ENDPOINTS.SCAN_START, {
         method: 'POST',
@@ -106,174 +86,179 @@ class ScanService {
       })
 
       const data = await response.json()
-      return {
-        success: data.success,
-        scanId: data.scanId,
-        message: data.message
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to start scan')
       }
+
+      return data
     } catch (error) {
-      console.error('Error starting scan:', error)
+      console.error('Start scan error:', error)
       return {
         success: false,
-        message: 'Failed to start scan'
+        error: error instanceof Error ? error.message : 'Unknown error'
       }
     }
   }
 
-  /**
-   * Get scan status
-   */
-  async getScanStatus(scanId: string): Promise<ScanStatus | null> {
+  async getScanStatus(scanId: string): Promise<ScanStatusResult> {
     try {
       const response = await fetch(API_ENDPOINTS.SCAN_STATUS(scanId), {
+        method: 'GET',
         headers: this.getAuthHeaders()
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        throw new Error('Failed to get scan status')
+        throw new Error(data.error || 'Failed to get scan status')
       }
 
-      const data = await response.json()
-      if (data.success) {
-        return {
-          scanId: data.scanId,
-          status: data.status,
-          progress: data.progress,
-          startTime: data.startTime,
-          endTime: data.endTime,
-          assets: data.assets
-        }
-      }
-      return null
+      return data
     } catch (error) {
-      console.error('Error getting scan status:', error)
-      return null
+      console.error('Get scan status error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
     }
   }
 
-  /**
-   * Get scan report
-   */
-  async getScanReport(scanId: string): Promise<ScanReport | null> {
+  async getScanReport(scanId: string): Promise<ScanReportResult> {
     try {
       const response = await fetch(API_ENDPOINTS.SCAN_REPORT(scanId), {
+        method: 'GET',
         headers: this.getAuthHeaders()
       })
+
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error('Failed to get scan report')
+        throw new Error(data.error || 'Failed to get scan report')
       }
 
-      const data = await response.json()
-      if (data.success) {
-        return data.report
-      }
-      return null
+      return data
     } catch (error) {
-      console.error('Error getting scan report:', error)
-      return null
+      console.error('Get scan report error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
     }
   }
 
-  /**
-   * Get scan history
-   */
-  async getScanHistory(): Promise<ScanHistoryItem[]> {
+  async updateUserAssets(scanId: string): Promise<ScanResult> {
     try {
-      const response = await fetch(API_ENDPOINTS.SCAN_HISTORY, {
+      const response = await fetch(API_ENDPOINTS.SCAN_UPDATE_ASSETS(scanId), {
+        method: 'POST',
         headers: this.getAuthHeaders()
       })
+
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error('Failed to get scan history')
+        throw new Error(data.error || 'Failed to update user assets')
       }
 
-      const data = await response.json()
-      if (data.success) {
-        return data.scans
-      }
-      return []
+      return data
     } catch (error) {
-      console.error('Error getting scan history:', error)
-      return []
+      console.error('Update user assets error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
     }
   }
 
-  /**
-   * Export scan report to PDF
-   */
-  async exportToPDF(scanId: string): Promise<{ success: boolean; filename?: string; data?: string; message: string }> {
+  async testConnection(): Promise<ScanResult> {
     try {
-      const response = await fetch(API_ENDPOINTS.SCAN_EXPORT_PDF(scanId), {
+      const response = await fetch(API_ENDPOINTS.SCAN_TEST_CONNECTION, {
+        method: 'GET',
         headers: this.getAuthHeaders()
       })
 
       const data = await response.json()
-      return {
-        success: data.success,
-        filename: data.filename,
-        data: data.data,
-        message: data.message || 'Export completed'
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to test connection')
       }
+
+      return data
     } catch (error) {
-      console.error('Error exporting to PDF:', error)
+      console.error('Test connection error:', error)
       return {
         success: false,
-        message: 'Failed to export to PDF'
+        error: error instanceof Error ? error.message : 'Unknown error'
       }
     }
   }
 
-  /**
-   * Export scan report to Excel
-   */
-  async exportToExcel(scanId: string): Promise<{ success: boolean; filename?: string; data?: string; message: string }> {
+  async getUserAssets(): Promise<{ success: boolean; assets?: Asset[]; error?: string }> {
     try {
-      const response = await fetch(API_ENDPOINTS.SCAN_EXPORT_EXCEL(scanId), {
+      const response = await fetch(API_ENDPOINTS.SCAN_USER_ASSETS, {
+        method: 'GET',
         headers: this.getAuthHeaders()
       })
 
       const data = await response.json()
-      return {
-        success: data.success,
-        filename: data.filename,
-        data: data.data,
-        message: data.message || 'Export completed'
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get user assets')
       }
+
+      return data
     } catch (error) {
-      console.error('Error exporting to Excel:', error)
+      console.error('Get user assets error:', error)
       return {
         success: false,
-        message: 'Failed to export to Excel'
+        error: error instanceof Error ? error.message : 'Unknown error'
       }
     }
   }
 
-  /**
-   * Poll scan status until completion
-   */
-  async pollScanStatus(scanId: string, onUpdate: (status: ScanStatus) => void, interval: number = 5000): Promise<ScanStatus> {
-    return new Promise((resolve, reject) => {
-      const poll = async () => {
-        try {
-          const status = await this.getScanStatus(scanId)
-          if (status) {
-            onUpdate(status)
-            
-            if (status.status === 'completed' || status.status === 'failed') {
-              resolve(status)
-              return
-            }
-          }
-          
-          setTimeout(poll, interval)
-        } catch (error) {
-          reject(error)
-        }
-      }
+  // Utility method to check if user has assets for scanning
+  async hasAssetsForScanning(): Promise<boolean> {
+    try {
+      const result = await this.getUserAssets()
+      return result.success && (result.assets?.length || 0) > 0
+    } catch (error) {
+      console.error('Check assets error:', error)
+      return false
+    }
+  }
+
+  // Utility method to get scan status with polling
+  async pollScanStatus(scanId: string, onUpdate: (status: ScanStatus) => void, maxAttempts = 60): Promise<ScanStatus> {
+    let attempts = 0
+    
+    const poll = async (): Promise<ScanStatus> => {
+      attempts++
       
-      poll()
-    })
+      const result = await this.getScanStatus(scanId)
+      
+      if (!result.success || !result.scan) {
+        throw new Error(result.error || 'Failed to get scan status')
+      }
+
+      onUpdate(result.scan)
+
+      // Stop polling if scan is completed or failed
+      if (result.scan.status === 'completed' || result.scan.status === 'failed') {
+        return result.scan
+      }
+
+      // Stop polling if max attempts reached
+      if (attempts >= maxAttempts) {
+        throw new Error('Scan status polling timeout')
+      }
+
+      // Wait 5 seconds before next poll
+      await new Promise(resolve => setTimeout(resolve, 5000))
+      
+      return poll()
+    }
+
+    return poll()
   }
 }
 
