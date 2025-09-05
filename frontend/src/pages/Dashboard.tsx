@@ -1,21 +1,241 @@
+import React, { useState, useEffect } from 'react'
 import MetricCard from '../components/MetricCard'
 import { Card, CardContent, CardHeader } from '../components/ui'
 import { metrics, threatsOverTime, threatTypes, recentIncidents } from '../data/mockData'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import { useI18n } from '../i18n'
+import { useAuth } from '../components/AuthProvider'
+import { API_ENDPOINTS } from '../config/api'
 
 const PIE_COLORS = ['#2563eb', '#16a34a', '#ef4444', '#f59e0b']
 
 export default function Dashboard() {
   const { t } = useI18n()
+  const { token, user } = useAuth()
+  const [reportData, setReportData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (user?.username === 'user1') {
+      fetchReportData()
+    } else {
+      setLoading(false)
+    }
+  }, [user])
+
+  const fetchReportData = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.REPORTS_SUMMARY, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setReportData(data.summary)
+      }
+    } catch (error) {
+      console.error('Failed to fetch report data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Security Health data for user1
+  const securityHealthData = reportData ? [
+    { name: 'Secure', value: reportData.securityHealth, color: '#10B981' },
+    { name: 'At Risk', value: 100 - reportData.securityHealth, color: '#EF4444' }
+  ] : []
+
+  // Problem distribution data
+  const problemData = reportData ? [
+    { name: 'Critical', value: reportData.riskDistribution.critical, color: '#8B0000' },
+    { name: 'High', value: reportData.riskDistribution.high, color: '#DC2626' },
+    { name: 'Medium', value: reportData.riskDistribution.medium, color: '#F59E0B' },
+    { name: 'Low', value: reportData.riskDistribution.low, color: '#10B981' }
+  ] : []
+
+  if (loading) return <div className="p-6">Loading dashboard...</div>
   
   return (
     <div className="space-y-6">
-      <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        {metrics.map((m) => (
-          <MetricCard key={m.title} title={m.title} value={m.value} icon={m.icon} />)
-        )}
-      </section>
+      {/* Security Health Section for user1 */}
+      {user?.username === 'user1' && reportData && (
+        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
+          <Card className="col-span-2">
+            <CardHeader className="p-4 pb-0">
+              <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-300">Total Security Health</h3>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-center h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={securityHealthData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={30}
+                      outerRadius={50}
+                      dataKey="value"
+                      startAngle={90}
+                      endAngle={450}
+                    >
+                      {securityHealthData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold">
+                      {reportData.securityHealth}%
+                    </text>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="p-4 pb-0">
+              <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-300">Assets Monitoring</h3>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-center h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[{ name: 'Monitored', value: reportData.totalAssets, color: '#10B981' }]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={30}
+                      outerRadius={50}
+                      dataKey="value"
+                    >
+                      <Cell fill="#10B981" />
+                    </Pie>
+                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold">
+                      {reportData.totalAssets}
+                    </text>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="p-4 pb-0">
+              <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-300">Critical Problems</h3>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-center h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[{ name: 'Critical', value: reportData.riskDistribution.critical, color: '#8B0000' }]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={30}
+                      outerRadius={50}
+                      dataKey="value"
+                    >
+                      <Cell fill="#8B0000" />
+                    </Pie>
+                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold">
+                      {reportData.riskDistribution.critical}
+                    </text>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="p-4 pb-0">
+              <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-300">High Problems</h3>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-center h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[{ name: 'High', value: reportData.riskDistribution.high, color: '#DC2626' }]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={30}
+                      outerRadius={50}
+                      dataKey="value"
+                    >
+                      <Cell fill="#DC2626" />
+                    </Pie>
+                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold">
+                      {reportData.riskDistribution.high}
+                    </text>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="p-4 pb-0">
+              <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-300">Medium Problems</h3>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-center h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[{ name: 'Medium', value: reportData.riskDistribution.medium, color: '#F59E0B' }]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={30}
+                      outerRadius={50}
+                      dataKey="value"
+                    >
+                      <Cell fill="#F59E0B" />
+                    </Pie>
+                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold">
+                      {reportData.riskDistribution.medium}
+                    </text>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="p-4 pb-0">
+              <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-300">Low Problems</h3>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-center h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[{ name: 'Low', value: reportData.riskDistribution.low, color: '#10B981' }]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={30}
+                      outerRadius={50}
+                      dataKey="value"
+                    >
+                      <Cell fill="#10B981" />
+                    </Pie>
+                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold">
+                      {reportData.riskDistribution.low}
+                    </text>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      {/* Default metrics for other users */}
+      {user?.username !== 'user1' && (
+        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          {metrics.map((m) => (
+            <MetricCard key={m.title} title={m.title} value={m.value} icon={m.icon} />)
+          )}
+        </section>
+      )}
 
       <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <Card>
