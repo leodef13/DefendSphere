@@ -11,21 +11,23 @@ function Sidebar() {
   const { t } = useI18n()
   const { user } = useAuth()
   
+  // Fixed order of sections; only these sections are shown
   const navItems = [
     { to: '/dashboard', label: t('nav.home'), icon: LayoutDashboard, permission: 'access.dashboard' },
+    { to: '/starter-guide', label: t('nav.starterGuide'), icon: HelpCircle, permission: 'access.dashboard' },
     { to: '/assets', label: t('nav.assets'), icon: Server, permission: 'access.assets' },
+    { to: '/reports', label: t('nav.reports'), icon: FileText, permission: 'access.reports' },
     { to: '/compliance', label: t('nav.compliance'), icon: FileCheck, permission: 'access.compliance' },
     { to: '/customer-trust', label: t('nav.customerTrust'), icon: Users, permission: 'access.customerTrust' },
     { to: '/suppliers', label: t('nav.suppliers'), icon: Building2, permission: 'access.suppliers' },
-    { to: '/reports', label: t('nav.reports'), icon: FileText, permission: 'access.reports' },
-    { to: '/starter-guide', label: t('nav.starterGuide'), icon: HelpCircle, permission: 'access.dashboard' },
     { to: '/integrations', label: t('nav.integrations'), icon: Plug, permission: 'access.integrations' },
-    { to: '/settings', label: t('nav.settings'), icon: Settings, permission: 'access.dashboard' },
   ]
 
   // Filter navigation items based on user permissions
   const filteredNavItems = navItems.filter(item => {
     if (!user) return false
+    // Integrations is visible only for admin
+    if (item.to === '/integrations') return user.role === 'admin'
     if (user.role === 'admin') return true
     return user.permissions.includes(item.permission) || user.permissions.includes('all')
   })
@@ -53,27 +55,6 @@ function Sidebar() {
             {label}
           </NavLink>
         ))}
-        
-        {/* Admin Panel Link */}
-        {user?.role === 'admin' && (
-          <NavLink
-            to="/admin"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                isActive ? 'text-white' : 'text-white/90'
-              }`
-            }
-            style={({ isActive }) => ({
-              backgroundColor: isActive ? '#134876' : 'transparent',
-              borderTop: '1px solid #134876',
-              marginTop: '8px',
-              paddingTop: '12px'
-            })}
-          >
-            <Settings className="h-4 w-4" color="#fff" />
-            {t('nav.admin')}
-          </NavLink>
-        )}
       </nav>
       <div className="absolute bottom-0 left-0 w-full p-5" style={{borderTop: '1px solid #134876'}}>
         <div className="space-y-3">
