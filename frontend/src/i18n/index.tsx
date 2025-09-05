@@ -1,16 +1,8 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
+import type { Language, Translations, I18nContextType } from './types'
 
-export type Language = 'en' | 'ru' | 'es'
-
-export interface Translations {
-  [key: string]: string
-}
-
-export interface I18nContextType {
-  language: Language
-  setLanguage: (lang: Language) => void
-  t: (key: string) => string
-}
+// Re-export types for convenience
+export type { Language, Translations, I18nContextType }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined)
 
