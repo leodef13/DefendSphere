@@ -6,7 +6,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, 
 import { useI18n } from '../i18n'
 import { useAuth } from '../components/AuthProvider'
 import { API_ENDPOINTS } from '../config/api'
-import scanService, { ScanData } from '../services/scanService'
+import scanService, { ScanStatus } from '../services/scanService'
 import { Play, CheckCircle, AlertCircle, Clock, X, Shield } from 'lucide-react'
 
 const PIE_COLORS = ['#2563eb', '#16a34a', '#ef4444', '#f59e0b']
@@ -17,11 +17,12 @@ export default function Dashboard() {
   const [reportData, setReportData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [userAssets, setUserAssets] = useState<any[]>([])
-  const [activeScan, setActiveScan] = useState<ScanData | null>(null)
+  const [activeScan, setActiveScan] = useState<ScanStatus | null>(null)
   const [scanning, setScanning] = useState(false)
   const [scanStatus, setScanStatus] = useState<string | null>(null)
   const [scanProgress, setScanProgress] = useState(0)
   const [scanMessage, setScanMessage] = useState('')
+  const [hasAssets, setHasAssets] = useState(false)
 
   useEffect(() => {
     if (user?.username === 'user1') {
@@ -51,30 +52,19 @@ export default function Dashboard() {
 
   const fetchUserAssets = async () => {
     try {
-      const assets = await scanService.getUserAssets()
-      setUserAssets(assets)
+      const result = await scanService.checkUserAssets()
+      if (result.success) {
+        setHasAssets(result.hasAssets)
+        setUserAssets(result.assets)
+      }
     } catch (error) {
       console.error('Failed to fetch user assets:', error)
     }
   }
 
   const checkActiveScan = async () => {
-    try {
-      const result = await scanService.getActiveScan()
-      if (result.success && result.data) {
-        setActiveScan(result.data)
-        setScanStatus(result.data.status)
-        setScanProgress(result.data.progress)
-        setScanMessage(`Scan ${result.data.status}`)
-        
-        // If scan is still running, start polling
-        if (result.data.status === 'running') {
-          pollScanStatus(result.data.scanId)
-        }
-      }
-    } catch (error) {
-      console.error('Failed to check active scan:', error)
-    }
+    // For now, we'll skip checking active scans as we don't have that endpoint yet
+    // This can be implemented later when we add scan persistence
   }
 
   const startScan = async () => {
@@ -84,14 +74,13 @@ export default function Dashboard() {
       setScanProgress(0)
       setScanMessage('Starting scan...')
 
-      const result = await scanService.startScan(userAssets)
+      const result = await scanService.startScan()
       
-      if (result.success && result.data) {
-        setActiveScan(result.data)
+      if (result.success && result.scanId) {
         setScanStatus('running')
         setScanMessage('Scan started successfully')
         // Start polling for status
-        pollScanStatus(result.data.scanId)
+        pollScanStatus(result.scanId)
       } else {
         setScanStatus('error')
         setScanMessage(result.message || 'Failed to start scan')
@@ -110,8 +99,8 @@ export default function Dashboard() {
       try {
         const result = await scanService.getScanStatus(scanId)
         
-        if (result.success && result.data) {
-          const scan = result.data
+        if (result.success && result.status) {
+          const scan = result.status
           setActiveScan(scan)
           setScanStatus(scan.status)
           setScanProgress(scan.progress)
@@ -137,21 +126,6 @@ export default function Dashboard() {
     }, 10000) // Poll every 10 seconds
   }
 
-  const cancelScan = async (scanId: string) => {
-    try {
-      const response = await fetch(API_ENDPOINTS.SCAN_CANCEL(scanId), {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-
-      if (response.ok) {
-        setScanStatus('cancelled')
-        setScanMessage('Scan cancelled')
-      }
-    } catch (error) {
-      console.error('Failed to cancel scan:', error)
-    }
-  }
 
   // Security Health data for user1
   const securityHealthData = reportData ? [
@@ -172,7 +146,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Scan Control Section for user1 */}
-      {user?.username === 'user1' && userAssets.length > 0 && (
+      {user?.username === 'user1' && hasAssets && (
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">

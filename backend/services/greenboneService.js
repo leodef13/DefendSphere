@@ -1,33 +1,19 @@
-const redis = require('redis');
+const { spawn } = require('child_process');
+const fs = require('fs').promises;
+const path = require('path');
 
 class GreenboneService {
   constructor() {
     this.gmp = null;
-    this.redisClient = null;
     this.isConnected = false;
-    this.init();
-  }
-
-  async init() {
-    try {
-      // Initialize Redis client
-      this.redisClient = redis.createClient({
-        url: process.env.REDIS_URL || 'redis://localhost:6379'
-      });
-      await this.redisClient.connect();
-      console.log('GreenboneService: Redis connected');
-    } catch (error) {
-      console.error('GreenboneService: Redis connection failed:', error);
-    }
+    this.scanStatuses = new Map(); // Store scan statuses in memory
   }
 
   /**
    * Connect to Greenbone GVM API (Mock implementation)
-   * Note: In production, this would use actual gvm-tools Python library
    */
   async connectToGreenbone() {
     try {
-      // Mock connection - in production this would use gvm-tools
       const config = {
         host: process.env.GREENBONE_HOST || '217.65.144.232',
         port: process.env.GREENBONE_PORT || 9392,
@@ -36,202 +22,201 @@ class GreenboneService {
         protocol: 'http'
       };
 
-      // Simulate connection delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Mock connection - in real implementation, this would use gvm-tools
+      // For now, we'll simulate a successful connection
       this.isConnected = true;
-      console.log('GreenboneService: Connected to Greenbone GVM (Mock)');
+      
+      console.log('✅ Connected to Greenbone GVM successfully (Mock)');
       return { success: true, message: 'Connected to Greenbone GVM' };
     } catch (error) {
-      console.error('GreenboneService: Connection failed:', error);
+      console.error('❌ Failed to connect to Greenbone GVM:', error.message);
       this.isConnected = false;
-      return { success: false, message: 'Failed to connect to Greenbone GVM', error: error.message };
+      return { success: false, message: `Connection failed: ${error.message}` };
     }
   }
 
   /**
-   * Start scan for given assets (Mock implementation)
+   * Start scan for a list of assets (Mock implementation)
    */
   async startScan(assets, userId) {
     try {
       if (!this.isConnected) {
         const connectionResult = await this.connectToGreenbone();
         if (!connectionResult.success) {
-          return connectionResult;
+          throw new Error(connectionResult.message);
         }
       }
 
-      const scanId = `scan_${userId}_${Date.now()}`;
-      
-      // Mock scan data
-      const scanData = {
+      // Generate a mock scan ID
+      const scanId = `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      // Store scan status
+      const scanStatus = {
         scanId,
+        taskId: `task_${scanId}`,
+        targetId: `target_${scanId}`,
         userId,
-        taskId: `task_${Date.now()}`,
-        targetId: `target_${Date.now()}`,
         assets,
-        status: 'running',
-        startTime: new Date().toISOString(),
+        status: 'queued',
+        startTime: new Date(),
         progress: 0
       };
 
-      await this.redisClient.setEx(`scan:${scanId}`, 3600, JSON.stringify(scanData));
-      await this.redisClient.setEx(`scan:user:${userId}`, 3600, scanId);
+      this.scanStatuses.set(scanId, scanStatus);
 
-      console.log(`GreenboneService: Scan started with ID ${scanId} (Mock)`);
-      
-      // Start monitoring scan progress (mock)
-      this.monitorScan(scanId, scanData.taskId);
+      // Simulate scan progression
+      setTimeout(() => {
+        this.simulateScanProgress(scanId);
+      }, 2000);
 
+      console.log(`✅ Scan started successfully. Scan ID: ${scanId}`);
       return {
         success: true,
         scanId,
-        message: 'Scan started successfully',
-        data: scanData
+        message: 'Scan started successfully'
       };
 
     } catch (error) {
-      console.error('GreenboneService: Start scan failed:', error);
+      console.error('❌ Failed to start scan:', error.message);
       return {
         success: false,
-        message: 'Failed to start scan',
-        error: error.message
+        message: `Failed to start scan: ${error.message}`
       };
     }
   }
 
   /**
-   * Monitor scan progress (Mock implementation)
+   * Simulate scan progress (Mock implementation)
    */
-  async monitorScan(scanId, taskId) {
-    try {
-      let progress = 0;
-      const checkInterval = setInterval(async () => {
-        try {
-          // Mock progress update
-          progress += Math.random() * 20; // Random progress increment
-          if (progress > 100) progress = 100;
+  async simulateScanProgress(scanId) {
+    const scanStatus = this.scanStatuses.get(scanId);
+    if (!scanStatus) return;
 
-          // Update scan status in Redis
-          const scanData = await this.redisClient.get(`scan:${scanId}`);
-          if (scanData) {
-            const data = JSON.parse(scanData);
-            data.progress = Math.round(progress);
-            data.status = progress >= 100 ? 'completed' : 'running';
-            
-            if (progress >= 100) {
-              data.endTime = new Date().toISOString();
-              data.status = 'completed';
-              clearInterval(checkInterval);
-              
-              // Generate mock reports when scan is completed
-              await this.generateMockReports(scanId, data.assets);
-            }
-            
-            await this.redisClient.setEx(`scan:${scanId}`, 3600, JSON.stringify(data));
-          }
-        } catch (error) {
-          console.error('GreenboneService: Monitor scan error:', error);
-        }
-      }, 5000); // Check every 5 seconds for faster demo
+    const progressSteps = [
+      { status: 'running', progress: 10 },
+      { status: 'running', progress: 25 },
+      { status: 'running', progress: 50 },
+      { status: 'running', progress: 75 },
+      { status: 'running', progress: 90 },
+      { status: 'completed', progress: 100 }
+    ];
 
-    } catch (error) {
-      console.error('GreenboneService: Monitor scan failed:', error);
+    for (let i = 0; i < progressSteps.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, 3000 + Math.random() * 2000));
+      
+      const step = progressSteps[i];
+      scanStatus.status = step.status;
+      scanStatus.progress = step.progress;
+      
+      if (step.status === 'completed') {
+        scanStatus.endTime = new Date();
+      }
+      
+      console.log(`📊 Scan ${scanId}: ${step.status} - ${step.progress}%`);
     }
   }
 
   /**
-   * Generate mock reports for completed scan
+   * Get scan status (Mock implementation)
    */
-  async generateMockReports(scanId, assets) {
+  async getScanStatus(scanId) {
     try {
-      const mockVulnerabilities = [
-        {
-          id: 'vuln_001',
-          name: 'SSH Weak Encryption',
-          severity: 7.5,
-          cvss: 7.5,
-          cve: 'CVE-2023-1234',
-          description: 'SSH server uses weak encryption algorithms',
-          solution: 'Update SSH configuration to use stronger encryption',
-          host: assets[0]?.ip || assets[0]?.domain || '192.168.1.1',
-          port: '22',
-          nvt: 'SSH_WEAK_ENCRYPTION',
-          timestamp: new Date().toISOString(),
-          riskLevel: 'High'
-        },
-        {
-          id: 'vuln_002',
-          name: 'HTTP Server Information Disclosure',
-          severity: 5.0,
-          cvss: 5.0,
-          cve: 'CVE-2023-5678',
-          description: 'HTTP server discloses version information',
-          solution: 'Configure server to hide version information',
-          host: assets[0]?.ip || assets[0]?.domain || '192.168.1.1',
-          port: '80',
-          nvt: 'HTTP_VERSION_DISCLOSURE',
-          timestamp: new Date().toISOString(),
-          riskLevel: 'Medium'
-        },
-        {
-          id: 'vuln_003',
-          name: 'SSL/TLS Certificate Issues',
-          severity: 4.0,
-          cvss: 4.0,
-          cve: 'CVE-2023-9012',
-          description: 'SSL certificate has weak signature algorithm',
-          solution: 'Update SSL certificate with stronger signature',
-          host: assets[0]?.ip || assets[0]?.domain || '192.168.1.1',
-          port: '443',
-          nvt: 'SSL_WEAK_SIGNATURE',
-          timestamp: new Date().toISOString(),
-          riskLevel: 'Medium'
-        }
-      ];
-
-      // Update scan data with mock reports
-      const scanData = await this.redisClient.get(`scan:${scanId}`);
-      if (scanData) {
-        const data = JSON.parse(scanData);
-        data.reports = mockVulnerabilities;
-        data.reportCount = mockVulnerabilities.length;
-        
-        await this.redisClient.setEx(`scan:${scanId}`, 3600, JSON.stringify(data));
-        console.log(`GreenboneService: Mock reports generated for scan ${scanId}`);
+      const scanStatus = this.scanStatuses.get(scanId);
+      if (!scanStatus) {
+        return {
+          success: false,
+          message: 'Scan not found'
+        };
       }
 
-    } catch (error) {
-      console.error('GreenboneService: Generate mock reports failed:', error);
-    }
-  }
-
-  /**
-   * Get reports for completed scan
-   */
-  async getReports(scanId) {
-    try {
-      const scanData = await this.redisClient.get(`scan:${scanId}`);
-      if (!scanData) {
-        throw new Error('Scan data not found');
-      }
-
-      const data = JSON.parse(scanData);
-      
-      console.log(`GreenboneService: Reports retrieved for scan ${scanId}`);
-      
       return {
         success: true,
-        reports: data.reports || [],
+        status: scanStatus.status,
+        progress: scanStatus.progress,
+        startTime: scanStatus.startTime,
+        endTime: scanStatus.endTime,
+        assets: scanStatus.assets
+      };
+
+    } catch (error) {
+      console.error('❌ Failed to get scan status:', error.message);
+      return {
+        success: false,
+        message: `Failed to get scan status: ${error.message}`
+      };
+    }
+  }
+
+  /**
+   * Get scan reports (Mock implementation)
+   */
+  async getScanReports(scanId) {
+    try {
+      const scanStatus = this.scanStatuses.get(scanId);
+      if (!scanStatus) {
+        return {
+          success: false,
+          message: 'Scan not found'
+        };
+      }
+
+      if (scanStatus.status !== 'completed') {
+        return {
+          success: false,
+          message: 'Scan not completed yet'
+        };
+      }
+
+      // Generate mock report data
+      const mockReportData = {
+        results: [
+          {
+            name: 'HTTP Server Detection',
+            cve: 'N/A',
+            severity: 2.5,
+            cvss: '2.5',
+            host: scanStatus.assets[0]?.ip || '192.168.1.1',
+            port: '80',
+            description: 'HTTP server detected on port 80'
+          },
+          {
+            name: 'SSL/TLS Certificate Issues',
+            cve: 'CVE-2023-1234',
+            severity: 6.8,
+            cvss: '6.8',
+            host: scanStatus.assets[0]?.ip || '192.168.1.1',
+            port: '443',
+            description: 'SSL certificate has weak encryption'
+          },
+          {
+            name: 'Outdated Software Version',
+            cve: 'CVE-2023-5678',
+            severity: 8.2,
+            cvss: '8.2',
+            host: scanStatus.assets[0]?.ip || '192.168.1.1',
+            port: '22',
+            description: 'SSH server running outdated version'
+          }
+        ],
+        hosts: scanStatus.assets.map(asset => ({
+          name: asset.name,
+          ip: asset.ip
+        }))
+      };
+
+      const parsedData = await this.parseReports(mockReportData);
+
+      return {
+        success: true,
+        reports: parsedData,
         message: 'Reports retrieved successfully'
       };
 
     } catch (error) {
-      console.error('GreenboneService: Get reports failed:', error);
+      console.error('❌ Failed to get scan reports:', error.message);
       return {
         success: false,
-        message: 'Failed to get reports',
-        error: error.message
+        message: `Failed to get scan reports: ${error.message}`
       };
     }
   }
@@ -239,74 +224,82 @@ class GreenboneService {
   /**
    * Parse reports and extract asset/vulnerability data
    */
-  async parseReports(reportData, assets) {
+  async parseReports(reportData) {
     try {
-      const parsedReports = [];
-      
-      for (const result of reportData) {
-        const report = {
-          id: result.id,
-          name: result.name,
-          severity: result.severity,
-          cvss: result.cvss,
-          cve: result.cve,
-          description: result.description,
-          solution: result.solution,
-          host: result.host,
-          port: result.port,
-          nvt: result.nvt,
-          timestamp: result.timestamp,
-          riskLevel: this.getRiskLevel(result.severity)
-        };
+      const parsedData = {
+        summary: {
+          totalAssets: 0,
+          totalVulnerabilities: 0,
+          riskDistribution: {
+            critical: 0,
+            high: 0,
+            medium: 0,
+            low: 0
+          }
+        },
+        vulnerabilities: [],
+        assets: []
+      };
 
-        parsedReports.push(report);
-      }
+      // Parse vulnerabilities from report
+      if (reportData.results && reportData.results.length > 0) {
+        for (const result of reportData.results) {
+          const vulnerability = {
+            name: result.name || 'Unknown Vulnerability',
+            cve: result.cve || 'N/A',
+            risk: this.mapSeverityToRisk(result.severity),
+            cvss: result.cvss || 'N/A',
+            status: 'open',
+            recommendations: this.getRecommendations(result.severity),
+            host: result.host || 'Unknown',
+            port: result.port || 'N/A',
+            description: result.description || 'No description available'
+          };
 
-      // Group by asset and calculate risk levels
-      const assetRiskData = {};
-      
-      for (const asset of assets) {
-        const assetKey = asset.ip || asset.domain;
-        assetRiskData[assetKey] = {
-          name: asset.name || asset.domain,
-          ip: asset.ip,
-          domain: asset.domain,
-          vulnerabilities: parsedReports.filter(r => r.host === assetKey),
-          riskLevel: 'Low',
-          compliance: 100
-        };
+          parsedData.vulnerabilities.push(vulnerability);
+          parsedData.summary.totalVulnerabilities++;
 
-        // Calculate risk level based on vulnerabilities
-        const vulnerabilities = assetRiskData[assetKey].vulnerabilities;
-        if (vulnerabilities.some(v => v.riskLevel === 'Critical')) {
-          assetRiskData[assetKey].riskLevel = 'Critical';
-          assetRiskData[assetKey].compliance = 25;
-        } else if (vulnerabilities.some(v => v.riskLevel === 'High')) {
-          assetRiskData[assetKey].riskLevel = 'High';
-          assetRiskData[assetKey].compliance = 50;
-        } else if (vulnerabilities.some(v => v.riskLevel === 'Medium')) {
-          assetRiskData[assetKey].riskLevel = 'Medium';
-          assetRiskData[assetKey].compliance = 75;
+          // Update risk distribution
+          if (vulnerability.risk === 'Critical') parsedData.summary.riskDistribution.critical++;
+          else if (vulnerability.risk === 'High') parsedData.summary.riskDistribution.high++;
+          else if (vulnerability.risk === 'Medium') parsedData.summary.riskDistribution.medium++;
+          else if (vulnerability.risk === 'Low') parsedData.summary.riskDistribution.low++;
         }
       }
 
-      // Save asset risk data to Redis
-      for (const [assetKey, data] of Object.entries(assetRiskData)) {
-        await this.redisClient.setEx(`asset:risk:${assetKey}`, 3600, JSON.stringify(data));
+      // Parse assets from report
+      if (reportData.hosts && reportData.hosts.length > 0) {
+        for (const host of reportData.hosts) {
+          const asset = {
+            name: host.name || host.ip,
+            type: 'Web Server',
+            environment: 'Production',
+            ip: host.ip,
+            url: host.name,
+            assignedStandards: ['GDPR', 'NIS2'],
+            compliancePercentage: this.calculateCompliance(parsedData.summary.riskDistribution),
+            riskLevel: this.calculateOverallRisk(parsedData.summary.riskDistribution),
+            lastAssessment: new Date().toISOString().split('T')[0],
+            vulnerabilities: parsedData.vulnerabilities.filter(v => v.host === host.ip || v.host === host.name)
+          };
+
+          parsedData.assets.push(asset);
+          parsedData.summary.totalAssets++;
+        }
       }
 
-      return parsedReports;
+      return parsedData;
 
     } catch (error) {
-      console.error('GreenboneService: Parse reports failed:', error);
-      return [];
+      console.error('❌ Failed to parse reports:', error.message);
+      throw error;
     }
   }
 
   /**
-   * Get risk level from severity
+   * Map GVM severity to risk level
    */
-  getRiskLevel(severity) {
+  mapSeverityToRisk(severity) {
     if (severity >= 9.0) return 'Critical';
     if (severity >= 7.0) return 'High';
     if (severity >= 4.0) return 'Medium';
@@ -314,55 +307,70 @@ class GreenboneService {
   }
 
   /**
-   * Get scan status
+   * Get recommendations based on severity
    */
-  async getScanStatus(scanId) {
-    try {
-      const scanData = await this.redisClient.get(`scan:${scanId}`);
-      if (!scanData) {
-        return {
-          success: false,
-          message: 'Scan not found'
-        };
-      }
-
-      const data = JSON.parse(scanData);
-      return {
-        success: true,
-        data
-      };
-
-    } catch (error) {
-      console.error('GreenboneService: Get scan status failed:', error);
-      return {
-        success: false,
-        message: 'Failed to get scan status',
-        error: error.message
-      };
-    }
+  getRecommendations(severity) {
+    if (severity >= 9.0) return 'Immediate action required. Patch immediately.';
+    if (severity >= 7.0) return 'High priority. Schedule patching within 24 hours.';
+    if (severity >= 4.0) return 'Medium priority. Schedule patching within 1 week.';
+    return 'Low priority. Schedule patching within 1 month.';
   }
 
   /**
-   * Get user's active scan
+   * Calculate compliance percentage
    */
-  async getUserActiveScan(userId) {
+  calculateCompliance(riskDistribution) {
+    const total = riskDistribution.critical + riskDistribution.high + 
+                  riskDistribution.medium + riskDistribution.low;
+    
+    if (total === 0) return 100;
+    
+    const criticalWeight = riskDistribution.critical * 4;
+    const highWeight = riskDistribution.high * 3;
+    const mediumWeight = riskDistribution.medium * 2;
+    const lowWeight = riskDistribution.low * 1;
+    
+    const weightedScore = (total * 4) - (criticalWeight + highWeight + mediumWeight + lowWeight);
+    return Math.max(0, Math.round((weightedScore / (total * 4)) * 100));
+  }
+
+  /**
+   * Calculate overall risk level
+   */
+  calculateOverallRisk(riskDistribution) {
+    if (riskDistribution.critical > 0) return 'Critical';
+    if (riskDistribution.high > 0) return 'High';
+    if (riskDistribution.medium > 0) return 'Medium';
+    return 'Low';
+  }
+
+  /**
+   * Check if user has assets
+   */
+  async checkUserAssets(userId) {
     try {
-      const scanId = await this.redisClient.get(`scan:user:${userId}`);
-      if (!scanId) {
+      // This would typically check the database for user assets
+      // For now, we'll simulate checking if user1 has assets
+      if (userId === 'user1') {
         return {
-          success: false,
-          message: 'No active scan found'
+          success: true,
+          hasAssets: true,
+          assets: [
+            { name: 'myrockshows.com', url: 'myrockshows.com', ip: '116.203.242.207' }
+          ]
         };
       }
-
-      return await this.getScanStatus(scanId);
-
+      
+      return {
+        success: true,
+        hasAssets: false,
+        assets: []
+      };
     } catch (error) {
-      console.error('GreenboneService: Get user active scan failed:', error);
+      console.error('❌ Failed to check user assets:', error.message);
       return {
         success: false,
-        message: 'Failed to get user active scan',
-        error: error.message
+        message: `Failed to check user assets: ${error.message}`
       };
     }
   }
@@ -372,13 +380,13 @@ class GreenboneService {
    */
   async disconnect() {
     try {
-      if (this.gmp) {
+      if (this.gmp && this.isConnected) {
         await this.gmp.disconnect();
         this.isConnected = false;
-        console.log('GreenboneService: Disconnected from Greenbone GVM');
+        console.log('✅ Disconnected from Greenbone GVM');
       }
     } catch (error) {
-      console.error('GreenboneService: Disconnect failed:', error);
+      console.error('❌ Error disconnecting from Greenbone:', error.message);
     }
   }
 }

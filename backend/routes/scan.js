@@ -1,186 +1,172 @@
 const express = require('express');
 const router = express.Router();
-const greenboneService = require('../services/greenboneService');
-const { authenticateToken } = require('../middleware/auth');
+const greenboneService = require('../services/greenboneService.js');
+const { authenticateToken } = require('../middleware/auth.js');
 
 /**
- * Start asset scan
  * POST /api/scan/start
+ * Start a new scan for user assets
  */
 router.post('/start', authenticateToken, async (req, res) => {
   try {
-    const { assets } = req.body;
-    const userId = req.user.id;
-
-    if (!assets || !Array.isArray(assets) || assets.length === 0) {
-      return res.status(400).json({
+    const userId = req.user.username;
+    
+    // Check if user has assets
+    const assetsCheck = await greenboneService.checkUserAssets(userId);
+    if (!assetsCheck.success) {
+      return res.status(500).json({
         success: false,
-        message: 'Assets array is required and cannot be empty'
+        message: assetsCheck.message
       });
     }
 
-    // Validate assets structure
-    for (const asset of assets) {
-      if (!asset.ip && !asset.domain) {
-        return res.status(400).json({
-          success: false,
-          message: 'Each asset must have either IP or domain'
-        });
-      }
+    if (!assetsCheck.hasAssets) {
+      return res.status(400).json({
+        success: false,
+        message: 'No assets found for scanning. Please add assets first.'
+      });
     }
 
-    const result = await greenboneService.startScan(assets, userId);
-
-    if (result.success) {
-      res.status(200).json(result);
-    } else {
-      res.status(500).json(result);
+    // Start the scan
+    const scanResult = await greenboneService.startScan(assetsCheck.assets, userId);
+    
+    if (!scanResult.success) {
+      return res.status(500).json({
+        success: false,
+        message: scanResult.message
+      });
     }
+
+    res.json({
+      success: true,
+      scanId: scanResult.scanId,
+      message: 'Scan started successfully',
+      assets: assetsCheck.assets
+    });
 
   } catch (error) {
-    console.error('Scan start error:', error);
+    console.error('Error starting scan:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
-      error: error.message
+      message: 'Internal server error while starting scan'
     });
   }
 });
 
 /**
- * Get scan status
  * GET /api/scan/status/:scanId
+ * Get scan status
  */
 router.get('/status/:scanId', authenticateToken, async (req, res) => {
   try {
     const { scanId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user.username;
 
-    const result = await greenboneService.getScanStatus(scanId);
-
-    if (result.success) {
-      // Verify user owns this scan
-      if (result.data.userId !== userId) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied to this scan'
-        });
-      }
-
-      res.status(200).json(result);
-    } else {
-      res.status(404).json(result);
+    const statusResult = await greenboneService.getScanStatus(scanId);
+    
+    if (!statusResult.success) {
+      return res.status(404).json({
+        success: false,
+        message: statusResult.message
+      });
     }
 
+    res.json({
+      success: true,
+      scanId,
+      status: statusResult.status,
+      progress: statusResult.progress,
+      startTime: statusResult.startTime,
+      endTime: statusResult.endTime,
+      assets: statusResult.assets
+    });
+
   } catch (error) {
-    console.error('Get scan status error:', error);
+    console.error('Error getting scan status:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
-      error: error.message
+      message: 'Internal server error while getting scan status'
     });
   }
 });
 
 /**
- * Get user's active scan
- * GET /api/scan/active
- */
-router.get('/active', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const result = await greenboneService.getUserActiveScan(userId);
-
-    if (result.success) {
-      res.status(200).json(result);
-    } else {
-      res.status(404).json(result);
-    }
-
-  } catch (error) {
-    console.error('Get active scan error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: error.message
-    });
-  }
-});
-
-/**
- * Get scan report
  * GET /api/scan/report/:scanId
+ * Get scan reports
  */
 router.get('/report/:scanId', authenticateToken, async (req, res) => {
   try {
     const { scanId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user.username;
 
-    const result = await greenboneService.getScanStatus(scanId);
-
-    if (result.success) {
-      // Verify user owns this scan
-      if (result.data.userId !== userId) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied to this scan'
-        });
-      }
-
-      // Check if scan is completed
-      if (result.data.status !== 'completed') {
-        return res.status(400).json({
-          success: false,
-          message: 'Scan is not completed yet'
-        });
-      }
-
-      res.status(200).json({
-        success: true,
-        data: {
-          scanId: result.data.scanId,
-          reports: result.data.reports || [],
-          reportCount: result.data.reportCount || 0,
-          startTime: result.data.startTime,
-          endTime: result.data.endTime,
-          assets: result.data.assets
-        }
+    const reportResult = await greenboneService.getScanReports(scanId);
+    
+    if (!reportResult.success) {
+      return res.status(404).json({
+        success: false,
+        message: reportResult.message
       });
-    } else {
-      res.status(404).json(result);
     }
 
+    res.json({
+      success: true,
+      scanId,
+      reports: reportResult.reports,
+      message: 'Reports retrieved successfully'
+    });
+
   } catch (error) {
-    console.error('Get scan report error:', error);
+    console.error('Error getting scan reports:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
-      error: error.message
+      message: 'Internal server error while getting scan reports'
     });
   }
 });
 
 /**
- * Test Greenbone connection
- * GET /api/scan/test-connection
+ * GET /api/scan/assets
+ * Check if user has assets for scanning
  */
-router.get('/test-connection', authenticateToken, async (req, res) => {
+router.get('/assets', authenticateToken, async (req, res) => {
   try {
-    const result = await greenboneService.connectToGreenbone();
-
-    if (result.success) {
-      res.status(200).json(result);
-    } else {
-      res.status(500).json(result);
-    }
+    const userId = req.user.username;
+    
+    const assetsCheck = await greenboneService.checkUserAssets(userId);
+    
+    res.json({
+      success: true,
+      hasAssets: assetsCheck.hasAssets,
+      assets: assetsCheck.assets || []
+    });
 
   } catch (error) {
-    console.error('Test connection error:', error);
+    console.error('Error checking user assets:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
-      error: error.message
+      message: 'Internal server error while checking assets'
+    });
+  }
+});
+
+/**
+ * POST /api/scan/connect
+ * Test connection to Greenbone
+ */
+router.post('/connect', authenticateToken, async (req, res) => {
+  try {
+    const connectionResult = await greenboneService.connectToGreenbone();
+    
+    res.json({
+      success: connectionResult.success,
+      message: connectionResult.message
+    });
+
+  } catch (error) {
+    console.error('Error testing Greenbone connection:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error while testing connection'
     });
   }
 });

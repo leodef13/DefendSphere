@@ -1,40 +1,54 @@
 import { API_ENDPOINTS } from '../config/api'
 
-export interface Asset {
-  name?: string
-  domain?: string
+export interface ScanAsset {
+  name: string
+  url?: string
   ip?: string
-  type?: string
-  environment?: string
 }
 
-export interface ScanData {
+export interface ScanStatus {
   scanId: string
-  userId: string
-  taskId: string
-  targetId: string
-  assets: Asset[]
   status: 'queued' | 'running' | 'completed' | 'failed'
+  progress: number
   startTime: string
   endTime?: string
-  progress: number
-  reports?: VulnerabilityReport[]
-  reportCount?: number
+  assets: ScanAsset[]
 }
 
-export interface VulnerabilityReport {
-  id: string
-  name: string
-  severity: number
-  cvss: number
-  cve?: string
-  description: string
-  solution: string
-  host: string
-  port: string
-  nvt: string
-  timestamp: string
-  riskLevel: 'Critical' | 'High' | 'Medium' | 'Low'
+export interface ScanReport {
+  summary: {
+    totalAssets: number
+    totalVulnerabilities: number
+    riskDistribution: {
+      critical: number
+      high: number
+      medium: number
+      low: number
+    }
+  }
+  vulnerabilities: Array<{
+    name: string
+    cve: string
+    risk: string
+    cvss: string
+    status: string
+    recommendations: string
+    host: string
+    port: string
+    description: string
+  }>
+  assets: Array<{
+    name: string
+    type: string
+    environment: string
+    ip: string
+    url: string
+    assignedStandards: string[]
+    compliancePercentage: number
+    riskLevel: string
+    lastAssessment: string
+    vulnerabilities: any[]
+  }>
 }
 
 class ScanService {
@@ -47,20 +61,49 @@ class ScanService {
   }
 
   /**
-   * Start asset scan
+   * Check if user has assets for scanning
    */
-  async startScan(assets: Asset[]): Promise<{ success: boolean; data?: ScanData; message?: string }> {
+  async checkUserAssets(): Promise<{ success: boolean; hasAssets: boolean; assets: ScanAsset[] }> {
+    try {
+      const response = await fetch(API_ENDPOINTS.SCAN_ASSETS, {
+        method: 'GET',
+        headers: this.getAuthHeaders()
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error checking user assets:', error)
+      return {
+        success: false,
+        hasAssets: false,
+        assets: []
+      }
+    }
+  }
+
+  /**
+   * Start a new scan
+   */
+  async startScan(): Promise<{ success: boolean; scanId?: string; message: string; assets?: ScanAsset[] }> {
     try {
       const response = await fetch(API_ENDPOINTS.SCAN_START, {
         method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify({ assets })
+        headers: this.getAuthHeaders()
       })
 
-      const result = await response.json()
-      return result
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data
     } catch (error) {
-      console.error('Start scan error:', error)
+      console.error('Error starting scan:', error)
       return {
         success: false,
         message: 'Failed to start scan'
@@ -71,17 +114,32 @@ class ScanService {
   /**
    * Get scan status
    */
-  async getScanStatus(scanId: string): Promise<{ success: boolean; data?: ScanData; message?: string }> {
+  async getScanStatus(scanId: string): Promise<{ success: boolean; status?: ScanStatus; message?: string }> {
     try {
       const response = await fetch(API_ENDPOINTS.SCAN_STATUS(scanId), {
         method: 'GET',
         headers: this.getAuthHeaders()
       })
 
-      const result = await response.json()
-      return result
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return {
+        success: data.success,
+        status: data.success ? {
+          scanId: data.scanId,
+          status: data.status,
+          progress: data.progress,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          assets: data.assets
+        } : undefined,
+        message: data.message
+      }
     } catch (error) {
-      console.error('Get scan status error:', error)
+      console.error('Error getting scan status:', error)
       return {
         success: false,
         message: 'Failed to get scan status'
@@ -90,61 +148,52 @@ class ScanService {
   }
 
   /**
-   * Get user's active scan
+   * Get scan reports
    */
-  async getActiveScan(): Promise<{ success: boolean; data?: ScanData; message?: string }> {
-    try {
-      const response = await fetch(API_ENDPOINTS.SCAN_ACTIVE, {
-        method: 'GET',
-        headers: this.getAuthHeaders()
-      })
-
-      const result = await response.json()
-      return result
-    } catch (error) {
-      console.error('Get active scan error:', error)
-      return {
-        success: false,
-        message: 'Failed to get active scan'
-      }
-    }
-  }
-
-  /**
-   * Get scan report
-   */
-  async getScanReport(scanId: string): Promise<{ success: boolean; data?: any; message?: string }> {
+  async getScanReports(scanId: string): Promise<{ success: boolean; reports?: ScanReport; message?: string }> {
     try {
       const response = await fetch(API_ENDPOINTS.SCAN_REPORT(scanId), {
         method: 'GET',
         headers: this.getAuthHeaders()
       })
 
-      const result = await response.json()
-      return result
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return {
+        success: data.success,
+        reports: data.reports,
+        message: data.message
+      }
     } catch (error) {
-      console.error('Get scan report error:', error)
+      console.error('Error getting scan reports:', error)
       return {
         success: false,
-        message: 'Failed to get scan report'
+        message: 'Failed to get scan reports'
       }
     }
   }
 
   /**
-   * Test Greenbone connection
+   * Test connection to Greenbone
    */
-  async testConnection(): Promise<{ success: boolean; message?: string }> {
+  async testConnection(): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(API_ENDPOINTS.SCAN_TEST_CONNECTION, {
-        method: 'GET',
+      const response = await fetch(API_ENDPOINTS.SCAN_CONNECT, {
+        method: 'POST',
         headers: this.getAuthHeaders()
       })
 
-      const result = await response.json()
-      return result
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data
     } catch (error) {
-      console.error('Test connection error:', error)
+      console.error('Error testing connection:', error)
       return {
         success: false,
         message: 'Failed to test connection'
@@ -153,30 +202,37 @@ class ScanService {
   }
 
   /**
-   * Get user's assets for scanning
+   * Poll scan status until completion
    */
-  async getUserAssets(): Promise<Asset[]> {
-    try {
-      const response = await fetch(API_ENDPOINTS.REPORTS_ASSETS, {
-        method: 'GET',
-        headers: this.getAuthHeaders()
-      })
+  async pollScanStatus(scanId: string, onUpdate: (status: ScanStatus) => void): Promise<ScanStatus> {
+    return new Promise((resolve, reject) => {
+      const poll = async () => {
+        try {
+          const result = await this.getScanStatus(scanId)
+          
+          if (!result.success) {
+            reject(new Error(result.message || 'Failed to get scan status'))
+            return
+          }
 
-      const result = await response.json()
-      if (result.success && result.data) {
-        return result.data.map((asset: any) => ({
-          name: asset.name,
-          domain: asset.domain,
-          ip: asset.ip,
-          type: asset.type,
-          environment: asset.environment
-        }))
+          if (result.status) {
+            onUpdate(result.status)
+            
+            if (result.status.status === 'completed' || result.status.status === 'failed') {
+              resolve(result.status)
+              return
+            }
+          }
+
+          // Continue polling every 5 seconds
+          setTimeout(poll, 5000)
+        } catch (error) {
+          reject(error)
+        }
       }
-      return []
-    } catch (error) {
-      console.error('Get user assets error:', error)
-      return []
-    }
+
+      poll()
+    })
   }
 }
 
