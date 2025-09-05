@@ -1,7 +1,7 @@
 // Report data for user1 based on analysis results
 export const reportData = {
   user: 'user1',
-  company: 'MyRockShows Ltd',
+  company: 'Company LTD',
   reportDate: '2024-01-15',
   lastScan: '2024-01-15',
   
@@ -23,7 +23,7 @@ export const reportData = {
   assets: [
     {
       id: 'asset-1',
-      name: 'myrockshows.com',
+      name: 'company.ltd',
       type: 'Web Server',
       environment: 'Production',
       ip: '116.203.242.207',
@@ -51,7 +51,7 @@ export const reportData = {
       status: 'Open',
       description: 'SQL injection vulnerability in login form',
       recommendation: 'Implement parameterized queries and input validation',
-      asset: 'myrockshows.com',
+      asset: 'company.ltd',
       discovered: '2024-01-15'
     },
     {
@@ -63,7 +63,7 @@ export const reportData = {
       status: 'Open',
       description: 'Reflected XSS in search functionality',
       recommendation: 'Implement proper output encoding and CSP headers',
-      asset: 'myrockshows.com',
+      asset: 'company.ltd',
       discovered: '2024-01-15'
     },
     {
@@ -75,7 +75,7 @@ export const reportData = {
       status: 'Open',
       description: 'Direct access to user data without authorization',
       recommendation: 'Implement proper access controls and authorization checks',
-      asset: 'myrockshows.com',
+      asset: 'company.ltd',
       discovered: '2024-01-15'
     },
     {
@@ -87,7 +87,7 @@ export const reportData = {
       status: 'Open',
       description: 'Password policy does not meet security standards',
       recommendation: 'Implement strong password requirements (min 12 chars, complexity)',
-      asset: 'myrockshows.com',
+      asset: 'company.ltd',
       discovered: '2024-01-15'
     },
     {
@@ -99,7 +99,7 @@ export const reportData = {
       status: 'Open',
       description: 'Missing security headers (HSTS, CSP, X-Frame-Options)',
       recommendation: 'Configure security headers in web server',
-      asset: 'myrockshows.com',
+      asset: 'company.ltd',
       discovered: '2024-01-15'
     },
     {
@@ -111,7 +111,7 @@ export const reportData = {
       status: 'Open',
       description: 'SSL/TLS configuration allows weak ciphers',
       recommendation: 'Update SSL/TLS configuration to use strong ciphers only',
-      asset: 'myrockshows.com',
+      asset: 'company.ltd',
       discovered: '2024-01-15'
     },
     {
@@ -130,22 +130,17 @@ export const reportData = {
 
   // User profile data from questionnaire
   userProfile: {
-    companyName: 'MyRockShows Ltd',
+    companyName: 'Company LTD',
     userName: 'user1',
-    email: 'user1@myrockshows.com',
-    phone: '+1-555-0123',
+    email: 'user1@user',
+    phone: 'Phone 11111-11111',
     registeredSystems: 1,
     recommendedStandards: ['GDPR', 'NIS2', 'DORA'],
     contacts: {
-      dpo: {
-        name: 'John Smith',
-        email: 'dpo@myrockshows.com',
-        phone: '+1-555-0124'
-      },
+      dpo: {},
       ciso: {
-        name: 'Jane Doe',
-        email: 'ciso@myrockshows.com',
-        phone: '+1-555-0125'
+        name: 'Jon Watson',
+        email: 'ciso@user'
       }
     }
   },

@@ -58,10 +58,10 @@ export default function Dashboard() {
         setHasAssets(result.assets.length > 0)
       } else {
         // Fallback to mock assets for user1
-        setUserAssets([{ 
-          id: '1', 
-          name: 'myrockshows.com', 
-          domain: 'myrockshows.com', 
+        setUserAssets([{
+          id: '1',
+          name: 'company.ltd',
+          domain: 'company.ltd',
           ip: '116.203.242.207',
           type: 'Web Server',
           environment: 'Production'
@@ -71,10 +71,10 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to fetch user assets:', error)
       // Fallback to mock assets for user1
-      setUserAssets([{ 
-        id: '1', 
-        name: 'myrockshows.com', 
-        domain: 'myrockshows.com', 
+      setUserAssets([{
+        id: '1',
+        name: 'company.ltd',
+        domain: 'company.ltd',
         ip: '116.203.242.207',
         type: 'Web Server',
         environment: 'Production'

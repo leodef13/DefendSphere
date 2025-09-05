@@ -108,7 +108,7 @@ GREENBONE_PASSWORD=admin
 GREENBONE_PROTOCOL=http
 
 # Redis Configuration
-REDIS_URL=redis://localhost:6379
+REDIS_URL=redis://localhost:6380
 
 # JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key
@@ -183,8 +183,8 @@ curl -X POST http://localhost:5000/api/scan/start \
     "assets": [
       {
         "id": "1",
-        "name": "myrockshows.com",
-        "domain": "myrockshows.com",
+        "name": "company.ltd",
+        "domain": "company.ltd",
         "ip": "116.203.242.207",
         "type": "Web Server",
         "environment": "Production"
