@@ -24,6 +24,19 @@ For testing and initial setup, the following users are available:
 
 ## 📊 Dashboard Sections
 
+### UI/UX Overview
+
+- Sidebar
+  - Fixed order: Home → Starter Guide → Assets → Reports → Compliance → Customer Trust → Suppliers → Integrations
+  - Integrations is visible to Admin only
+  - Sections without permission are hidden; overall order is preserved
+  - Colors: background #003a6a, text #ffffff; user block with initials and Logout at the bottom
+
+- Main Content
+  - Inter font; body background #f8f9fa; text color #2c2c2c
+  - Cards (#fdfeff) with soft shadows; hover elevation
+  - Primary buttons: #56a3d9 (hover #134876)
+
 ### 1. Home Dashboard
 - **Security Health Overview**: Real-time security metrics and status
 - **Threat Monitoring**: Live threat detection and system health
@@ -67,6 +80,13 @@ For testing and initial setup, the following users are available:
 - **Database Connections**: Monitor PostgreSQL, MySQL, MongoDB
 
 ### 8. Starter Guide
+## 🤖 AI Assistant (Chat)
+
+- Floating chat button at bottom-right of the Dashboard
+- Header background #56a3d9 (white text), scrollable messages area
+- Input with Send button; animations: slide-in (window), fade-in (messages)
+- Message bubbles: user (#56a3d9, white), AI (#f1f1f1, dark)
+
 - **Interactive Assessment**: Step-by-step security evaluation
 - **Best Practices**: Security recommendations
 - **Implementation Guide**: How-to guides for security measures

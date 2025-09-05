@@ -43,21 +43,21 @@ Visual breakdown by security elements:
 
 ### Sidebar Navigation
 
-The left sidebar provides access to all major sections:
+The left sidebar shows a fixed sequence of sections (only these):
 
-- **🏠 Home**: Main dashboard overview
-- **📊 Starter Guide**: Interactive security assessment
-- **📈 Reports**: Security reports and analytics
-- **✅ Compliance**: Regulatory compliance tracking
-- **🤝 Customer Trust**: Client relationship management
-- **🏭 Suppliers**: Third-party supplier monitoring
-- **💻 Assets**: IT asset management
-- **🔗 Integrations**: System integrations
-- **⚠️ Incidents**: Security incident management
-- **🚨 Alerts**: Security alerts and notifications
-- **⚙️ Settings**: System configuration
-- **👤 Profile**: User profile management
-- **👑 Admin**: Administrative functions (admin only)
+1. **🏠 Home**
+2. **📊 Starter Guide**
+3. **💻 Assets**
+4. **📈 Reports**
+5. **✅ Compliance**
+6. **🤝 Customer Trust**
+7. **🏭 Suppliers**
+8. **🔗 Integrations** (Admin only)
+
+Rules:
+- Sections are hidden if the user lacks permission, but the overall order is preserved
+- Integrations is visible only for Admin
+- No other sections (Incidents, Alerts, etc.) are displayed in the sidebar
 
 ### User Profile (Bottom Left)
 

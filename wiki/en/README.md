@@ -24,6 +24,7 @@ Welcome to the DefendSphere Wiki! This comprehensive guide covers all aspects of
 - [Reports & Analytics](reports-analytics.md)
 - [AI Assistant](ai-assistant.md)
 - [AI Assistant Integrations](ai-assistant-integration.md)
+- [Dashboard & Sidebar](dashboard-sidebar.md)
 - [Starter Guide](starter-guide.md)
 
 ### Security
