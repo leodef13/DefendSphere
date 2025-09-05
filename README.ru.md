@@ -258,6 +258,9 @@ DefendSphere/
 
 #### ИИ-помощник
 - `POST /api/assistant` - Чат с ИИ-помощником
+  
+Централизованное управление провайдерами (OpenAI, Claude, Gemini, Azure, Mistral и др.):
+- см. `docs/ai_assistant_integration.md`
 
 ### Переменные окружения
 

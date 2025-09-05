@@ -23,6 +23,7 @@
 - [Управление поставщиками](suppliers-management.md)
 - [Отчеты и аналитика](reports-analytics.md)
 - [ИИ-помощник](ai-assistant.md)
+- [Интеграции ИИ‑помощника](ai-assistant-integration.md)
 - [Руководство для начинающих](starter-guide.md)
 
 ### Безопасность

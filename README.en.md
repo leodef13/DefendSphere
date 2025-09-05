@@ -258,6 +258,9 @@ DefendSphere/
 
 #### AI Assistant
 - `POST /api/assistant` - Chat with AI assistant
+  
+For centralized provider management (OpenAI, Claude, Gemini, Azure, Mistral, etc.), see:
+- `docs/ai_assistant_integration.md`
 
 ### Environment Variables
 

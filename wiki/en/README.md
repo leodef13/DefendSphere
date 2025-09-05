@@ -23,6 +23,7 @@ Welcome to the DefendSphere Wiki! This comprehensive guide covers all aspects of
 - [Suppliers Management](suppliers-management.md)
 - [Reports & Analytics](reports-analytics.md)
 - [AI Assistant](ai-assistant.md)
+- [AI Assistant Integrations](ai-assistant-integration.md)
 - [Starter Guide](starter-guide.md)
 
 ### Security

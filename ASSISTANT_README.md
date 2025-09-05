@@ -185,6 +185,20 @@ function generateAssistantResponse(message, userRole, searchResults) {
 
 ## 🔧 Configuration
 
+### AI Integrations Management
+
+Use the Admin Panel → Integrations → AI Assistant to configure providers. Backend exposes `/api/ai-assistant` to manage:
+- Status (active provider)
+- Provider configuration (encrypted secrets)
+- Test connectivity
+- Enable/Disable provider
+
+Redis keys:
+- `integration:ai:active` → current provider
+- `integration:ai:<provider>` → config hash
+
+See `docs/ai_assistant_integration.md` for details.
+
 ### Environment Variables
 ```bash
 # Backend
