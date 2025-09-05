@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express'
 const router = express.Router();
-const greenboneService = require('../services/greenboneService.cjs');
-const { authenticateToken } = require('../middleware/auth');
+import greenboneService from '../services/greenboneService.cjs'
+import { authenticateToken } from '../middleware/auth.js'
 
 // Initialize Greenbone service
 greenboneService.initialize().catch(console.error);
@@ -256,4 +256,4 @@ router.get('/user-assets', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router

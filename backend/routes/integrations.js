@@ -2,9 +2,7 @@ import express from 'express'
 import { createClient } from 'redis'
 import { authenticateToken, requireAdmin } from '../middleware/auth.js'
 import encryptionService from '../services/encryptionService.js'
-import { createRequire } from 'module'
-const require = createRequire(import.meta.url)
-const greenboneService = require('../services/greenboneService.js')
+import greenboneService from '../services/greenboneService.cjs'
 
 const router = express.Router()
 const redis = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6380' })
