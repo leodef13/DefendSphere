@@ -1,9 +1,42 @@
 import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, Button } from '../components/ui'
-import { Plug, CheckCircle, AlertTriangle, Clock, Plus, Settings, Activity } from 'lucide-react'
+import { Plug, CheckCircle, AlertTriangle, Clock, Plus, Settings, Activity, Bot, Power, Wand2, X } from 'lucide-react'
+import { useEffect } from 'react'
 
 export default function Integrations() {
   const [selectedIntegration, setSelectedIntegration] = useState('')
+  const [aiStatus, setAiStatus] = useState<{ active: boolean; provider?: string } | null>(null)
+  const [loadingAi, setLoadingAi] = useState(false)
+  const [configOpen, setConfigOpen] = useState(false)
+  const [configProvider, setConfigProvider] = useState('openai')
+  const [form, setForm] = useState<Record<string, string>>({})
+  const [saving, setSaving] = useState(false)
+  const [testing, setTesting] = useState(false)
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        setLoadingAi(true)
+        const base = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+        const res = await fetch(`${base}/ai-assistant`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}`
+          }
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setAiStatus(data)
+        } else {
+          setAiStatus({ active: false })
+        }
+      } catch {
+        setAiStatus({ active: false })
+      } finally {
+        setLoadingAi(false)
+      }
+    }
+    fetchStatus()
+  }, [])
 
   const integrations = [
     {
@@ -109,6 +142,127 @@ export default function Integrations() {
           Add Integration
         </Button>
       </div>
+      {configOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setConfigOpen(false)} />
+          <div className="relative bg-white dark:bg-neutral-900 rounded-xl shadow-xl w-full max-w-lg border border-gray-200 dark:border-neutral-800">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-neutral-800">
+              <div className="font-medium">Configure Provider: <span className="capitalize">{configProvider}</span></div>
+              <button className="p-1" onClick={() => setConfigOpen(false)}><X className="h-5 w-5" /></button>
+            </div>
+            <div className="p-4 space-y-3">
+              {(() => {
+                const fieldsByProvider = {
+                  openai: [
+                    { key: 'apiKey', label: 'API Key', type: 'password' },
+                    { key: 'model', label: 'Model' },
+                    { key: 'maxTokens', label: 'Max Tokens' }
+                  ],
+                  claude: [
+                    { key: 'apiKey', label: 'API Key', type: 'password' },
+                    { key: 'model', label: 'Model' },
+                    { key: 'maxTokens', label: 'Max Tokens' }
+                  ],
+                  gemini: [
+                    { key: 'apiKey', label: 'API Key', type: 'password' },
+                    { key: 'model', label: 'Model' },
+                    { key: 'temperature', label: 'Temperature' }
+                  ],
+                  azure: [
+                    { key: 'apiKey', label: 'API Key', type: 'password' },
+                    { key: 'endpoint', label: 'Endpoint' },
+                    { key: 'model', label: 'Model' }
+                  ],
+                  mistral: [
+                    { key: 'apiKey', label: 'API Key', type: 'password' },
+                    { key: 'model', label: 'Model' }
+                  ],
+                  groq: [
+                    { key: 'apiKey', label: 'API Key', type: 'password' },
+                    { key: 'model', label: 'Model' }
+                  ],
+                  vertex: [
+                    { key: 'apiKey', label: 'API Key', type: 'password' },
+                    { key: 'project', label: 'Project' },
+                    { key: 'location', label: 'Location' },
+                    { key: 'model', label: 'Model' }
+                  ],
+                  ollama: [
+                    { key: 'endpoint', label: 'Endpoint' },
+                    { key: 'model', label: 'Model' }
+                  ]
+                } as Record<string, { key: string; label: string; type?: string }[]>
+                const fields = fieldsByProvider[configProvider] || []
+                return (
+                  <div className="space-y-3">
+                    {fields.map((f) => (
+                      <div key={f.key} className="space-y-1">
+                        <label className="text-sm text-gray-700 dark:text-neutral-300">{f.label}</label>
+                        <input
+                          type={f.type || 'text'}
+                          className="w-full rounded-md border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3 py-2 text-sm"
+                          value={form[f.key] || ''}
+                          placeholder={f.key.toLowerCase().includes('api') ? '••••••••' : ''}
+                          onChange={(e) => setForm((s) => ({ ...s, [f.key]: e.target.value }))}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
+            </div>
+            <div className="p-4 flex justify-end gap-2 border-t border-gray-100 dark:border-neutral-800">
+              <Button className="bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-neutral-800 dark:text-neutral-200" onClick={() => setConfigOpen(false)}>Cancel</Button>
+              <Button
+                className="bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-neutral-800 dark:text-neutral-200"
+                onClick={async () => {
+                  try {
+                    setTesting(true)
+                    const base = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+                    const res = await fetch(`${base}/ai-assistant/${configProvider}/test`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}`,
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ message: 'ping' })
+                    })
+                    const data = await res.json().catch(() => ({}))
+                    alert(res.ok ? `Test OK: ${data.provider}` : `Test failed`)
+                  } finally {
+                    setTesting(false)
+                  }
+                }}
+                disabled={testing}
+              >{testing ? 'Testing…' : 'Проверить подключение'}</Button>
+              <Button
+                onClick={async () => {
+                  try {
+                    setSaving(true)
+                    const base = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+                    const res = await fetch(`${base}/ai-assistant/${configProvider}/config`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}`,
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify(form)
+                    })
+                    if (res.ok) {
+                      alert('Configuration saved')
+                    } else {
+                      alert('Failed to save configuration')
+                    }
+                  } finally {
+                    setSaving(false)
+                  }
+                }}
+                disabled={saving}
+              >{saving ? 'Saving…' : 'Сохранить в Дашборду'}</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
@@ -147,11 +301,18 @@ export default function Integrations() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
-              <Activity className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+              <Bot className="h-6 w-6 text-purple-600 dark:text-purple-300" />
             </div>
-            <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">Data Volume</h3>
-            <p className="mt-2 text-3xl font-bold text-purple-600 dark:text-purple-300">3.8 GB</p>
-            <p className="text-sm text-gray-600 dark:text-neutral-400">per day</p>
+            <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">AI Assistant</h3>
+            <p className="mt-2 text-xl font-semibold text-purple-600 dark:text-purple-300">
+              {loadingAi ? 'Loading…' : aiStatus?.active ? `Active · ${aiStatus.provider}` : 'Not Connected'}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-neutral-400">status</p>
+            <div className="mt-3 flex justify-center gap-2">
+              <Button className="bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-neutral-800 dark:text-neutral-200" onClick={() => setSelectedIntegration('ai-assistant')}>
+                <Settings className="h-4 w-4 mr-1" /> Configure
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -224,7 +385,7 @@ export default function Integrations() {
         </CardContent>
       </Card>
 
-      {selectedIntegration && (
+      {selectedIntegration && selectedIntegration !== 'ai-assistant' && (
         <Card>
           <CardHeader className="p-4 pb-0">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">Integration Details</h3>
@@ -273,6 +434,99 @@ export default function Integrations() {
                   </div>
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedIntegration === 'ai-assistant' && (
+        <Card>
+          <CardHeader className="p-4 pb-0">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">AI Assistant Integration</h3>
+          </CardHeader>
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-600 dark:text-neutral-400 mb-4">
+              Manage external AI providers for the Security Assistant. Enable one provider at a time.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {['openai','claude','gemini','azure','mistral','groq','vertex','ollama'].map((p) => (
+                <div key={p} className={`p-4 rounded-lg border ${aiStatus?.active && aiStatus.provider === p ? 'border-green-400' : 'border-gray-200 dark:border-neutral-800'}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Wand2 className="h-4 w-4 text-blue-600" />
+                      <div className="font-medium capitalize">{p}</div>
+                    </div>
+                    {aiStatus?.active && aiStatus.provider === p ? (
+                      <span className="text-xs inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        <Power className="h-3 w-3" /> Active
+                      </span>
+                    ) : (
+                      <span className="text-xs inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+                        Inactive
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <Button className="bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-neutral-800 dark:text-neutral-200"
+                      onClick={async () => {
+                        const base = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+                        const res = await fetch(`${base}/ai-assistant/${p}/enable`, {
+                          method: 'POST',
+                          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}` }
+                        })
+                        if (res.ok) {
+                          const data = await res.json()
+                          setAiStatus({ active: data.active, provider: data.provider })
+                        }
+                      }}
+                    >Enable</Button>
+                    <Button className="bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-neutral-800 dark:text-neutral-200"
+                      onClick={async () => {
+                        const base = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+                        const res = await fetch(`${base}/ai-assistant/${p}/disable`, {
+                          method: 'POST',
+                          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}` }
+                        })
+                        if (res.ok) {
+                          setAiStatus({ active: false })
+                        }
+                      }}
+                    >Disable</Button>
+                    <Button
+                      onClick={async () => {
+                        const base = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+                        const res = await fetch(`${base}/ai-assistant/${p}/test`, {
+                          method: 'POST',
+                          headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}`,
+                            'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify({ message: 'ping' })
+                        })
+                        const data = await res.json().catch(() => ({}))
+                        alert(res.ok ? `Test OK: ${data.provider}` : `Test failed`)
+                      }}
+                    >Test</Button>
+                    <Button className="bg-blue-600 text-white"
+                      onClick={async () => {
+                        setConfigProvider(p)
+                        setForm({})
+                        setConfigOpen(true)
+                        try {
+                          const base = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+                          const res = await fetch(`${base}/ai-assistant/${p}/config`, {
+                            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}` }
+                          })
+                          if (res.ok) {
+                            const data = await res.json()
+                            if (data.config) setForm(data.config)
+                          }
+                        } catch {}
+                      }}
+                    >Configure</Button>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
