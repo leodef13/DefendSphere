@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, Button } from '../components/ui'
 import { API_ENDPOINTS } from '../config/api'
 import { useAuth } from '../components/AuthProvider'
 import { useI18n } from '../i18n'
-import scanService, { ScanStatus, ScanReport } from '../services/scanService'
+import scanService, { type ScanStatus, type ScanReport } from '../services/scanService'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Download, FileText, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
 

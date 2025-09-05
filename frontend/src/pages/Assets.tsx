@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from '../components/ui'
 import { useAuth } from '../components/AuthProvider'
 import { useI18n } from '../i18n'
 import { API_ENDPOINTS } from '../config/api'
-import scanService, { ScanStatus } from '../services/scanService'
+import scanService, { type ScanStatus } from '../services/scanService'
 import { Server, Shield, AlertTriangle, CheckCircle, Clock, Globe, Database, Monitor, RefreshCw } from 'lucide-react'
 
 interface Asset {
