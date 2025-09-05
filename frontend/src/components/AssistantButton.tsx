@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { API_ENDPOINTS } from '../config/api'
 import { MessageCircle, X } from 'lucide-react'
 
 const AssistantButton: React.FC = () => {
@@ -7,6 +8,34 @@ const AssistantButton: React.FC = () => {
     { role: 'ai', text: "👋 Hello! I'm your Security Assistant. How can I help you today?" }
   ])
   const [input, setInput] = useState('')
+  const [available, setAvailable] = useState<boolean | null>(null)
+  const [provider, setProvider] = useState<string>('')
+
+  useEffect(() => {
+    // check integration status
+    const check = async () => {
+      try {
+        const res = await fetch(`${API_ENDPOINTS.INTEGRATIONS}/ai-assistant`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setAvailable(!!data.active)
+          setProvider(data.provider || '')
+          if (!data.active) {
+            setMessages([{ role: 'ai', text: 'AI ассистент недоступен. Настройте интеграцию в Admin Panel → Integrations' }])
+          }
+        } else {
+          setAvailable(false)
+          setMessages([{ role: 'ai', text: 'AI ассистент недоступен. Настройте интеграцию в Admin Panel → Integrations' }])
+        }
+      } catch {
+        setAvailable(false)
+        setMessages([{ role: 'ai', text: 'AI ассистент недоступен. Настройте интеграцию в Admin Panel → Integrations' }])
+      }
+    }
+    check()
+  }, [])
 
   const send = () => {
     const text = input.trim()
@@ -16,7 +45,7 @@ const AssistantButton: React.FC = () => {
     setTimeout(() => {
       setMessages((prev) => {
         const copy = [...prev]
-        copy[copy.length - 1] = { role: 'ai', text: 'Thanks! I will process your request.' }
+        copy[copy.length - 1] = available ? { role: 'ai', text: `(${provider || 'LLM'}) Ответ на тестовый запрос.` } : { role: 'ai', text: 'AI ассистент недоступен. Настройте интеграцию в Admin Panel → Integrations' }
         return copy
       })
     }, 600)
