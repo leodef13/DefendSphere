@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken'
 import { createClient } from 'redis'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379'
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6380'
 
 const redis = createClient({ url: REDIS_URL })
 redis.on('error', (e) => console.error('Redis error:', e))

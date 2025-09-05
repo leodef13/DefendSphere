@@ -2,7 +2,7 @@ import { createClient } from 'redis'
 
 // Test Redis client setup
 const testRedis = createClient({ 
-  url: process.env.TEST_REDIS_URL || 'redis://localhost:6379/1' // Use database 1 for tests
+  url: process.env.TEST_REDIS_URL || 'redis://localhost:6380/1' // Use database 1 for tests
 })
 
 beforeAll(async () => {

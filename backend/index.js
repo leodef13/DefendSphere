@@ -26,7 +26,7 @@ app.use(express.json())
 app.use(morgan('dev'))
 
 const PORT = process.env.PORT || 5000
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379'
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6380'
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
 
 const redis = createClient({ url: REDIS_URL })

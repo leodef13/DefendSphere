@@ -7,7 +7,7 @@ const require = createRequire(import.meta.url)
 const greenboneService = require('../services/greenboneService.js')
 
 const router = express.Router()
-const redis = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' })
+const redis = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6380' })
 redis.on('error', (e) => console.error('Redis error in integrations routes:', e))
 await redis.connect()
 
