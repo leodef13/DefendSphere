@@ -12,7 +12,12 @@ import {
   Settings,
   CheckCircle,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  Plug,
+  Wifi,
+  WifiOff,
+  Eye,
+  EyeOff
 } from 'lucide-react'
 
 interface User {
@@ -32,6 +37,26 @@ interface UserFormData {
   password: string
   role: string
   permissions: string[]
+}
+
+interface Integration {
+  id: string
+  name: string
+  description: string
+  status: string
+  category: string
+  icon: string
+  version: string
+  author: string
+  configured: boolean
+}
+
+interface IntegrationConfig {
+  host: string
+  port: number
+  username: string
+  password: string
+  useSSL: boolean
 }
 
 const availablePermissions = [
@@ -63,6 +88,21 @@ export default function AdminPanel() {
     role: 'user',
     permissions: ['access.dashboard']
   })
+  
+  // Integration states
+  const [integrations, setIntegrations] = useState<Integration[]>([])
+  const [showIntegrationModal, setShowIntegrationModal] = useState(false)
+  const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null)
+  const [integrationConfig, setIntegrationConfig] = useState<IntegrationConfig>({
+    host: '',
+    port: 9392,
+    username: '',
+    password: '',
+    useSSL: false
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [testResult, setTestResult] = useState<{success: boolean, message: string} | null>(null)
+  const [testing, setTesting] = useState(false)
 
   // Check if current user is admin
   if (currentUser?.role !== 'admin') {
@@ -102,6 +142,7 @@ export default function AdminPanel() {
 
   useEffect(() => {
     fetchUsers()
+    fetchIntegrations()
   }, [])
 
   const handleAddUser = async (e: React.FormEvent) => {
@@ -205,6 +246,129 @@ export default function AdminPanel() {
     }))
   }
 
+  // Integration functions
+  const fetchIntegrations = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.INTEGRATIONS_LIST, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch integrations')
+      }
+
+      const data = await response.json()
+      setIntegrations(data.integrations || [])
+    } catch (err) {
+      console.error('Failed to fetch integrations:', err)
+    }
+  }
+
+  const openIntegrationModal = async (integration: Integration) => {
+    setSelectedIntegration(integration)
+    setTestResult(null)
+    
+    // Load existing configuration if available
+    if (integration.configured) {
+      try {
+        const response = await fetch(API_ENDPOINTS.INTEGRATION_CONFIG(integration.id), {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.config) {
+            setIntegrationConfig({
+              host: data.config.host || '',
+              port: data.config.port || 9392,
+              username: data.config.username || '',
+              password: data.config.password || '',
+              useSSL: data.config.useSSL || false
+            })
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load integration config:', err)
+      }
+    } else {
+      // Reset to default values
+      setIntegrationConfig({
+        host: '',
+        port: 9392,
+        username: '',
+        password: '',
+        useSSL: false
+      })
+    }
+    
+    setShowIntegrationModal(true)
+  }
+
+  const testConnection = async () => {
+    try {
+      setTesting(true)
+      setTestResult(null)
+
+      const response = await fetch(API_ENDPOINTS.INTEGRATION_TEST(selectedIntegration!.id), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(integrationConfig)
+      })
+
+      const data = await response.json()
+      setTestResult({
+        success: data.success,
+        message: data.message || (data.success ? 'Connection successful' : 'Connection failed')
+      })
+    } catch (err) {
+      setTestResult({
+        success: false,
+        message: 'Failed to test connection'
+      })
+    } finally {
+      setTesting(false)
+    }
+  }
+
+  const saveIntegrationConfig = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.INTEGRATION_CONFIG(selectedIntegration!.id), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(integrationConfig)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to save configuration')
+      }
+
+      setShowIntegrationModal(false)
+      fetchIntegrations() // Refresh integrations list
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save configuration')
+    }
+  }
+
+  const closeIntegrationModal = () => {
+    setShowIntegrationModal(false)
+    setSelectedIntegration(null)
+    setTestResult(null)
+    setShowPassword(false)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
@@ -240,6 +404,53 @@ export default function AdminPanel() {
           </div>
         </div>
       )}
+
+      {/* Integrations Section */}
+      <Card>
+        <CardHeader className="p-4 pb-0">
+          <div className="flex items-center gap-2">
+            <Plug className="h-5 w-5 text-blue-600" />
+            <h3 className="text-lg font-semibold">Integrations</h3>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {integrations.map((integration) => (
+              <div
+                key={integration.id}
+                className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+                onClick={() => openIntegrationModal(integration)}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-blue-600" />
+                    <h4 className="font-semibold text-gray-900">{integration.name}</h4>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {integration.configured ? (
+                      <Wifi className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <WifiOff className="h-4 w-4 text-gray-400" />
+                    )}
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      integration.configured 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {integration.configured ? 'Configured' : 'Not Configured'}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mb-2">{integration.description}</p>
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <span>{integration.category}</span>
+                  <span>v{integration.version}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="p-4 pb-0">
@@ -482,6 +693,147 @@ export default function AdminPanel() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Integration Configuration Modal */}
+      {showIntegrationModal && selectedIntegration && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Configure {selectedIntegration.name}
+                </h3>
+                <button
+                  onClick={closeIntegrationModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XCircle className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Host / Endpoint</label>
+                  <input
+                    type="text"
+                    value={integrationConfig.host}
+                    onChange={(e) => setIntegrationConfig(prev => ({ ...prev, host: e.target.value }))}
+                    placeholder="217.65.144.232"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Port</label>
+                  <input
+                    type="number"
+                    value={integrationConfig.port}
+                    onChange={(e) => setIntegrationConfig(prev => ({ ...prev, port: parseInt(e.target.value) }))}
+                    placeholder="9392"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Username</label>
+                  <input
+                    type="text"
+                    value={integrationConfig.username}
+                    onChange={(e) => setIntegrationConfig(prev => ({ ...prev, username: e.target.value }))}
+                    placeholder="admin"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Password</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={integrationConfig.password}
+                      onChange={(e) => setIntegrationConfig(prev => ({ ...prev, password: e.target.value }))}
+                      placeholder="••••••••"
+                      className="mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="useSSL"
+                    checked={integrationConfig.useSSL}
+                    onChange={(e) => setIntegrationConfig(prev => ({ ...prev, useSSL: e.target.checked }))}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="useSSL" className="ml-2 block text-sm text-gray-700">
+                    Use SSL/TLS
+                  </label>
+                </div>
+
+                {/* Test Connection Result */}
+                {testResult && (
+                  <div className={`p-3 rounded-md ${
+                    testResult.success 
+                      ? 'bg-green-50 border border-green-200' 
+                      : 'bg-red-50 border border-red-200'
+                  }`}>
+                    <div className="flex items-center">
+                      {testResult.success ? (
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-red-600" />
+                      )}
+                      <span className={`ml-2 text-sm font-medium ${
+                        testResult.success ? 'text-green-800' : 'text-red-800'
+                      }`}>
+                        {testResult.message}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={closeIntegrationModal}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={testConnection}
+                    disabled={testing || !integrationConfig.host || !integrationConfig.username}
+                    className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {testing ? 'Testing...' : 'Test Connection'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveIntegrationConfig}
+                    disabled={!integrationConfig.host || !integrationConfig.username || !integrationConfig.password}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Save Settings
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

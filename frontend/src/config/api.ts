@@ -31,6 +31,12 @@ export const API_ENDPOINTS = {
   SCAN_HISTORY: `${API_BASE_URL}/api/scan/history`,
   SCAN_TEST_CONNECTION: `${API_BASE_URL}/api/scan/test-connection`,
   SCAN_CANCEL: (scanId: string) => `${API_BASE_URL}/api/scan/cancel/${scanId}`,
+  // Integration endpoints
+  INTEGRATIONS_LIST: `${API_BASE_URL}/api/integrations`,
+  INTEGRATION_CONFIG: (integrationId: string) => `${API_BASE_URL}/api/integrations/${integrationId}/config`,
+  INTEGRATION_TEST: (integrationId: string) => `${API_BASE_URL}/api/integrations/${integrationId}/test`,
+  INTEGRATION_STATUS: (integrationId: string) => `${API_BASE_URL}/api/integrations/${integrationId}/status`,
+  INTEGRATION_LOGS: `${API_BASE_URL}/api/integrations/logs`,
   // Admin endpoints
   ADMIN_USERS: `${API_BASE_URL}/api/admin/users`,
   ADMIN_USER: (username: string) => `${API_BASE_URL}/api/admin/users/${username}`,

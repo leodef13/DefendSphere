@@ -1,151 +1,372 @@
 import express from 'express'
-import { authenticateToken } from '../middleware/auth.js'
+import { createClient } from 'redis'
+import { authenticateToken, requireAdmin } from '../middleware/auth.js'
+import encryptionService from '../services/encryptionService.js'
+import greenboneService from '../services/greenboneService.js'
 
 const router = express.Router()
+const redis = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' })
+redis.on('error', (e) => console.error('Redis error in integrations routes:', e))
+await redis.connect()
 
-// Mock integrations data
-const mockIntegrations = [
-  {
-    id: '1',
-    name: 'SIEM Integration',
-    description: 'Security Information and Event Management system',
-    status: 'active',
-    type: 'security',
-    lastSync: '2024-01-15T10:30:00Z',
-    configurable: true
-  },
-  {
-    id: '2',
-    name: 'AWS CloudTrail',
-    description: 'Amazon Web Services CloudTrail logging',
-    status: 'active',
-    type: 'cloud',
-    lastSync: '2024-01-15T10:25:00Z',
-    configurable: true
-  },
-  {
-    id: '3',
-    name: 'Microsoft Sentinel',
-    description: 'Microsoft Azure Sentinel SIEM',
-    status: 'inactive',
-    type: 'security',
-    configurable: true
-  },
-  {
-    id: '4',
-    name: 'Splunk Enterprise',
-    description: 'Splunk Enterprise Security platform',
-    status: 'error',
-    type: 'monitoring',
-    lastSync: '2024-01-14T15:45:00Z',
-    configurable: true
-  },
-  {
-    id: '5',
-    name: 'PostgreSQL Database',
-    description: 'PostgreSQL database monitoring',
-    status: 'active',
-    type: 'database',
-    lastSync: '2024-01-15T10:20:00Z',
-    configurable: false
-  }
-]
-
-// Get all integrations
-router.get('/', authenticateToken, async (req, res) => {
+// Get all available integrations
+router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    res.json({ integrations: mockIntegrations })
+    const integrations = [
+      {
+        id: 'scans_defendsphere_team',
+        name: "Scan's_defendSphere_team",
+        description: 'Greenbone GVM integration for automated vulnerability scanning',
+        status: 'available',
+        category: 'Security Scanning',
+        icon: 'shield-scan',
+        version: '1.0.0',
+        author: 'DefendSphere Team'
+      }
+    ]
+
+    // Check which integrations are configured
+    for (const integration of integrations) {
+      const config = await redis.get(`integration:${integration.id}:config`)
+      integration.status = config ? 'configured' : 'available'
+      integration.configured = !!config
+    }
+
+    res.json({
+      success: true,
+      integrations
+    })
   } catch (error) {
-    console.error('Get integrations error:', error)
-    res.status(500).json({ message: 'Internal server error' })
+    console.error('Error fetching integrations:', error)
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch integrations' 
+    })
   }
 })
 
-// Get integration by ID
-router.get('/:id', authenticateToken, async (req, res) => {
+// Get integration configuration
+router.get('/:integrationId/config', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { id } = req.params
-    const integration = mockIntegrations.find(i => i.id === id)
+    const { integrationId } = req.params
     
-    if (!integration) {
-      return res.status(404).json({ message: 'Integration not found' })
+    if (integrationId !== 'scans_defendsphere_team') {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Integration not found' 
+      })
     }
+
+    const configData = await redis.get(`integration:${integrationId}:config`)
     
-    res.json({ integration })
+    if (!configData) {
+      return res.json({
+        success: true,
+        config: null,
+        configured: false
+      })
+    }
+
+    const config = JSON.parse(configData)
+    
+    // Decrypt sensitive data for display (but mask passwords)
+    const decryptedConfig = encryptionService.decryptSensitiveData(config)
+    
+    // Mask sensitive fields for display
+    const maskedConfig = {
+      ...decryptedConfig,
+      password: decryptedConfig.password ? '••••••••' : '',
+      token: decryptedConfig.token ? '••••••••' : ''
+    }
+
+    res.json({
+      success: true,
+      config: maskedConfig,
+      configured: true
+    })
   } catch (error) {
-    console.error('Get integration error:', error)
-    res.status(500).json({ message: 'Internal server error' })
+    console.error('Error fetching integration config:', error)
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch integration configuration' 
+    })
   }
 })
 
-// Update integration status
-router.put('/:id/status', authenticateToken, async (req, res) => {
+// Save integration configuration
+router.post('/:integrationId/config', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { id } = req.params
-    const { status } = req.body
-    
-    const integration = mockIntegrations.find(i => i.id === id)
-    if (!integration) {
-      return res.status(404).json({ message: 'Integration not found' })
+    const { integrationId } = req.params
+    const config = req.body
+    const adminUser = req.user.username
+
+    if (integrationId !== 'scans_defendsphere_team') {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Integration not found' 
+      })
     }
-    
-    integration.status = status
-    if (status === 'active') {
-      integration.lastSync = new Date().toISOString()
+
+    // Validate required fields
+    const requiredFields = ['host', 'port', 'username', 'password']
+    for (const field of requiredFields) {
+      if (!config[field]) {
+        return res.status(400).json({ 
+          success: false, 
+          error: `Missing required field: ${field}` 
+        })
+      }
     }
+
+    // Get existing config to track changes
+    const existingConfigData = await redis.get(`integration:${integrationId}:config`)
+    let existingConfig = null
+    if (existingConfigData) {
+      existingConfig = encryptionService.decryptSensitiveData(JSON.parse(existingConfigData))
+    }
+
+    // Encrypt sensitive data before storing
+    const encryptedConfig = encryptionService.encryptSensitiveData(config)
     
-    res.json({ integration })
+    // Save configuration
+    await redis.set(`integration:${integrationId}:config`, JSON.stringify(encryptedConfig))
+    
+    // Log admin action
+    await logAdminAction(adminUser, 'integration_config_update', {
+      integrationId,
+      changes: getConfigChanges(existingConfig, config)
+    })
+
+    res.json({
+      success: true,
+      message: 'Integration configuration saved successfully'
+    })
   } catch (error) {
-    console.error('Update integration status error:', error)
-    res.status(500).json({ message: 'Internal server error' })
+    console.error('Error saving integration config:', error)
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to save integration configuration' 
+    })
   }
 })
 
-// Create new integration
-router.post('/', authenticateToken, async (req, res) => {
+// Test integration connection
+router.post('/:integrationId/test', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { name, description, type, configurable = true } = req.body
-    
-    if (!name || !description || !type) {
-      return res.status(400).json({ message: 'Name, description, and type are required' })
+    const { integrationId } = req.params
+    const testConfig = req.body
+
+    if (integrationId !== 'scans_defendsphere_team') {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Integration not found' 
+      })
     }
+
+    // Test connection using provided config or saved config
+    let configToTest = testConfig
     
-    const newIntegration = {
-      id: (mockIntegrations.length + 1).toString(),
-      name,
-      description,
-      status: 'inactive',
-      type,
-      configurable,
-      createdAt: new Date().toISOString()
+    if (!configToTest || !configToTest.host) {
+      // Use saved configuration
+      const configData = await redis.get(`integration:${integrationId}:config`)
+      if (!configData) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'No configuration found. Please save configuration first.' 
+        })
+      }
+      
+      const savedConfig = JSON.parse(configData)
+      configToTest = encryptionService.decryptSensitiveData(savedConfig)
     }
+
+    // Test connection to Greenbone GVM
+    const connectionTest = await testGreenboneConnection(configToTest)
     
-    mockIntegrations.push(newIntegration)
-    
-    res.status(201).json({ integration: newIntegration })
+    // Log test result
+    await logAdminAction(req.user.username, 'integration_test', {
+      integrationId,
+      success: connectionTest.success,
+      error: connectionTest.error
+    })
+
+    res.json({
+      success: connectionTest.success,
+      message: connectionTest.success ? 'Connection test successful' : 'Connection test failed',
+      details: connectionTest.details || connectionTest.error
+    })
   } catch (error) {
-    console.error('Create integration error:', error)
-    res.status(500).json({ message: 'Internal server error' })
+    console.error('Error testing integration:', error)
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to test integration connection' 
+    })
   }
 })
 
-// Delete integration
-router.delete('/:id', authenticateToken, async (req, res) => {
+// Get integration status
+router.get('/:integrationId/status', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { id } = req.params
-    const index = mockIntegrations.findIndex(i => i.id === id)
-    
-    if (index === -1) {
-      return res.status(404).json({ message: 'Integration not found' })
+    const { integrationId } = req.params
+
+    if (integrationId !== 'scans_defendsphere_team') {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Integration not found' 
+      })
     }
+
+    const configData = await redis.get(`integration:${integrationId}:config`)
     
-    mockIntegrations.splice(index, 1)
-    
-    res.json({ message: 'Integration deleted successfully' })
+    if (!configData) {
+      return res.json({
+        success: true,
+        status: 'not_configured',
+        message: 'Integration not configured'
+      })
+    }
+
+    // Test current configuration
+    const config = JSON.parse(configData)
+    const decryptedConfig = encryptionService.decryptSensitiveData(config)
+    const connectionTest = await testGreenboneConnection(decryptedConfig)
+
+    res.json({
+      success: true,
+      status: connectionTest.success ? 'connected' : 'disconnected',
+      message: connectionTest.success ? 'Integration is working' : 'Integration connection failed',
+      lastTest: new Date().toISOString(),
+      details: connectionTest.details || connectionTest.error
+    })
   } catch (error) {
-    console.error('Delete integration error:', error)
-    res.status(500).json({ message: 'Internal server error' })
+    console.error('Error getting integration status:', error)
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to get integration status' 
+    })
   }
 })
+
+// Get admin action logs
+router.get('/logs', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { page = 1, limit = 50 } = req.query
+    const offset = (page - 1) * limit
+
+    // Get logs from Redis
+    const logKeys = await redis.keys('admin_log:*')
+    const logs = []
+
+    for (const key of logKeys.slice(offset, offset + parseInt(limit))) {
+      const logData = await redis.get(key)
+      if (logData) {
+        logs.push(JSON.parse(logData))
+      }
+    }
+
+    // Sort by timestamp (newest first)
+    logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+
+    res.json({
+      success: true,
+      logs,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: logKeys.length
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching admin logs:', error)
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch admin logs' 
+    })
+  }
+})
+
+// Helper function to test Greenbone connection
+async function testGreenboneConnection(config) {
+  try {
+    // Temporarily override greenbone service config
+    const originalConfig = {
+      hostname: process.env.GREENBONE_HOST,
+      port: process.env.GREENBONE_PORT,
+      username: process.env.GREENBONE_USERNAME,
+      password: process.env.GREENBONE_PASSWORD
+    }
+
+    // Set test configuration
+    process.env.GREENBONE_HOST = config.host
+    process.env.GREENBONE_PORT = config.port.toString()
+    process.env.GREENBONE_USERNAME = config.username
+    process.env.GREENBONE_PASSWORD = config.password
+
+    // Test connection
+    const result = await greenboneService.connectToGreenbone()
+
+    // Restore original configuration
+    process.env.GREENBONE_HOST = originalConfig.hostname
+    process.env.GREENBONE_PORT = originalConfig.port
+    process.env.GREENBONE_USERNAME = originalConfig.username
+    process.env.GREENBONE_PASSWORD = originalConfig.password
+
+    return result
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    }
+  }
+}
+
+// Helper function to get configuration changes
+function getConfigChanges(oldConfig, newConfig) {
+  if (!oldConfig) {
+    return ['Initial configuration']
+  }
+
+  const changes = []
+  const fields = ['host', 'port', 'username', 'useSSL']
+
+  for (const field of fields) {
+    if (oldConfig[field] !== newConfig[field]) {
+      changes.push(`${field}: ${oldConfig[field]} → ${newConfig[field]}`)
+    }
+  }
+
+  // Check password change (without revealing the actual password)
+  if (oldConfig.password !== newConfig.password) {
+    changes.push('password: updated')
+  }
+
+  return changes.length > 0 ? changes : ['No changes detected']
+}
+
+// Helper function to log admin actions
+async function logAdminAction(adminUser, action, details) {
+  try {
+    const logEntry = {
+      id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      adminUser,
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      ip: '127.0.0.1' // In production, get from request
+    }
+
+    await redis.set(`admin_log:${logEntry.id}`, JSON.stringify(logEntry))
+    
+    // Keep only last 1000 logs
+    const logKeys = await redis.keys('admin_log:*')
+    if (logKeys.length > 1000) {
+      const sortedKeys = logKeys.sort()
+      const keysToDelete = sortedKeys.slice(0, logKeys.length - 1000)
+      await redis.del(...keysToDelete)
+    }
+  } catch (error) {
+    console.error('Failed to log admin action:', error)
+  }
+}
 
 export default router
