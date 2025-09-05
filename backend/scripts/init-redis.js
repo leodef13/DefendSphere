@@ -44,7 +44,7 @@ async function initializeRedis() {
         email: 'user1@defendsphere.com',
         password: hashedPassword,
         role: 'user',
-        permissions: JSON.stringify(['access.dashboard', 'access.assets', 'access.incidents', 'access.alerts']),
+        permissions: JSON.stringify(['access.dashboard', 'access.assets', 'access.incidents', 'access.alerts', 'access.reports']),
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       }
