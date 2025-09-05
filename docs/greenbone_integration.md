@@ -1,423 +1,313 @@
-# DefendSphere Greenbone Integration
+# Greenbone (GVM) Integration Module
 
 ## Overview
 
-DefendSphere integrates with Greenbone Vulnerability Manager (GVM) to provide automated security scanning capabilities. This integration allows users to scan their assets and receive detailed vulnerability reports directly within the DefendSphere dashboard.
+The DefendSphere Dashboard includes a comprehensive integration module with Greenbone Vulnerability Manager (GVM) for automated security scanning of user assets. This module, named `Scan's_defendSphere_team`, provides seamless integration between the DefendSphere platform and Greenbone's vulnerability scanning capabilities.
 
-## Module: Scan's_defendSphere_team
+## Features
 
-The integration module is implemented as a comprehensive service that handles:
-- Connection to Greenbone GVM via SSH
-- Asset scanning using OpenVAS scanner
-- Report generation and parsing
-- Real-time scan status monitoring
-- Integration with DefendSphere's reporting system
+- **Automated Asset Scanning**: Scan user assets (websites, IP addresses) using Greenbone GVM
+- **Real-time Scan Monitoring**: Track scan progress and status in real-time
+- **Report Integration**: Automatically import and display scan results in the Reports section
+- **Asset Risk Assessment**: Update asset risk levels based on scan findings
+- **Secure Connection**: Encrypted communication with Greenbone GVM instance
 
 ## Architecture
 
 ### Backend Components
 
-1. **GreenboneService** (`/backend/services/greenboneService.js`)
-   - Handles GVM API communication
-   - Manages scan lifecycle
-   - Parses vulnerability reports
-   - Stores scan status in Redis
+#### 1. Greenbone Service (`/backend/services/greenboneService.js`)
 
-2. **Scan Routes** (`/backend/routes/scan.js`)
-   - REST API endpoints for scan management
-   - User authentication and authorization
-   - Scan status monitoring
+The core service that handles all Greenbone GVM interactions:
 
-3. **Redis Integration**
-   - Stores scan status and progress
-   - Caches scan results
-   - Manages scan history
+- **Connection Management**: Establishes and maintains connection to GVM API
+- **Scan Orchestration**: Creates targets, tasks, and manages scan execution
+- **Progress Monitoring**: Tracks scan progress and status updates
+- **Report Processing**: Retrieves and parses scan results
+- **Data Storage**: Saves scan data and results in Redis
+
+#### 2. Scan API Routes (`/backend/routes/scan.js`)
+
+RESTful API endpoints for scan management:
+
+- `POST /api/scan/start` - Start asset scan
+- `GET /api/scan/status/:scanId` - Get scan status
+- `GET /api/scan/active` - Get user's active scan
+- `GET /api/scan/report/:scanId` - Get scan report
+- `GET /api/scan/test-connection` - Test Greenbone connection
 
 ### Frontend Components
 
-1. **Dashboard Integration**
-   - Scan control panel on Home page
-   - Real-time progress monitoring
-   - Status indicators and notifications
+#### 1. Scan Service (`/frontend/src/services/scanService.ts`)
 
-2. **Reports Integration**
-   - Automatic report loading after scan completion
-   - PDF/Excel export functionality
-   - Vulnerability data visualization
+TypeScript service for frontend-backend communication:
 
-3. **Assets Integration**
-   - Asset data updates from scan results
-   - Risk level recalculation
-   - Compliance score updates
+- Asset management
+- Scan initiation and monitoring
+- Report retrieval
+- Connection testing
+
+#### 2. Dashboard Integration
+
+- **Home Page**: "Запустить скан активов" button with scan status
+- **Reports Page**: Greenbone scan reports section
+- **Assets Page**: Updated asset information based on scan results
 
 ## Configuration
 
 ### Environment Variables
 
-Create a `.env` file in the backend directory with the following configuration:
+Add the following variables to your `.env` file:
 
-```bash
+```env
 # Greenbone GVM Configuration
 GREENBONE_HOST=217.65.144.232
 GREENBONE_PORT=9392
 GREENBONE_USERNAME=admin
 GREENBONE_PASSWORD=admin
+GREENBONE_PROTOCOL=http
 
 # Redis Configuration
 REDIS_URL=redis://localhost:6379
-
-# JWT Configuration
-JWT_SECRET=your-secret-key
 ```
 
-### Greenbone GVM Setup
+### Dependencies
 
-1. **Enable GMP Access**
-   - Access GOS administration menu
-   - Enable remote GMP service
-   - Configure SSH access
+The integration requires the following npm packages:
 
-2. **User Permissions**
-   - Ensure user has scan creation permissions
-   - Verify target creation permissions
-   - Check report access permissions
-
-3. **Scanner Configuration**
-   - Verify OpenVAS scanner is running
-   - Check scan configurations are available
-   - Ensure report formats are configured
-
-## API Endpoints
-
-### Scan Management
-
-#### Get User Assets
-```http
-GET /api/scan/assets
-Authorization: Bearer <token>
-```
-
-Response:
 ```json
 {
-  "success": true,
-  "assets": [
-    {
-      "id": "asset-1",
-      "name": "myrockshows.com",
-      "type": "Web Server",
-      "ip": "116.203.242.207",
-      "environment": "Production"
-    }
-  ],
-  "canScan": true
+  "gvm-tools": "^23.4.0"
 }
 ```
 
-#### Start Scan
+Install with:
+```bash
+npm install gvm-tools
+```
+
+## Usage
+
+### Starting a Scan
+
+1. **Prerequisites**: User must have at least one asset configured
+2. **Access**: Navigate to the Home page (Dashboard)
+3. **Initiation**: Click "Запустить скан активов" button
+4. **Monitoring**: Track scan progress in real-time
+
+### Scan Process Flow
+
+1. **Asset Validation**: Verify user has assets to scan
+2. **GVM Connection**: Establish connection to Greenbone GVM
+3. **Target Creation**: Create scan target with user's assets
+4. **Task Creation**: Create scan task with appropriate configuration
+5. **Scan Execution**: Start the vulnerability scan
+6. **Progress Monitoring**: Track scan progress every 10 seconds
+7. **Report Retrieval**: Fetch results when scan completes
+8. **Data Integration**: Update Reports and Assets sections
+
+### Scan Statuses
+
+- **queued**: Scan is waiting to start
+- **running**: Scan is in progress
+- **completed**: Scan finished successfully
+- **failed**: Scan encountered an error
+
+## API Reference
+
+### Start Scan
+
 ```http
 POST /api/scan/start
 Authorization: Bearer <token>
 Content-Type: application/json
-```
 
-Response:
-```json
 {
-  "success": true,
-  "scanId": "scan_user1_1640995200000",
-  "message": "Scan started successfully",
-  "assets": 1
-}
-```
-
-#### Get Scan Status
-```http
-GET /api/scan/status/{scanId}
-Authorization: Bearer <token>
-```
-
-Response:
-```json
-{
-  "success": true,
-  "scan": {
-    "id": "scan_user1_1640995200000",
-    "status": "running",
-    "progress": 45,
-    "message": "Scan in progress: 45%",
-    "startTime": "2024-01-15T10:00:00Z",
-    "lastUpdate": "2024-01-15T10:15:00Z"
-  }
-}
-```
-
-#### Get Scan Results
-```http
-GET /api/scan/results/{scanId}
-Authorization: Bearer <token>
-```
-
-Response:
-```json
-{
-  "success": true,
-  "results": {
-    "vulnerabilities": [
-      {
-        "id": "vuln_123",
-        "name": "SQL Injection Vulnerability",
-        "cve": "CVE-2024-0001",
-        "riskLevel": "High",
-        "cvss": 8.5,
-        "status": "Open",
-        "description": "SQL injection vulnerability in login form",
-        "recommendation": "Implement parameterized queries",
-        "asset": "myrockshows.com",
-        "discovered": "2024-01-15T10:30:00Z"
-      }
-    ],
-    "assets": [
-      {
-        "id": "asset-1",
-        "name": "myrockshows.com",
-        "riskLevel": "High",
-        "compliancePercentage": 75,
-        "vulnerabilities": {
-          "critical": 0,
-          "high": 3,
-          "medium": 3,
-          "low": 1
-        }
-      }
-    ],
-    "summary": {
-      "totalAssets": 1,
-      "totalVulnerabilities": 7,
-      "riskDistribution": {
-        "critical": 0,
-        "high": 3,
-        "medium": 3,
-        "low": 1
-      },
-      "securityHealth": 75,
-      "complianceScore": 75
-    }
-  }
-}
-```
-
-#### Get Scan History
-```http
-GET /api/scan/history
-Authorization: Bearer <token>
-```
-
-Response:
-```json
-{
-  "success": true,
-  "scans": [
+  "assets": [
     {
-      "id": "scan_user1_1640995200000",
-      "status": "completed",
-      "progress": 100,
-      "message": "Scan completed successfully",
-      "startTime": "2024-01-15T10:00:00Z",
-      "lastUpdate": "2024-01-15T10:30:00Z",
-      "assets": 1
+      "name": "myrockshows.com",
+      "domain": "myrockshows.com",
+      "ip": "116.203.242.207",
+      "type": "Web Server",
+      "environment": "Production"
     }
   ]
 }
 ```
 
-#### Test Connection
-```http
-GET /api/scan/test-connection
-Authorization: Bearer <token>
-```
-
-Response:
+**Response:**
 ```json
 {
   "success": true,
-  "message": "Greenbone GVM is available",
-  "details": {
-    "version": "22.4"
+  "scanId": "scan_user1_1703123456789",
+  "message": "Scan started successfully",
+  "data": {
+    "scanId": "scan_user1_1703123456789",
+    "userId": "user1",
+    "taskId": "task_123",
+    "targetId": "target_456",
+    "assets": [...],
+    "status": "running",
+    "startTime": "2023-12-21T10:30:00.000Z",
+    "progress": 0
   }
 }
 ```
 
-#### Cancel Scan
+### Get Scan Status
+
 ```http
-POST /api/scan/cancel/{scanId}
+GET /api/scan/status/scan_user1_1703123456789
 Authorization: Bearer <token>
 ```
 
-Response:
+**Response:**
 ```json
 {
   "success": true,
-  "message": "Scan cancelled successfully"
+  "data": {
+    "scanId": "scan_user1_1703123456789",
+    "status": "running",
+    "progress": 45,
+    "startTime": "2023-12-21T10:30:00.000Z",
+    "assets": [...]
+  }
 }
 ```
 
-## Scan Process Flow
+### Get Scan Report
 
-### 1. Scan Initiation
-1. User clicks "Start Asset Scan" button
-2. System checks if user has assets available
-3. Tests connection to Greenbone GVM
-4. Creates scan record in Redis
-5. Returns scan ID to frontend
+```http
+GET /api/scan/report/scan_user1_1703123456789
+Authorization: Bearer <token>
+```
 
-### 2. Target Creation
-1. For each asset, creates a target in GVM
-2. Configures target with asset IP/domain
-3. Sets appropriate port list
-4. Stores target IDs for task creation
-
-### 3. Task Creation
-1. Creates scan task in GVM
-2. Associates targets with task
-3. Sets scan configuration (Full and Fast)
-4. Assigns OpenVAS scanner
-5. Adds descriptive comments
-
-### 4. Scan Execution
-1. Starts the scan task
-2. Monitors scan progress
-3. Updates status in Redis
-4. Provides real-time progress to frontend
-
-### 5. Report Processing
-1. Retrieves scan reports from GVM
-2. Parses vulnerability data
-3. Calculates risk levels and compliance scores
-4. Updates asset information
-5. Stores results in Redis
-
-### 6. Integration
-1. Updates Reports section with new data
-2. Refreshes Assets section with updated information
-3. Recalculates Security Health metrics
-4. Notifies user of completion
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "scanId": "scan_user1_1703123456789",
+    "reports": [
+      {
+        "id": "result_123",
+        "name": "SSH Weak Encryption",
+        "severity": 7.5,
+        "cvss": 7.5,
+        "cve": "CVE-2023-1234",
+        "description": "SSH server uses weak encryption",
+        "solution": "Update SSH configuration",
+        "host": "116.203.242.207",
+        "port": "22",
+        "riskLevel": "High"
+      }
+    ],
+    "reportCount": 1,
+    "startTime": "2023-12-21T10:30:00.000Z",
+    "endTime": "2023-12-21T10:45:00.000Z"
+  }
+}
+```
 
 ## Security Considerations
 
 ### Authentication
-- All API endpoints require valid JWT tokens
-- User can only access their own scans
-- Scan results are isolated by user
+- All API endpoints require valid JWT authentication
+- Users can only access their own scan data
+- Admin users have additional privileges
 
 ### Data Protection
-- Scan credentials stored in environment variables
-- Redis data encrypted in transit
-- No sensitive data logged
+- Scan credentials stored securely in environment variables
+- Scan results cached in Redis with TTL
+- No sensitive data logged in plain text
 
-### Access Control
-- Users must have 'access.assets' permission
-- Scan operations are user-scoped
-- Admin users can view all scans
+### Network Security
+- HTTPS recommended for production environments
+- Firewall rules should restrict GVM access
+- Regular credential rotation recommended
 
 ## Error Handling
 
-### Connection Errors
-- GVM unavailable: Returns 503 status
-- Authentication failed: Returns 401 status
-- Permission denied: Returns 403 status
+### Common Error Scenarios
 
-### Scan Errors
-- Target creation failed: Logs error, continues with other targets
-- Task creation failed: Returns error to user
-- Scan timeout: Automatically cancels after timeout
+1. **GVM Connection Failed**
+   - Check network connectivity
+   - Verify credentials
+   - Ensure GVM service is running
 
-### Recovery
-- Failed scans can be restarted
-- Partial results are preserved
-- Error messages are user-friendly
+2. **Asset Validation Failed**
+   - Ensure user has configured assets
+   - Verify asset format (IP/domain)
+
+3. **Scan Creation Failed**
+   - Check GVM permissions
+   - Verify scan configuration
+   - Ensure sufficient resources
+
+### Error Response Format
+
+```json
+{
+  "success": false,
+  "message": "Error description",
+  "error": "Detailed error information"
+}
+```
 
 ## Monitoring and Logging
 
-### Logging
-- All scan operations are logged
-- Error conditions are captured
-- Performance metrics are tracked
+### Log Levels
+- **INFO**: Scan start/completion, status updates
+- **WARN**: Connection issues, retry attempts
+- **ERROR**: Scan failures, API errors
 
-### Monitoring
-- Scan status is tracked in Redis
-- Progress updates are real-time
-- Completion notifications are sent
+### Metrics
+- Scan duration
+- Number of vulnerabilities found
+- Asset coverage
+- Success/failure rates
 
 ## Troubleshooting
 
-### Common Issues
+### Scan Not Starting
+1. Check user has assets configured
+2. Verify GVM connection
+3. Check Redis connectivity
+4. Review backend logs
 
-1. **GVM Connection Failed**
-   - Check GVM host and port configuration
-   - Verify SSH access is enabled
-   - Confirm credentials are correct
+### Scan Stuck in "Running" State
+1. Check GVM task status
+2. Verify network connectivity
+3. Review scan configuration
+4. Check GVM resources
 
-2. **Scan Not Starting**
-   - Check user has assets available
-   - Verify GVM scanner is running
-   - Confirm scan configuration exists
-
-3. **Scan Stuck**
-   - Check GVM scanner status
-   - Verify target accessibility
-   - Review GVM logs for errors
-
-4. **Results Not Appearing**
-   - Check scan completion status
-   - Verify report parsing logic
-   - Review Redis data integrity
-
-### Debug Mode
-
-Enable debug logging by setting:
-```bash
-NODE_ENV=development
-```
-
-This will provide detailed logs of:
-- GVM API calls
-- Scan progress updates
-- Error conditions
-- Performance metrics
+### Reports Not Appearing
+1. Verify scan completed successfully
+2. Check report parsing logic
+3. Review Redis data
+4. Check frontend API calls
 
 ## Future Enhancements
 
-### Planned Features
-1. **Scheduled Scans**
-   - Recurring scan schedules
-   - Automated report generation
-   - Email notifications
-
-2. **Advanced Reporting**
-   - Custom report templates
-   - Trend analysis
-   - Compliance dashboards
-
-3. **Integration Improvements**
-   - Multiple GVM instances
-   - Load balancing
-   - High availability
-
-4. **User Experience**
-   - Scan templates
-   - Custom scan configurations
-   - Advanced filtering
+- **Scheduled Scans**: Automatic recurring scans
+- **Custom Scan Configurations**: User-defined scan parameters
+- **Report Templates**: Customizable report formats
+- **Integration with Other Tools**: Additional security tool integrations
+- **Advanced Analytics**: Trend analysis and reporting
 
 ## Support
 
 For technical support or questions about the Greenbone integration:
 
 1. Check the troubleshooting section
-2. Review GVM documentation
-3. Contact the DefendSphere team
-4. Submit issues via GitHub
+2. Review application logs
+3. Verify configuration settings
+4. Contact the DefendSphere development team
 
-## License
+## Version History
 
-This integration module is part of DefendSphere and follows the same licensing terms.
+- **v1.0.0**: Initial Greenbone integration
+  - Basic scan functionality
+  - Report integration
+  - Asset risk assessment
+  - Real-time monitoring

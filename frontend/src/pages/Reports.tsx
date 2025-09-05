@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, Button } from '../components/ui'
 import { API_ENDPOINTS } from '../config/api'
 import { useAuth } from '../components/AuthProvider'
 import { useI18n } from '../i18n'
+import scanService, { ScanData, VulnerabilityReport } from '../services/scanService'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { Download, FileText, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
 
 interface Vulnerability {
   id: string
@@ -40,15 +42,20 @@ const COLORS = {
 
 const Reports: React.FC = () => {
   const { t } = useI18n()
-  const { token } = useAuth()
+  const { token, user } = useAuth()
   const [summary, setSummary] = useState<ReportSummary | null>(null)
   const [vulnerabilities, setVulnerabilities] = useState<Vulnerability[]>([])
+  const [scanReports, setScanReports] = useState<VulnerabilityReport[]>([])
+  const [activeScan, setActiveScan] = useState<ScanData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchReportData()
-  }, [])
+    if (user?.username === 'user1') {
+      checkActiveScan()
+    }
+  }, [user])
 
   const fetchReportData = async () => {
     setLoading(true)
@@ -103,6 +110,42 @@ const Reports: React.FC = () => {
     }
   }
 
+  const checkActiveScan = async () => {
+    try {
+      const result = await scanService.getActiveScan()
+      if (result.success && result.data) {
+        setActiveScan(result.data)
+        if (result.data.status === 'completed' && result.data.reports) {
+          setScanReports(result.data.reports)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check active scan:', error)
+    }
+  }
+
+  const downloadScanReport = async (scanId: string) => {
+    try {
+      const result = await scanService.getScanReport(scanId)
+      if (result.success && result.data) {
+        // Create downloadable content
+        const reportContent = JSON.stringify(result.data, null, 2)
+        const blob = new Blob([reportContent], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `scan-report-${scanId}.json`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }
+    } catch (error) {
+      console.error('Failed to download scan report:', error)
+      alert('Failed to download scan report')
+    }
+  }
+
   const riskDistributionData = summary ? [
     { name: 'Critical', value: summary.riskDistribution.critical, color: COLORS.Critical },
     { name: 'High', value: summary.riskDistribution.high, color: COLORS.High },
@@ -133,6 +176,92 @@ const Reports: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Greenbone Scan Reports Section */}
+      {user?.username === 'user1' && (activeScan || scanReports.length > 0) && (
+        <Card className="border-green-200 bg-green-50">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-green-600" />
+                <h2 className="text-lg font-semibold text-green-800">Greenbone Scan Reports</h2>
+              </div>
+              {activeScan && (
+                <div className="flex items-center gap-2">
+                  {activeScan.status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600" />}
+                  {activeScan.status === 'running' && <Clock className="h-4 w-4 text-blue-600 animate-spin" />}
+                  <span className="text-sm text-green-700">
+                    {activeScan.status === 'completed' && 'Scan Completed'}
+                    {activeScan.status === 'running' && `Scan Running (${activeScan.progress}%)`}
+                    {activeScan.status === 'failed' && 'Scan Failed'}
+                  </span>
+                </div>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {activeScan && activeScan.status === 'completed' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-3 bg-white rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">{activeScan.assets?.length || 0}</div>
+                    <div className="text-sm text-gray-600">Assets Scanned</div>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded-lg">
+                    <div className="text-2xl font-bold text-red-600">{activeScan.reportCount || 0}</div>
+                    <div className="text-sm text-gray-600">Vulnerabilities Found</div>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
+                      {activeScan.startTime && activeScan.endTime 
+                        ? Math.round((new Date(activeScan.endTime).getTime() - new Date(activeScan.startTime).getTime()) / 1000 / 60)
+                        : 0} min
+                    </div>
+                    <div className="text-sm text-gray-600">Scan Duration</div>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => downloadScanReport(activeScan.scanId)}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Scan Report
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {scanReports.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-md font-semibold text-green-800 mb-3">Recent Scan Results</h3>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {scanReports.slice(0, 10).map((report, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full ${
+                          report.riskLevel === 'Critical' ? 'bg-red-800' :
+                          report.riskLevel === 'High' ? 'bg-red-600' :
+                          report.riskLevel === 'Medium' ? 'bg-yellow-500' : 'bg-green-500'
+                        }`}></div>
+                        <div>
+                          <div className="font-medium text-sm">{report.name}</div>
+                          <div className="text-xs text-gray-500">{report.host}:{report.port}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">{report.riskLevel}</div>
+                        <div className="text-xs text-gray-500">CVSS: {report.cvss}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Summary Cards */}
       {summary && (

@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader } from '../components/ui'
 import { useAuth } from '../components/AuthProvider'
 import { useI18n } from '../i18n'
 import { API_ENDPOINTS } from '../config/api'
-import { Server, Shield, AlertTriangle, CheckCircle, Clock, Globe, Database, Monitor } from 'lucide-react'
+import scanService, { ScanData } from '../services/scanService'
+import { Server, Shield, AlertTriangle, CheckCircle, Clock, Globe, Database, Monitor, RefreshCw } from 'lucide-react'
 
 interface Asset {
   id: string
@@ -27,12 +28,14 @@ const Assets: React.FC = () => {
   const { t } = useI18n()
   const { token, user } = useAuth()
   const [assets, setAssets] = useState<Asset[]>([])
+  const [activeScan, setActiveScan] = useState<ScanData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (user?.username === 'user1') {
       fetchAssets()
+      checkActiveScan()
     } else {
       setLoading(false)
     }
@@ -89,14 +92,94 @@ const Assets: React.FC = () => {
     }
   }
 
+  const checkActiveScan = async () => {
+    try {
+      const result = await scanService.getActiveScan()
+      if (result.success && result.data) {
+        setActiveScan(result.data)
+        
+        // Update asset information based on scan results
+        if (result.data.status === 'completed' && result.data.reports) {
+          updateAssetsFromScan(result.data.reports)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check active scan:', error)
+    }
+  }
+
+  const updateAssetsFromScan = (reports: any[]) => {
+    setAssets(prevAssets => 
+      prevAssets.map(asset => {
+        // Find reports for this asset
+        const assetReports = reports.filter(report => 
+          report.host === asset.ip || report.host === asset.name
+        )
+        
+        if (assetReports.length > 0) {
+          // Calculate new risk level based on scan results
+          const criticalCount = assetReports.filter(r => r.riskLevel === 'Critical').length
+          const highCount = assetReports.filter(r => r.riskLevel === 'High').length
+          const mediumCount = assetReports.filter(r => r.riskLevel === 'Medium').length
+          const lowCount = assetReports.filter(r => r.riskLevel === 'Low').length
+          
+          let newRiskLevel = 'Low'
+          let newCompliance = 100
+          
+          if (criticalCount > 0) {
+            newRiskLevel = 'Critical'
+            newCompliance = 25
+          } else if (highCount > 0) {
+            newRiskLevel = 'High'
+            newCompliance = 50
+          } else if (mediumCount > 0) {
+            newRiskLevel = 'Medium'
+            newCompliance = 75
+          }
+          
+          return {
+            ...asset,
+            riskLevel: newRiskLevel,
+            compliancePercentage: newCompliance,
+            vulnerabilities: {
+              critical: criticalCount,
+              high: highCount,
+              medium: mediumCount,
+              low: lowCount
+            },
+            lastAssessment: new Date().toLocaleDateString()
+          }
+        }
+        
+        return asset
+      })
+    )
+  }
+
   if (loading) return <div className="p-6">Loading assets...</div>
   if (error) return <div className="p-6 text-red-500">Error: {error}</div>
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Server className="h-8 w-8 text-blue-600" />
-        <h1 className="text-2xl font-bold">Assets - MyRockShows Infrastructure</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Server className="h-8 w-8 text-blue-600" />
+          <h1 className="text-2xl font-bold">Assets - MyRockShows Infrastructure</h1>
+        </div>
+        
+        {/* Scan Status Indicator */}
+        {user?.username === 'user1' && activeScan && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-200">
+            {activeScan.status === 'running' && <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />}
+            {activeScan.status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600" />}
+            {activeScan.status === 'failed' && <AlertTriangle className="h-4 w-4 text-red-600" />}
+            <span className="text-sm font-medium text-blue-800">
+              {activeScan.status === 'running' && `Scanning... ${activeScan.progress}%`}
+              {activeScan.status === 'completed' && 'Scan Completed'}
+              {activeScan.status === 'failed' && 'Scan Failed'}
+            </span>
+          </div>
+        )}
       </div>
 
       {user?.username === 'user1' && assets.length > 0 ? (

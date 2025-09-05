@@ -24,13 +24,11 @@ export const API_ENDPOINTS = {
   STARTER_GUIDE: `${API_BASE_URL}/api/starter-guide`,
   INTEGRATIONS: `${API_BASE_URL}/api/integrations`,
   // Scan endpoints
-  SCAN_ASSETS: `${API_BASE_URL}/api/scan/assets`,
   SCAN_START: `${API_BASE_URL}/api/scan/start`,
   SCAN_STATUS: (scanId: string) => `${API_BASE_URL}/api/scan/status/${scanId}`,
-  SCAN_RESULTS: (scanId: string) => `${API_BASE_URL}/api/scan/results/${scanId}`,
-  SCAN_HISTORY: `${API_BASE_URL}/api/scan/history`,
+  SCAN_ACTIVE: `${API_BASE_URL}/api/scan/active`,
+  SCAN_REPORT: (scanId: string) => `${API_BASE_URL}/api/scan/report/${scanId}`,
   SCAN_TEST_CONNECTION: `${API_BASE_URL}/api/scan/test-connection`,
-  SCAN_CANCEL: (scanId: string) => `${API_BASE_URL}/api/scan/cancel/${scanId}`,
   // Integration endpoints
   INTEGRATIONS_LIST: `${API_BASE_URL}/api/integrations`,
   INTEGRATION_CONFIG: (integrationId: string) => `${API_BASE_URL}/api/integrations/${integrationId}/config`,

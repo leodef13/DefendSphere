@@ -6,7 +6,8 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, 
 import { useI18n } from '../i18n'
 import { useAuth } from '../components/AuthProvider'
 import { API_ENDPOINTS } from '../config/api'
-import { Play, CheckCircle, AlertCircle, Clock, X } from 'lucide-react'
+import scanService, { ScanData } from '../services/scanService'
+import { Play, CheckCircle, AlertCircle, Clock, X, Shield } from 'lucide-react'
 
 const PIE_COLORS = ['#2563eb', '#16a34a', '#ef4444', '#f59e0b']
 
@@ -15,7 +16,8 @@ export default function Dashboard() {
   const { token, user } = useAuth()
   const [reportData, setReportData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [scanData, setScanData] = useState<any>(null)
+  const [userAssets, setUserAssets] = useState<any[]>([])
+  const [activeScan, setActiveScan] = useState<ScanData | null>(null)
   const [scanning, setScanning] = useState(false)
   const [scanStatus, setScanStatus] = useState<string | null>(null)
   const [scanProgress, setScanProgress] = useState(0)
@@ -24,7 +26,8 @@ export default function Dashboard() {
   useEffect(() => {
     if (user?.username === 'user1') {
       fetchReportData()
-      fetchScanData()
+      fetchUserAssets()
+      checkActiveScan()
     } else {
       setLoading(false)
     }
@@ -46,17 +49,31 @@ export default function Dashboard() {
     }
   }
 
-  const fetchScanData = async () => {
+  const fetchUserAssets = async () => {
     try {
-      const response = await fetch(API_ENDPOINTS.SCAN_ASSETS, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setScanData(data)
+      const assets = await scanService.getUserAssets()
+      setUserAssets(assets)
+    } catch (error) {
+      console.error('Failed to fetch user assets:', error)
+    }
+  }
+
+  const checkActiveScan = async () => {
+    try {
+      const result = await scanService.getActiveScan()
+      if (result.success && result.data) {
+        setActiveScan(result.data)
+        setScanStatus(result.data.status)
+        setScanProgress(result.data.progress)
+        setScanMessage(`Scan ${result.data.status}`)
+        
+        // If scan is still running, start polling
+        if (result.data.status === 'running') {
+          pollScanStatus(result.data.scanId)
+        }
       }
     } catch (error) {
-      console.error('Failed to fetch scan data:', error)
+      console.error('Failed to check active scan:', error)
     }
   }
 
@@ -67,28 +84,17 @@ export default function Dashboard() {
       setScanProgress(0)
       setScanMessage('Starting scan...')
 
-      const response = await fetch(API_ENDPOINTS.SCAN_START, {
-        method: 'POST',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          setScanStatus('running')
-          setScanMessage('Scan started successfully')
-          // Start polling for status
-          pollScanStatus(data.scanId)
-        } else {
-          setScanStatus('error')
-          setScanMessage(data.error || 'Failed to start scan')
-        }
+      const result = await scanService.startScan(userAssets)
+      
+      if (result.success && result.data) {
+        setActiveScan(result.data)
+        setScanStatus('running')
+        setScanMessage('Scan started successfully')
+        // Start polling for status
+        pollScanStatus(result.data.scanId)
       } else {
         setScanStatus('error')
-        setScanMessage('Failed to start scan')
+        setScanMessage(result.message || 'Failed to start scan')
       }
     } catch (error) {
       console.error('Failed to start scan:', error)
@@ -102,24 +108,23 @@ export default function Dashboard() {
   const pollScanStatus = async (scanId: string) => {
     const pollInterval = setInterval(async () => {
       try {
-        const response = await fetch(API_ENDPOINTS.SCAN_STATUS(scanId), {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+        const result = await scanService.getScanStatus(scanId)
+        
+        if (result.success && result.data) {
+          const scan = result.data
+          setActiveScan(scan)
+          setScanStatus(scan.status)
+          setScanProgress(scan.progress)
+          setScanMessage(`Scan ${scan.status} - ${scan.progress}%`)
 
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success && data.scan) {
-            const scan = data.scan
-            setScanStatus(scan.status)
-            setScanProgress(scan.progress)
-            setScanMessage(scan.message)
-
-            if (scan.status === 'completed' || scan.status === 'failed' || scan.status === 'cancelled') {
-              clearInterval(pollInterval)
-              if (scan.status === 'completed') {
-                // Refresh report data with new scan results
-                fetchReportData()
-              }
+          if (scan.status === 'completed' || scan.status === 'failed') {
+            clearInterval(pollInterval)
+            if (scan.status === 'completed') {
+              // Refresh report data with new scan results
+              fetchReportData()
+              setScanMessage('Scan completed successfully')
+            } else {
+              setScanMessage('Scan failed')
             }
           }
         }
@@ -129,7 +134,7 @@ export default function Dashboard() {
         setScanStatus('error')
         setScanMessage('Failed to get scan status')
       }
-    }, 5000) // Poll every 5 seconds
+    }, 10000) // Poll every 10 seconds
   }
 
   const cancelScan = async (scanId: string) => {
@@ -167,18 +172,18 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Scan Control Section for user1 */}
-      {user?.username === 'user1' && scanData && (
+      {user?.username === 'user1' && userAssets.length > 0 && (
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-blue-100 rounded-lg">
-                  <Play className="h-6 w-6 text-blue-600" />
+                  <Shield className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-blue-900">Asset Security Scan</h3>
+                  <h3 className="text-lg font-semibold text-blue-900">Запустить скан активов</h3>
                   <p className="text-sm text-blue-700">
-                    {scanData.assets?.length || 0} assets available for scanning
+                    {userAssets.length} актив(ов) доступно для сканирования
                   </p>
                 </div>
               </div>
@@ -190,28 +195,28 @@ export default function Dashboard() {
                     {scanStatus === 'error' && <AlertCircle className="h-5 w-5 text-red-600" />}
                     {scanStatus === 'cancelled' && <X className="h-5 w-5 text-gray-600" />}
                     <span className="text-sm font-medium">
-                      {scanStatus === 'completed' && 'Completed'}
-                      {scanStatus === 'running' && 'Running'}
-                      {scanStatus === 'error' && 'Error'}
-                      {scanStatus === 'cancelled' && 'Cancelled'}
-                      {scanStatus === 'starting' && 'Starting'}
+                      {scanStatus === 'completed' && 'Завершено'}
+                      {scanStatus === 'running' && 'Выполняется'}
+                      {scanStatus === 'error' && 'Ошибка'}
+                      {scanStatus === 'cancelled' && 'Отменено'}
+                      {scanStatus === 'starting' && 'Запуск'}
                     </span>
                   </div>
                 )}
                 <Button
                   onClick={startScan}
-                  disabled={scanning || !scanData.canScan || scanStatus === 'running'}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={scanning || scanStatus === 'running' || activeScan !== null}
+                  className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
                 >
                   {scanning ? (
                     <>
                       <Clock className="h-4 w-4 mr-2 animate-spin" />
-                      Starting...
+                      Запуск...
                     </>
                   ) : (
                     <>
                       <Play className="h-4 w-4 mr-2" />
-                      Start Asset Scan
+                      Запустить скан активов
                     </>
                   )}
                 </Button>
