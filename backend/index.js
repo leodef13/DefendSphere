@@ -6,6 +6,7 @@ import { createClient } from 'redis'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import assistantRoutes from './routes/assistant.js'
+import aiAssistantRoutes from './routes/ai-assistant.js'
 import starterGuideRoutes from './routes/starter-guide.js'
 import customerTrustRoutes from './routes/customer-trust.js'
 import assetsRoutes from './routes/assets.js'
@@ -426,6 +427,7 @@ await initializeDefaultUsers()
 
 // Подключаем маршруты
 app.use('/api/assistant', assistantRoutes);
+app.use('/api/ai-assistant', aiAssistantRoutes);
 app.use('/api/starter-guide', starterGuideRoutes);
 app.use('/api/customer-trust', customerTrustRoutes);
 app.use('/api/assets', assetsRoutes);

@@ -1,5 +1,6 @@
 import express from 'express';
 import { createClient } from 'redis';
+import { decryptSecret } from '../lib/crypto.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -256,8 +257,31 @@ router.post('/', authenticateToken, async (req, res) => {
     // Поиск по разделам Dashboard
     const dashboardResults = searchDashboardSections(message);
     
-    // Генерация ответа
-    const response = generateAssistantResponse(message, userRole, userDataResults);
+    // Проверка активного AI провайдера
+    let response;
+    try {
+      const activeProvider = await client.get('integration:ai:active');
+      if (activeProvider) {
+        // Получаем конфиг провайдера
+        const providerKey = `integration:ai:${activeProvider}`;
+        const config = await client.hGetAll(providerKey);
+        // Расшифровываем секреты (например, apiKey)
+        const apiKey = config.apiKey ? decryptSecret(config.apiKey) : '';
+        const model = config.model || '';
+
+        // На данном этапе выполняем мок-ответ, имитируя внешний вызов
+        // Здесь позже подключаются реальные SDK провайдеров
+        response = {
+          response: `(${activeProvider}) ${message}\n\n[demo] Using model: ${model || 'default'}\n[demo] Provider is enabled and would be called here`,
+          type: 'text'
+        };
+      } else {
+        response = generateAssistantResponse(message, userRole, userDataResults);
+      }
+    } catch (e) {
+      // На ошибках интеграции переключаемся на локальный fallback
+      response = generateAssistantResponse(message, userRole, userDataResults);
+    }
     
     // Логирование запроса
     await client.lPush(`assistant:logs:${userId}`, JSON.stringify({
