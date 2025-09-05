@@ -14,6 +14,7 @@ import assetsRoutes from './routes/assets.js'
 import complianceRoutes from './routes/compliance.js'
 import integrationsRoutes from './routes/integrations.js'
 import reportsRoutes from './routes/reports.js'
+import scanRoutes from './routes/scan.js'
 import { authenticateToken, requireAdmin, requirePermission } from './middleware/auth.js'
 
 const app = express()
@@ -407,6 +408,7 @@ app.use('/api/assets', assetsRoutes);
 app.use('/api/compliance', complianceRoutes);
 app.use('/api/integrations', integrationsRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/scan', scanRoutes);
 
 // Start server with HTTPS if configured
 const HTTPS_ENABLED = process.env.HTTPS === 'true'

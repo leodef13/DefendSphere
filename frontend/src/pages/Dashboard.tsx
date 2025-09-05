@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import MetricCard from '../components/MetricCard'
-import { Card, CardContent, CardHeader } from '../components/ui'
+import { Card, CardContent, CardHeader, Button } from '../components/ui'
 import { metrics, threatsOverTime, threatTypes, recentIncidents } from '../data/mockData'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import { useI18n } from '../i18n'
 import { useAuth } from '../components/AuthProvider'
 import { API_ENDPOINTS } from '../config/api'
+import { Play, CheckCircle, AlertCircle, Clock, X } from 'lucide-react'
 
 const PIE_COLORS = ['#2563eb', '#16a34a', '#ef4444', '#f59e0b']
 
@@ -14,10 +15,16 @@ export default function Dashboard() {
   const { token, user } = useAuth()
   const [reportData, setReportData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [scanData, setScanData] = useState<any>(null)
+  const [scanning, setScanning] = useState(false)
+  const [scanStatus, setScanStatus] = useState<string | null>(null)
+  const [scanProgress, setScanProgress] = useState(0)
+  const [scanMessage, setScanMessage] = useState('')
 
   useEffect(() => {
     if (user?.username === 'user1') {
       fetchReportData()
+      fetchScanData()
     } else {
       setLoading(false)
     }
@@ -39,6 +46,108 @@ export default function Dashboard() {
     }
   }
 
+  const fetchScanData = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.SCAN_ASSETS, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setScanData(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch scan data:', error)
+    }
+  }
+
+  const startScan = async () => {
+    try {
+      setScanning(true)
+      setScanStatus('starting')
+      setScanProgress(0)
+      setScanMessage('Starting scan...')
+
+      const response = await fetch(API_ENDPOINTS.SCAN_START, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setScanStatus('running')
+          setScanMessage('Scan started successfully')
+          // Start polling for status
+          pollScanStatus(data.scanId)
+        } else {
+          setScanStatus('error')
+          setScanMessage(data.error || 'Failed to start scan')
+        }
+      } else {
+        setScanStatus('error')
+        setScanMessage('Failed to start scan')
+      }
+    } catch (error) {
+      console.error('Failed to start scan:', error)
+      setScanStatus('error')
+      setScanMessage('Failed to start scan')
+    } finally {
+      setScanning(false)
+    }
+  }
+
+  const pollScanStatus = async (scanId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(API_ENDPOINTS.SCAN_STATUS(scanId), {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.scan) {
+            const scan = data.scan
+            setScanStatus(scan.status)
+            setScanProgress(scan.progress)
+            setScanMessage(scan.message)
+
+            if (scan.status === 'completed' || scan.status === 'failed' || scan.status === 'cancelled') {
+              clearInterval(pollInterval)
+              if (scan.status === 'completed') {
+                // Refresh report data with new scan results
+                fetchReportData()
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to poll scan status:', error)
+        clearInterval(pollInterval)
+        setScanStatus('error')
+        setScanMessage('Failed to get scan status')
+      }
+    }, 5000) // Poll every 5 seconds
+  }
+
+  const cancelScan = async (scanId: string) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.SCAN_CANCEL(scanId), {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      if (response.ok) {
+        setScanStatus('cancelled')
+        setScanMessage('Scan cancelled')
+      }
+    } catch (error) {
+      console.error('Failed to cancel scan:', error)
+    }
+  }
+
   // Security Health data for user1
   const securityHealthData = reportData ? [
     { name: 'Secure', value: reportData.securityHealth, color: '#10B981' },
@@ -57,6 +166,84 @@ export default function Dashboard() {
   
   return (
     <div className="space-y-6">
+      {/* Scan Control Section for user1 */}
+      {user?.username === 'user1' && scanData && (
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Play className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-900">Asset Security Scan</h3>
+                  <p className="text-sm text-blue-700">
+                    {scanData.assets?.length || 0} assets available for scanning
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {scanStatus && (
+                  <div className="flex items-center gap-2">
+                    {scanStatus === 'completed' && <CheckCircle className="h-5 w-5 text-green-600" />}
+                    {scanStatus === 'running' && <Clock className="h-5 w-5 text-blue-600 animate-spin" />}
+                    {scanStatus === 'error' && <AlertCircle className="h-5 w-5 text-red-600" />}
+                    {scanStatus === 'cancelled' && <X className="h-5 w-5 text-gray-600" />}
+                    <span className="text-sm font-medium">
+                      {scanStatus === 'completed' && 'Completed'}
+                      {scanStatus === 'running' && 'Running'}
+                      {scanStatus === 'error' && 'Error'}
+                      {scanStatus === 'cancelled' && 'Cancelled'}
+                      {scanStatus === 'starting' && 'Starting'}
+                    </span>
+                  </div>
+                )}
+                <Button
+                  onClick={startScan}
+                  disabled={scanning || !scanData.canScan || scanStatus === 'running'}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {scanning ? (
+                    <>
+                      <Clock className="h-4 w-4 mr-2 animate-spin" />
+                      Starting...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4 mr-2" />
+                      Start Asset Scan
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+            
+            {/* Scan Progress */}
+            {scanStatus && (scanStatus === 'running' || scanStatus === 'starting') && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-sm text-blue-700 mb-2">
+                  <span>{scanMessage}</span>
+                  <span>{scanProgress}%</span>
+                </div>
+                <div className="w-full bg-blue-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${scanProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+            
+            {/* Scan Status Message */}
+            {scanMessage && scanStatus !== 'running' && scanStatus !== 'starting' && (
+              <div className="mt-4 p-3 rounded-lg bg-blue-100">
+                <p className="text-sm text-blue-800">{scanMessage}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Security Health Section for user1 */}
       {user?.username === 'user1' && reportData && (
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">

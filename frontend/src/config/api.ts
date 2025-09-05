@@ -23,6 +23,14 @@ export const API_ENDPOINTS = {
   REPORTS_EXPORT_EXCEL: `${API_BASE_URL}/api/reports/export/excel`,
   STARTER_GUIDE: `${API_BASE_URL}/api/starter-guide`,
   INTEGRATIONS: `${API_BASE_URL}/api/integrations`,
+  // Scan endpoints
+  SCAN_ASSETS: `${API_BASE_URL}/api/scan/assets`,
+  SCAN_START: `${API_BASE_URL}/api/scan/start`,
+  SCAN_STATUS: (scanId: string) => `${API_BASE_URL}/api/scan/status/${scanId}`,
+  SCAN_RESULTS: (scanId: string) => `${API_BASE_URL}/api/scan/results/${scanId}`,
+  SCAN_HISTORY: `${API_BASE_URL}/api/scan/history`,
+  SCAN_TEST_CONNECTION: `${API_BASE_URL}/api/scan/test-connection`,
+  SCAN_CANCEL: (scanId: string) => `${API_BASE_URL}/api/scan/cancel/${scanId}`,
   // Admin endpoints
   ADMIN_USERS: `${API_BASE_URL}/api/admin/users`,
   ADMIN_USER: (username: string) => `${API_BASE_URL}/api/admin/users/${username}`,
