@@ -14,7 +14,6 @@ function Sidebar() {
   // Fixed order of sections; only these sections are shown
   const navItems = [
     { to: '/dashboard', label: t('nav.home'), icon: LayoutDashboard, permission: 'access.dashboard' },
-    { to: '/admin', label: 'Admin Panel', icon: Settings, permission: 'access.admin' },
     { to: '/user-dashboard', label: 'User Dashboard', icon: User, permission: 'access.dashboard' },
     { to: '/integrations', label: t('nav.integrations'), icon: Plug, permission: 'access.integrations' },
   ]
@@ -24,8 +23,6 @@ function Sidebar() {
     if (!user) return false
     // Integrations is visible only for admin
     if (item.to === '/integrations') return user.role === 'admin'
-    // Admin Panel is visible only for admin
-    if (item.to === '/admin') return user.role === 'admin'
     // User Dashboard visible to all authenticated users
     if (item.to === '/user-dashboard') return true
     if (user.role === 'admin') return true
