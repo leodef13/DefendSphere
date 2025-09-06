@@ -27,11 +27,14 @@ function Sidebar() {
   // Filter navigation items based on user permissions
   const filteredNavItems = navItems.filter(item => {
     if (!user) return false
-    // Integrations is visible only for admin
-    if (item.to === '/integrations') return user.role === 'admin'
+    // Admin-only restriction: only admin sees Integrations
+    if (item.to === '/integrations' && user.role !== 'admin') return false
+    // For admin: only Home, User Dashboard, Integrations
+    if (user.role === 'admin') {
+      return item.to === '/dashboard' || item.to === '/user-dashboard' || item.to === '/integrations'
+    }
     // User Dashboard visible to all authenticated users
     if (item.to === '/user-dashboard') return true
-    if (user.role === 'admin') return true
     return user.permissions?.includes(item.permission) || user.permissions?.includes('all')
   })
   return (

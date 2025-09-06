@@ -1,272 +1,227 @@
 import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader } from '../components/ui'
 import { useI18n } from '../i18n'
-import { 
-  Shield, 
-  Database, 
-  Cloud, 
-  Zap, 
-  CheckCircle, 
-  XCircle, 
-  Settings,
-  Plus,
-  ExternalLink
-} from 'lucide-react'
+import { useAuth } from '../components/AuthProvider'
+import { API_ENDPOINTS } from '../config/api'
+import { Shield, Plug, CheckCircle, XCircle, Settings, X, Wifi, WifiOff } from 'lucide-react'
 
-interface Integration {
+interface IntegrationItem {
   id: string
   name: string
   description: string
-  status: 'active' | 'inactive' | 'error'
-  type: 'security' | 'monitoring' | 'cloud' | 'database'
-  lastSync?: string
-  configurable: boolean
-}
-
-const mockIntegrations: Integration[] = [
-  {
-    id: '1',
-    name: 'SIEM Integration',
-    description: 'Security Information and Event Management system',
-    status: 'active',
-    type: 'security',
-    lastSync: '2024-01-15T10:30:00Z',
-    configurable: true
-  },
-  {
-    id: '2',
-    name: 'AWS CloudTrail',
-    description: 'Amazon Web Services CloudTrail logging',
-    status: 'active',
-    type: 'cloud',
-    lastSync: '2024-01-15T10:25:00Z',
-    configurable: true
-  },
-  {
-    id: '3',
-    name: 'Microsoft Sentinel',
-    description: 'Microsoft Azure Sentinel SIEM',
-    status: 'inactive',
-    type: 'security',
-    configurable: true
-  },
-  {
-    id: '4',
-    name: 'Splunk Enterprise',
-    description: 'Splunk Enterprise Security platform',
-    status: 'error',
-    type: 'monitoring',
-    lastSync: '2024-01-14T15:45:00Z',
-    configurable: true
-  },
-  {
-    id: '5',
-    name: 'PostgreSQL Database',
-    description: 'PostgreSQL database monitoring',
-    status: 'active',
-    type: 'database',
-    lastSync: '2024-01-15T10:20:00Z',
-    configurable: false
-  }
-]
-
-const getStatusIcon = (status: Integration['status']) => {
-  switch (status) {
-    case 'active':
-      return <CheckCircle className="h-5 w-5 text-green-500" />
-    case 'inactive':
-      return <XCircle className="h-5 w-5 text-gray-400" />
-    case 'error':
-      return <XCircle className="h-5 w-5 text-red-500" />
-    default:
-      return <XCircle className="h-5 w-5 text-gray-400" />
-  }
-}
-
-const getStatusText = (status: Integration['status'], t: (key: string) => string) => {
-  switch (status) {
-    case 'active':
-      return t('common.active') || 'Active'
-    case 'inactive':
-      return t('common.inactive') || 'Inactive'
-    case 'error':
-      return t('common.error') || 'Error'
-    default:
-      return t('common.unknown') || 'Unknown'
-  }
-}
-
-const getTypeIcon = (type: Integration['type']) => {
-  switch (type) {
-    case 'security':
-      return <Shield className="h-5 w-5 text-blue-500" />
-    case 'monitoring':
-      return <Zap className="h-5 w-5 text-yellow-500" />
-    case 'cloud':
-      return <Cloud className="h-5 w-5 text-purple-500" />
-    case 'database':
-      return <Database className="h-5 w-5 text-green-500" />
-    default:
-      return <Settings className="h-5 w-5 text-gray-500" />
-  }
+  status: string
+  category: string
+  icon: string
+  version: string
+  author: string
+  configured: boolean
+  providers?: { key: string; title: string; params: string[] }[]
 }
 
 export default function Integrations() {
   const { t } = useI18n()
-  const [integrations, setIntegrations] = useState<Integration[]>(mockIntegrations)
-  const [selectedType, setSelectedType] = useState<string>('all')
+  const { token } = useAuth()
+  const [integrations, setIntegrations] = useState<IntegrationItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selected, setSelected] = useState<IntegrationItem | null>(null)
+  const [gbConfig, setGbConfig] = useState({ host: '217.65.144.232', port: 9392, username: '', password: '', useSSL: false })
+  const [aiProvider, setAiProvider] = useState<string>('openai')
+  const [aiConfig, setAiConfig] = useState<Record<string, string>>({ apiKey: '', model: 'gpt-4o-mini', endpoint: '' })
+  const [testMsg, setTestMsg] = useState<string>('')
+  const [testing, setTesting] = useState(false)
 
-  const filteredIntegrations = selectedType === 'all' 
-    ? integrations 
-    : integrations.filter(integration => integration.type === selectedType)
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(API_ENDPOINTS.INTEGRATIONS_LIST, { headers: { 'Authorization': `Bearer ${token}` } })
+        if (res.ok) {
+          const data = await res.json()
+          setIntegrations(data.integrations || [])
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [token])
 
-  const handleToggleStatus = (id: string) => {
-    setIntegrations(prev => prev.map(integration => 
-      integration.id === id 
-        ? { 
-            ...integration, 
-            status: integration.status === 'active' ? 'inactive' : 'active',
-            lastSync: integration.status === 'active' ? undefined : new Date().toISOString()
+  const openIntegration = async (item: IntegrationItem) => {
+    setSelected(item)
+    if (item.id === 'scans_defendsphere_team') {
+      try {
+        const res = await fetch(API_ENDPOINTS.INTEGRATION_CONFIG(item.id), { headers: { 'Authorization': `Bearer ${token}` } })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.config) {
+            setGbConfig({
+              host: data.config.host || '217.65.144.232',
+              port: data.config.port || 9392,
+              username: data.config.username || '',
+              password: '',
+              useSSL: data.config.useSSL || false
+            })
           }
-        : integration
-    ))
+        }
+      } catch {}
+    }
+    if (item.id === 'ai_providers' && item.providers && item.providers.length > 0) {
+      setAiProvider(item.providers[0].key)
+      setAiConfig({ apiKey: '', model: 'gpt-4o-mini', endpoint: '' })
+    }
   }
+
+  const saveGb = async () => {
+    const res = await fetch(API_ENDPOINTS.INTEGRATION_CONFIG('scans_defendsphere_team'), {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(gbConfig)
+    })
+    if (res.ok) {
+      setSelected(null)
+      // refresh list
+      const r = await fetch(API_ENDPOINTS.INTEGRATIONS_LIST, { headers: { 'Authorization': `Bearer ${token}` } })
+      if (r.ok) {
+        const data = await r.json()
+        setIntegrations(data.integrations || [])
+      }
+    }
+  }
+
+  const testGb = async () => {
+    try {
+      setTesting(true)
+      const res = await fetch(API_ENDPOINTS.INTEGRATION_TEST('scans_defendsphere_team'), {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(gbConfig)
+      })
+      const data = await res.json()
+      setTestMsg(data.message || (data.success ? 'Connection successful' : 'Connection failed'))
+    } finally {
+      setTesting(false)
+    }
+  }
+
+  const saveAi = async () => {
+    const res = await fetch(`${API_ENDPOINTS.AI_ASSISTANT}/${aiProvider}/config`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(aiConfig)
+    })
+    if (res.ok) setSelected(null)
+  }
+
+  const enableAi = async () => {
+    await fetch(`${API_ENDPOINTS.AI_ASSISTANT}/${aiProvider}/enable`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+  }
+
+  if (loading) return <div className="p-6">Loading integrations...</div>
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">{t('nav.integrations')}</h1>
-        <button className="btn-primary inline-flex items-center gap-2 px-4 py-2 rounded-md">
-          <Plus className="h-4 w-4" />
-          {t('common.add')} {t('nav.integrations')}
-        </button>
       </div>
 
-      {/* Filter */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setSelectedType('all')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            selectedType === 'all' 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          All
-        </button>
-        <button
-          onClick={() => setSelectedType('security')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            selectedType === 'security' 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Security
-        </button>
-        <button
-          onClick={() => setSelectedType('monitoring')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            selectedType === 'monitoring' 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Monitoring
-        </button>
-        <button
-          onClick={() => setSelectedType('cloud')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            selectedType === 'cloud' 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Cloud
-        </button>
-        <button
-          onClick={() => setSelectedType('database')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            selectedType === 'database' 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Database
-        </button>
-      </div>
-
-      {/* Integrations Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredIntegrations.map((integration) => (
-          <Card key={integration.id} className="hover:shadow-lg transition-shadow">
+        {integrations.map((integration) => (
+          <Card key={integration.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => openIntegration(integration)}>
             <CardHeader className="p-4 pb-0">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {getTypeIcon(integration.type)}
-                  <div>
-                    <h3 className="font-semibold text-lg">{integration.name}</h3>
-                    <p className="text-sm text-gray-600">{integration.description}</p>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Plug className="h-5 w-5 text-blue-600" />
+                  <h3 className="font-semibold text-lg">{integration.name}</h3>
                 </div>
-                {getStatusIcon(integration.status)}
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-2">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Status:</span>
-                  <span className={`font-medium ${
-                    integration.status === 'active' ? 'text-green-600' :
-                    integration.status === 'error' ? 'text-red-600' :
-                    'text-gray-600'
-                  }`}>
-                    {getStatusText(integration.status, t)}
+                <div className="flex items-center gap-1">
+                  {integration.configured ? <Wifi className="h-4 w-4 text-green-600" /> : <WifiOff className="h-4 w-4 text-gray-400" />}
+                  <span className={`text-xs px-2 py-1 rounded-full ${integration.configured ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                    {integration.configured ? 'Configured' : 'Not Configured'}
                   </span>
                 </div>
-                
-                {integration.lastSync && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Last Sync:</span>
-                    <span className="text-gray-900">
-                      {new Date(integration.lastSync).toLocaleString()}
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={() => handleToggleStatus(integration.id)}
-                    className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      integration.status === 'active'
-                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                        : 'bg-green-100 text-green-700 hover:bg-green-200'
-                    }`}
-                  >
-                    {integration.status === 'active' ? 'Disable' : 'Enable'}
-                  </button>
-                  
-                  {integration.configurable && (
-                    <button className="px-3 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors">
-                      <Settings className="h-4 w-4" />
-                    </button>
-                  )}
-                  
-                  <button className="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
-                    <ExternalLink className="h-4 w-4" />
-                  </button>
-                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4">
+              <p className="text-sm text-gray-600 mb-2">{integration.description}</p>
+              <div className="text-xs text-gray-500 flex gap-4">
+                <span>{integration.category}</span>
+                <span>v{integration.version}</span>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {filteredIntegrations.length === 0 && (
-        <div className="text-center py-12">
-          <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No integrations found</h3>
-          <p className="text-gray-600">Try adjusting your filter or add a new integration.</p>
+      {selected && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-md shadow-lg w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-semibold">Configure {selected.name}</h3>
+              <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-gray-700"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="p-4 space-y-4">
+              {selected.id === 'scans_defendsphere_team' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Host / Endpoint</label>
+                    <input className="mt-1 w-full border rounded-md px-3 py-2" value={gbConfig.host} onChange={(e) => setGbConfig({ ...gbConfig, host: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Port</label>
+                    <input type="number" className="mt-1 w-full border rounded-md px-3 py-2" value={gbConfig.port} onChange={(e) => setGbConfig({ ...gbConfig, port: parseInt(e.target.value) || 0 })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Username</label>
+                    <input className="mt-1 w-full border rounded-md px-3 py-2" value={gbConfig.username} onChange={(e) => setGbConfig({ ...gbConfig, username: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" className="mt-1 w-full border rounded-md px-3 py-2" value={gbConfig.password} onChange={(e) => setGbConfig({ ...gbConfig, password: e.target.value })} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" checked={gbConfig.useSSL} onChange={(e) => setGbConfig({ ...gbConfig, useSSL: e.target.checked })} />
+                    <span className="text-sm">Use SSL/TLS</span>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button onClick={testGb} disabled={testing} className="px-3 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200">{testing ? 'Testing...' : 'Test'}</button>
+                    <button onClick={saveGb} className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save</button>
+                  </div>
+                  {testMsg && (<div className="text-sm text-gray-700">{testMsg}</div>)}
+                </>
+              )}
+
+              {selected.id === 'ai_providers' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Provider</label>
+                    <select className="mt-1 w-full border rounded-md px-3 py-2" value={aiProvider} onChange={(e) => setAiProvider(e.target.value)}>
+                      {(selected.providers || []).map((p) => (
+                        <option key={p.key} value={p.key}>{p.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">API Key</label>
+                    <input className="mt-1 w-full border rounded-md px-3 py-2" value={aiConfig.apiKey || ''} onChange={(e) => setAiConfig({ ...aiConfig, apiKey: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Model</label>
+                    <input className="mt-1 w-full border rounded-md px-3 py-2" value={aiConfig.model || ''} onChange={(e) => setAiConfig({ ...aiConfig, model: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Endpoint (optional)</label>
+                    <input className="mt-1 w-full border rounded-md px-3 py-2" value={aiConfig.endpoint || ''} onChange={(e) => setAiConfig({ ...aiConfig, endpoint: e.target.value })} />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button onClick={enableAi} className="px-3 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200">Enable</button>
+                    <button onClick={saveAi} className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save</button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
