@@ -29,6 +29,7 @@ interface User {
   createdAt: string
   lastLogin: string
   status?: string
+  organizations?: string[]
 }
 
 interface UserFormData {
@@ -112,6 +113,7 @@ export default function AdminPanel() {
   const [testing, setTesting] = useState(false)
   const [orgs, setOrgs] = useState<{ name: string, userCount: number, assetCount: number }[]>([])
   const [orgFilter, setOrgFilter] = useState('')
+  const [orgNames, setOrgNames] = useState<string[]>([])
 
   // Check if current user is admin
   if (currentUser?.role !== 'admin') {
@@ -153,6 +155,7 @@ export default function AdminPanel() {
     fetchUsers()
     fetchIntegrations()
     fetchOrganizations()
+    fetchOrgNames()
   }, [])
   const fetchOrganizations = async () => {
     try {
@@ -162,6 +165,16 @@ export default function AdminPanel() {
       if (res.ok) {
         const data = await res.json()
         setOrgs(data.organizations || [])
+      }
+    } catch {}
+  }
+
+  const fetchOrgNames = async () => {
+    try {
+      const res = await fetch(API_ENDPOINTS.ADMIN_ORG_NAMES, { headers: { 'Authorization': `Bearer ${token}` } })
+      if (res.ok) {
+        const data = await res.json()
+        setOrgNames(Array.isArray(data.organizations) ? data.organizations : [])
       }
     } catch {}
   }
@@ -176,7 +189,10 @@ export default function AdminPanel() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          organizations: (formData as any).organizations || (formData.organization ? [formData.organization] : [])
+        })
       })
 
       if (!response.ok) {
@@ -207,7 +223,8 @@ export default function AdminPanel() {
         body: JSON.stringify({
           email: formData.email,
           role: formData.role,
-          permissions: formData.permissions
+          permissions: formData.permissions,
+          organizations: (formData as any).organizations || undefined
         })
       })
 
@@ -409,7 +426,29 @@ export default function AdminPanel() {
       {/* Organizations Overview */}
       <Card>
         <CardHeader className="p-4 pb-0">
-          <h3 className="text-lg font-semibold">Organizations</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Organizations</h3>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="New organization name"
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                onKeyDown={async (e) => {
+                  if (e.key === 'Enter') {
+                    const name = (e.target as HTMLInputElement).value.trim()
+                    if (!name) return
+                    await fetch(API_ENDPOINTS.ADMIN_ORG_NAMES, {
+                      method: 'POST',
+                      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ name })
+                    })
+                    ;(e.target as HTMLInputElement).value = ''
+                    fetchOrgNames()
+                  }
+                }}
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-3">
@@ -428,6 +467,7 @@ export default function AdminPanel() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Users</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assets</th>
+                  <th className="px-6 py-3"></th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -436,6 +476,15 @@ export default function AdminPanel() {
                     <td className="px-6 py-4 whitespace-nowrap">{o.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{o.userCount}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{o.assetCount}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <button
+                        className="text-red-600 hover:text-red-900 text-sm"
+                        onClick={async () => {
+                          await fetch(API_ENDPOINTS.ADMIN_ORG_NAME(o.name), { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })
+                          fetchOrgNames()
+                        }}
+                      >Delete</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -650,12 +699,16 @@ export default function AdminPanel() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Organization</label>
                   <input
+                    list="orgs"
                     type="text"
                     required
                     value={formData.organization}
                     onChange={(e) => setFormData(prev => ({ ...prev, organization: e.target.value }))}
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
+                  <datalist id="orgs">
+                    {orgNames.map((n) => (<option key={n} value={n} />))}
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Position/Role</label>
@@ -701,6 +754,22 @@ export default function AdminPanel() {
                       </label>
                     ))}
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Additional Organizations (comma-separated)</label>
+                  <input
+                    type="text"
+                    placeholder="Org A, Org B"
+                    onChange={(e) => {
+                      const list = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                      // merge with primary organization
+                      const primary = formData.organization ? [formData.organization] : []
+                      const merged = Array.from(new Set([...primary, ...list]))
+                      // store via permissions array untouched; orgs handled in backend by organizations field
+                      ;(formData as any).organizations = merged
+                    }}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
                 </div>
                 <div className="flex justify-end space-x-3 pt-4">
                   <button

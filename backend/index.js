@@ -211,7 +211,8 @@ app.get('/api/admin/users', authenticateToken, requireAdminLocal, async (req, re
         delete user.password
         users.push({
           ...user,
-          permissions: JSON.parse(user.permissions)
+          permissions: JSON.parse(user.permissions),
+          organizations: user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
         })
       }
     }
