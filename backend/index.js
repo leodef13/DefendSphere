@@ -19,7 +19,21 @@ import scanRoutes from './routes/scan.js'
 import { authenticateToken, requireAdmin, requirePermission } from './middleware/auth.js'
 
 const app = express()
-app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }))
+// CORS setup: allow multiple origins via comma-separated CORS_ORIGIN, with sensible defaults
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173,http://217.65.144.232:5173')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin)) return callback(null, true)
+    return callback(new Error('Not allowed by CORS'))
+  },
+  credentials: true,
+}
+app.use(cors(corsOptions))
 app.use(express.json())
 app.use(morgan('dev'))
 
