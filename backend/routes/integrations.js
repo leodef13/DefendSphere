@@ -22,6 +22,38 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
         icon: 'shield-scan',
         version: '1.0.0',
         author: 'DefendSphere Team'
+      },
+      {
+        id: 'ai_providers',
+        name: 'AI Providers',
+        description: 'Integrations with external AI systems for the Security Assistant',
+        status: 'available',
+        category: 'AI',
+        icon: 'bot',
+        version: '1.0.0',
+        author: 'DefendSphere Team',
+        providers: [
+          {
+            key: 'openai',
+            title: 'OpenAI (Chat Completions)',
+            params: ['apiKey', 'model', 'endpoint']
+          },
+          {
+            key: 'claude',
+            title: 'Anthropic Claude',
+            params: ['apiKey', 'model', 'endpoint']
+          },
+          {
+            key: 'gemini',
+            title: 'Google Gemini',
+            params: ['apiKey', 'model', 'endpoint']
+          },
+          {
+            key: 'azure',
+            title: 'Azure OpenAI',
+            params: ['apiKey', 'endpoint', 'deploymentId']
+          }
+        ]
       }
     ]
 

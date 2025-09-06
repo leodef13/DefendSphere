@@ -53,6 +53,7 @@ interface Integration {
   version: string
   author: string
   configured: boolean
+  providers?: { key: string; title: string; params: string[] }[]
 }
 
 interface IntegrationConfig {
@@ -810,6 +811,20 @@ export default function AdminPanel() {
                   <XCircle className="h-6 w-6" />
                 </button>
               </div>
+
+              {/* Providers list for AI module */}
+              {selectedIntegration.id === 'ai_providers' && selectedIntegration.providers && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold mb-2">Available Providers</h4>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                    {selectedIntegration.providers.map((p) => (
+                      <li key={p.key}>
+                        <span className="font-medium">{p.title}</span> — params: {p.params.join(', ')}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div className="space-y-4">
                 <div>
