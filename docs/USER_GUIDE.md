@@ -225,3 +225,32 @@ DefendSphere is fully responsive and works on:
 - Admin Panel: admin only
 - User Dashboard: all users
 - Sections visible based on user permissions and organization policy
+
+## Visualizations for Company LLD
+
+For deployments that host organization-specific PNGs, the dashboard will reference static images at:
+
+- `/reports/organizations/CompanyLLDL/total_security_health.png`
+- `/reports/organizations/CompanyLLDL/high_problems.png`
+- `/reports/organizations/CompanyLLDL/critical_problems.png`
+- `/reports/organizations/CompanyLLDL/medium_problems.png`
+- `/reports/organizations/CompanyLLDL/low_problems.png`
+- `/reports/organizations/CompanyLLDL/Vulsecheal.png`
+
+Place these files on the target host; they are not stored in the repository.
+
+## Profile Update Endpoint
+
+User profile updates are performed via `PUT /api/users/profile` with JSON body:
+
+```
+{
+  "email": "new@example.com",
+  "currentPassword": "optional-current",
+  "newPassword": "optional-new"
+}
+```
+
+## Navigation Cleanup
+
+The Incidents/Alerts sections are not part of the current UI and were removed from navigation and tests.

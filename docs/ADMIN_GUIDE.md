@@ -315,3 +315,12 @@ SSL_CERT_PATH=./certs/certificate.pem
 
 - Admin Panel visible only to admins
 - User Dashboard visible to all users
+
+## Organization-Based Views
+
+- Users see only data for their organizations (as listed in `organizations`).
+- Admins see aggregated data across all organizations in Home.
+
+## Navigation Changes
+
+- Incidents/Alerts are not part of the UI and were removed from navigation and tests.

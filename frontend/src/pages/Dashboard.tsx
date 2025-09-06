@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [scanProgress, setScanProgress] = useState(0)
   const [scanMessage, setScanMessage] = useState('')
   const [hasAssets, setHasAssets] = useState(false)
+  const imageBase = '/reports/organizations/CompanyLLDL'
 
   const isCompanyLLD = Array.isArray(user?.organizations) && user!.organizations!.includes('Company LLD')
 
@@ -271,28 +272,8 @@ export default function Dashboard() {
               <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-300">Total Security Health</h3>
             </CardHeader>
             <CardContent className="p-4">
-              <div className="flex items-center justify-center h-32">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={securityHealthData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={30}
-                      outerRadius={50}
-                      dataKey="value"
-                      startAngle={90}
-                      endAngle={450}
-                    >
-                      {securityHealthData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold">
-                      {reportData.securityHealth}%
-                    </text>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="flex items-center justify-center h-40">
+                <img src={`${imageBase}/total_security_health.png`} alt="Total Security Health" className="max-h-40 object-contain" />
               </div>
             </CardContent>
           </Card>
@@ -302,24 +283,8 @@ export default function Dashboard() {
               <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-300">Assets Monitoring</h3>
             </CardHeader>
             <CardContent className="p-4">
-              <div className="flex items-center justify-center h-32">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={[{ name: 'Monitored', value: reportData.totalAssets, color: '#10B981' }]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={30}
-                      outerRadius={50}
-                      dataKey="value"
-                    >
-                      <Cell fill="#10B981" />
-                    </Pie>
-                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold">
-                      {reportData.totalAssets}
-                    </text>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="flex items-center justify-center h-40">
+                <img src={`${imageBase}/assets_monitoring.png`} alt="Assets Monitoring" className="max-h-40 object-contain" />
               </div>
             </CardContent>
           </Card>
@@ -329,24 +294,8 @@ export default function Dashboard() {
               <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-300">Critical Problems</h3>
             </CardHeader>
             <CardContent className="p-4">
-              <div className="flex items-center justify-center h-32">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={[{ name: 'Critical', value: reportData.riskDistribution.critical, color: '#8B0000' }]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={30}
-                      outerRadius={50}
-                      dataKey="value"
-                    >
-                      <Cell fill="#8B0000" />
-                    </Pie>
-                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold">
-                      {reportData.riskDistribution.critical}
-                    </text>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="flex items-center justify-center h-40">
+                <img src={`${imageBase}/critical_problems.png`} alt="Critical Problems" className="max-h-40 object-contain" />
               </div>
             </CardContent>
           </Card>
@@ -356,24 +305,8 @@ export default function Dashboard() {
               <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-300">High Problems</h3>
             </CardHeader>
             <CardContent className="p-4">
-              <div className="flex items-center justify-center h-32">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={[{ name: 'High', value: reportData.riskDistribution.high, color: '#DC2626' }]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={30}
-                      outerRadius={50}
-                      dataKey="value"
-                    >
-                      <Cell fill="#DC2626" />
-                    </Pie>
-                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold">
-                      {reportData.riskDistribution.high}
-                    </text>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="flex items-center justify-center h-40">
+                <img src={`${imageBase}/high_problems.png`} alt="High Problems" className="max-h-40 object-contain" />
               </div>
             </CardContent>
           </Card>
@@ -383,24 +316,8 @@ export default function Dashboard() {
               <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-300">Medium Problems</h3>
             </CardHeader>
             <CardContent className="p-4">
-              <div className="flex items-center justify-center h-32">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={[{ name: 'Medium', value: reportData.riskDistribution.medium, color: '#F59E0B' }]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={30}
-                      outerRadius={50}
-                      dataKey="value"
-                    >
-                      <Cell fill="#F59E0B" />
-                    </Pie>
-                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold">
-                      {reportData.riskDistribution.medium}
-                    </text>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="flex items-center justify-center h-40">
+                <img src={`${imageBase}/medium_problems.png`} alt="Medium Problems" className="max-h-40 object-contain" />
               </div>
             </CardContent>
           </Card>
@@ -410,24 +327,8 @@ export default function Dashboard() {
               <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-300">Low Problems</h3>
             </CardHeader>
             <CardContent className="p-4">
-              <div className="flex items-center justify-center h-32">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={[{ name: 'Low', value: reportData.riskDistribution.low, color: '#10B981' }]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={30}
-                      outerRadius={50}
-                      dataKey="value"
-                    >
-                      <Cell fill="#10B981" />
-                    </Pie>
-                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold">
-                      {reportData.riskDistribution.low}
-                    </text>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="flex items-center justify-center h-40">
+                <img src={`${imageBase}/low_problems.png`} alt="Low Problems" className="max-h-40 object-contain" />
               </div>
             </CardContent>
           </Card>

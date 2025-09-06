@@ -81,3 +81,14 @@ Body:
 - Mask secrets in UI and responses
 - Use HTTPS everywhere
 
+## OpenAI Provider Setup
+
+1. In Admin Panel → AI Assistant, select `openai` as provider.
+2. Configure fields:
+   - `apiKey`: your OpenAI API key
+   - `model`: e.g. `gpt-4o-mini` (default is used if omitted)
+   - `endpoint`: optional, defaults to `https://api.openai.com/v1/chat/completions`
+3. Click Save Settings, then Enable.
+
+When enabled, `/api/assistant` will call OpenAI for responses. On error or when disabled, the assistant falls back to internal guidance replies.
+

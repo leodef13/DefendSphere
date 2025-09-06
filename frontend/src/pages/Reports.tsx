@@ -49,6 +49,7 @@ const Reports: React.FC = () => {
   const [activeScan, setActiveScan] = useState<ScanStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const imageBase = '/reports/organizations/CompanyLLDL'
 
   const isCompanyLLD = Array.isArray(user?.organizations) && user!.organizations!.includes('Company LLD')
 
@@ -305,54 +306,17 @@ const Reports: React.FC = () => {
         </div>
       )}
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold">Risk Distribution</h3>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={riskDistributionData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {riskDistributionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold">Vulnerabilities by Category</h3>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={vulnerabilityCountData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="category" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" fill="#8884d8" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Static Visualization for Company LLD */}
+      <Card>
+        <CardHeader>
+          <h3 className="text-lg font-semibold">Risk & Health Visualization</h3>
+        </CardHeader>
+        <CardContent>
+          <div className="w-full flex items-center justify-center">
+            <img src={`${imageBase}/Vulsecheal.png`} alt="Risk & Health Visualization" className="max-w-full object-contain" />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Greenbone Scan Reports Section */}
       {isCompanyLLD && scanReports.length > 0 && (
