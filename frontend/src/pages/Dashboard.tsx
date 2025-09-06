@@ -7,7 +7,7 @@ import { useI18n } from '../i18n'
 import { useAuth } from '../components/AuthProvider'
 import { API_ENDPOINTS } from '../config/api'
 import scanService, { type ScanStatus } from '../services/scanService'
-import { Play, CheckCircle, AlertCircle, Clock, X, Shield } from 'lucide-react'
+import { Play, CheckCircle, AlertCircle, Clock, X, Shield, Server, Users, Building2 } from 'lucide-react'
 
 const PIE_COLORS = ['#2563eb', '#16a34a', '#ef4444', '#f59e0b']
 
