@@ -1,3 +1,10 @@
+## 2025-09-06
+
+- Ensure user1 and user3 see identical org-based content (Company LLD)
+- Restore AI Assistant chat visibility for all authenticated users
+- Add Google Gemini provider support for AI Assistant
+- Integrations page manages Greenbone and AI Providers via modals
+
 # Changelog
 
 ## v1.1.0 - AI Assistant Integrations
