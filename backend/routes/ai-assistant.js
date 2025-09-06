@@ -10,6 +10,10 @@ const client = createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6380'
 })
 client.on('error', (err) => console.log('Redis Client Error', err))
+// Ensure Redis connection for this router
+await client.connect().catch(err => {
+  console.error('AI Assistant Redis connect error:', err)
+})
 
 const PROVIDER_KEYS = {
   openai: 'integration:ai:openai',
