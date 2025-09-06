@@ -12,8 +12,6 @@ import Suppliers from './pages/Suppliers'
 import Reports from './pages/Reports'
 import StarterGuide from './pages/StarterGuide'
 import Integrations from './pages/Integrations'
-import Incidents from './pages/Incidents'
-import Alerts from './pages/Alerts'
 import Settings from './pages/Settings'
 import AdminPanel from './pages/AdminPanel'
 import UserDashboard from './pages/UserDashboard'
@@ -34,8 +32,6 @@ function App() {
             <Route path="/reports" element={<Reports />} />
             <Route path="/starter-guide" element={<StarterGuide />} />
             <Route path="/integrations" element={<Integrations />} />
-            <Route path="/incidents" element={<Incidents />} />
-            <Route path="/alerts" element={<Alerts />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/user-dashboard" element={<UserDashboard />} />

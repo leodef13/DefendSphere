@@ -1,6 +1,6 @@
 // MainLayout.tsx
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { Shield, LayoutDashboard, Bell, AlertTriangle, Settings, User, BarChart3, Server, FileCheck, Users, Building2, FileText, HelpCircle, Plug } from 'lucide-react'
+import { Shield, LayoutDashboard, Settings, User, Server, FileCheck, Users, Building2, FileText, HelpCircle, Plug } from 'lucide-react'
 import { motion } from 'framer-motion'
 import AssistantButton from '../components/AssistantButton'
 import { useAuth } from '../components/AuthProvider'
@@ -9,7 +9,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 
 function Sidebar() {
   const { t } = useI18n()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   
   // Fixed order of sections; only these sections are shown
   const navItems = [
@@ -38,7 +38,7 @@ function Sidebar() {
         <span className="font-semibold" style={{color: '#fff'}}>DefendSphere</span>
       </div>
       <nav className="p-3" style={{display: 'grid', rowGap: '4px'}}>
-        {filteredNavItems.map(({ to, label, icon: Icon }) => (
+        {filteredNavItems.map(({ to, label }) => (
           <NavLink
             key={to}
             to={to}
@@ -51,7 +51,6 @@ function Sidebar() {
               backgroundColor: isActive ? '#134876' : 'transparent'
             })}
           >
-            <Icon className="h-4 w-4" color="#fff" />
             {label}
           </NavLink>
         ))}
@@ -67,17 +66,12 @@ function Sidebar() {
             </div>
             <div>
               <p className="text-sm font-medium">{user?.username || 'User'}</p>
-              <p className="text-xs" style={{opacity: .8}}>{user?.role === 'admin' ? 'Security Admin' : 'User'}</p>
+              <p className="text-xs" style={{opacity: .8}}>{user?.email || ''}</p>
             </div>
           </div>
           <div className="flex items-center justify-between">
             <LanguageSwitcher />
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent('app:logout'))}
-              className="text-xs text-white/70 hover:text-white transition-colors"
-            >
-              Выход
-            </button>
+            <button onClick={logout} className="text-xs text-white/70 hover:text-white transition-colors">Выход</button>
           </div>
         </div>
       </div>
