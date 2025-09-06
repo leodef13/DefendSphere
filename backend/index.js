@@ -514,6 +514,37 @@ app.use('/api/integrations', integrationsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/scan', scanRoutes);
 
+// Organizations registry endpoints (admin)
+app.get('/api/admin/organizations-names', authenticateToken, requireAdminLocal, async (req, res) => {
+  try {
+    const setMembers = await redis.sMembers('organizations')
+    res.json({ organizations: setMembers })
+  } catch (e) {
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+app.post('/api/admin/organizations-names', authenticateToken, requireAdminLocal, async (req, res) => {
+  try {
+    const { name } = req.body
+    if (!name || String(name).trim().length === 0) return res.status(400).json({ message: 'Organization name is required' })
+    await redis.sAdd('organizations', String(name))
+    res.status(201).json({ ok: true })
+  } catch (e) {
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+app.delete('/api/admin/organizations-names/:name', authenticateToken, requireAdminLocal, async (req, res) => {
+  try {
+    const { name } = req.params
+    await redis.sRem('organizations', String(name))
+    res.json({ ok: true })
+  } catch (e) {
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
 // Admin and organization summaries
 app.get('/api/admin/summary', authenticateToken, requireAdminLocal, async (req, res) => {
   try {

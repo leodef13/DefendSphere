@@ -20,6 +20,7 @@ function Sidebar() {
     { to: '/compliance', label: t('nav.compliance'), icon: FileCheck, permission: 'access.compliance' },
     { to: '/customer-trust', label: t('nav.customerTrust'), icon: Users, permission: 'access.customerTrust' },
     { to: '/suppliers', label: t('nav.suppliers'), icon: Building2, permission: 'access.suppliers' },
+    { to: '/admin', label: 'Admin Panel', icon: Settings, permission: 'access.admin' },
     { to: '/user-dashboard', label: 'User Dashboard', icon: User, permission: 'access.dashboard' },
     { to: '/integrations', label: t('nav.integrations'), icon: Plug, permission: 'access.integrations' },
   ]
@@ -27,12 +28,10 @@ function Sidebar() {
   // Filter navigation items based on user permissions
   const filteredNavItems = navItems.filter(item => {
     if (!user) return false
-    // Admin-only restriction: only admin sees Integrations
-    if (item.to === '/integrations' && user.role !== 'admin') return false
-    // For admin: only Home, User Dashboard, Integrations
-    if (user.role === 'admin') {
-      return item.to === '/dashboard' || item.to === '/user-dashboard' || item.to === '/integrations'
-    }
+    // Admin-only restriction: only admin sees Integrations and Admin Panel
+    if ((item.to === '/integrations' || item.to === '/admin') && user.role !== 'admin') return false
+    // For admin: Home, User Dashboard, Integrations, Admin Panel
+    if (user.role === 'admin') return item.to === '/dashboard' || item.to === '/user-dashboard' || item.to === '/integrations' || item.to === '/admin'
     // User Dashboard visible to all authenticated users
     if (item.to === '/user-dashboard') return true
     return user.permissions?.includes(item.permission) || user.permissions?.includes('all')
