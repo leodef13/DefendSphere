@@ -36,6 +36,8 @@ export const API_ENDPOINTS = {
   INTEGRATION_TEST: (integrationId: string) => `${API_BASE_URL}/api/integrations/${integrationId}/test`,
   INTEGRATION_STATUS: (integrationId: string) => `${API_BASE_URL}/api/integrations/${integrationId}/status`,
   INTEGRATION_LOGS: `${API_BASE_URL}/api/integrations/logs`,
+  // AI Assistant integration management
+  AI_ASSISTANT: `${API_BASE_URL}/api/ai-assistant`,
   // Admin endpoints
   ADMIN_USERS: `${API_BASE_URL}/api/admin/users`,
   ADMIN_USER: (username: string) => `${API_BASE_URL}/api/admin/users/${username}`,

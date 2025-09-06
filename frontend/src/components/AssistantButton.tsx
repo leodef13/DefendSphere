@@ -15,7 +15,7 @@ const AssistantButton: React.FC = () => {
     // check integration status
     const check = async () => {
       try {
-        const res = await fetch(`${API_ENDPOINTS.INTEGRATIONS}/ai-assistant`, {
+        const res = await fetch(`${API_ENDPOINTS.AI_ASSISTANT}`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
         })
         if (res.ok) {
