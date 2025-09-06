@@ -223,16 +223,33 @@ app.get('/api/admin/users', authenticateToken, requireAdminLocal, async (req, re
 
 app.post('/api/admin/users', authenticateToken, requireAdminLocal, async (req, res) => {
   try {
-    const { username, email, password, role, permissions, organization, fullName, phone, position } = req.body
+    const { username, email, password, role, permissions, organization, organizations, fullName, phone, position } = req.body
 
-    if (!username || !email || !password || !organization) {
-      return res.status(400).json({ message: 'Username, email, password, and organization are required' })
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: 'Username, email, and password are required' })
+    }
+
+    // Resolve organizations array
+    let orgs = []
+    if (Array.isArray(organizations)) orgs = organizations.filter(Boolean).map(String)
+    else if (organization) orgs = [String(organization)]
+    if (orgs.length === 0) {
+      return res.status(400).json({ message: 'At least one organization is required' })
     }
 
     // Check if user already exists
     const existingUser = await redis.hGetAll(`user:${username}`)
     if (existingUser.username) {
       return res.status(400).json({ message: 'Username already exists' })
+    }
+
+    // Unique email check
+    const usernames = await redis.sMembers('users')
+    for (const u of usernames) {
+      const urec = await redis.hGetAll(`user:${u}`)
+      if (urec.email && urec.email.toLowerCase() === email.toLowerCase()) {
+        return res.status(400).json({ message: 'Email already exists' })
+      }
     }
 
     // Hash password
@@ -247,7 +264,7 @@ app.post('/api/admin/users', authenticateToken, requireAdminLocal, async (req, r
       password: hashedPassword,
       role: role || 'user',
       permissions: JSON.stringify(permissions || ['access.dashboard']),
-      organization,
+      organizations: JSON.stringify(orgs),
       fullName: fullName || '',
       phone: phone || '',
       position: position || '',
@@ -262,7 +279,8 @@ app.post('/api/admin/users', authenticateToken, requireAdminLocal, async (req, r
     res.status(201).json({
       user: {
         ...user,
-        permissions: JSON.parse(user.permissions)
+        permissions: JSON.parse(user.permissions),
+        organizations: orgs
       }
     })
   } catch (error) {
@@ -274,7 +292,7 @@ app.post('/api/admin/users', authenticateToken, requireAdminLocal, async (req, r
 app.put('/api/admin/users/:username', authenticateToken, requireAdminLocal, async (req, res) => {
   try {
     const { username } = req.params
-    const { email, role, permissions, status, fullName, phone, position } = req.body
+    const { email, role, permissions, status, fullName, phone, position, organizations } = req.body
 
     const user = await redis.hGetAll(`user:${username}`)
     if (!user.username) {
@@ -283,13 +301,29 @@ app.put('/api/admin/users/:username', authenticateToken, requireAdminLocal, asyn
 
     // Update user fields
     const updates = {}
-    if (email) updates.email = email
+    if (email) {
+      // Check email uniqueness against other users
+      const all = await redis.sMembers('users')
+      for (const u of all) {
+        if (u === username) continue
+        const urec = await redis.hGetAll(`user:${u}`)
+        if (urec.email && urec.email.toLowerCase() === email.toLowerCase()) {
+          return res.status(400).json({ message: 'Email already exists' })
+        }
+      }
+      updates.email = email
+    }
     if (role) updates.role = role
     if (permissions) updates.permissions = JSON.stringify(permissions)
     if (status) updates.status = status
     if (fullName !== undefined) updates.fullName = fullName
     if (phone !== undefined) updates.phone = phone
     if (position !== undefined) updates.position = position
+    if (organizations) {
+      const orgs = Array.isArray(organizations) ? organizations.filter(Boolean).map(String) : []
+      if (orgs.length === 0) return res.status(400).json({ message: 'At least one organization is required' })
+      updates.organizations = JSON.stringify(orgs)
+    }
 
     await redis.hSet(`user:${username}`, updates)
 
@@ -300,7 +334,8 @@ app.put('/api/admin/users/:username', authenticateToken, requireAdminLocal, asyn
     res.json({
       user: {
         ...updatedUser,
-        permissions: JSON.parse(updatedUser.permissions)
+        permissions: JSON.parse(updatedUser.permissions),
+        organizations: updatedUser.organizations ? JSON.parse(updatedUser.organizations) : []
       }
     })
   } catch (error) {

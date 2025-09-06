@@ -7,6 +7,7 @@ interface User {
   role: string
   permissions: string[]
   organization?: string
+  organizations?: string[]
   fullName?: string
   phone?: string
   position?: string

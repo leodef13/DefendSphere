@@ -21,6 +21,9 @@ interface UserProfile {
   email: string
   role: string
   permissions: string[]
+  organizations?: string[]
+  phone?: string
+  position?: string
   createdAt: string
   lastLogin: string
 }
@@ -47,6 +50,9 @@ export default function UserDashboard() {
         email: currentUser.email,
         role: currentUser.role,
         permissions: currentUser.permissions,
+        organizations: currentUser.organizations,
+        phone: currentUser.phone,
+        position: currentUser.position,
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       })
@@ -267,6 +273,16 @@ export default function UserDashboard() {
                       <p className="text-lg text-gray-900 capitalize">{profile.role}</p>
                     </div>
                   </div>
+
+                  {profile.organizations && profile.organizations.length > 0 && (
+                    <div className="flex items-center space-x-3">
+                      <Shield className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Organizations</p>
+                        <p className="text-lg text-gray-900">{profile.organizations.join(', ')}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
