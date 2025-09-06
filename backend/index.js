@@ -32,6 +32,9 @@ const corsOptions = {
     return callback(new Error('Not allowed by CORS'))
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200,
 }
 app.use(cors(corsOptions))
 // Handle preflight for all routes
@@ -116,14 +119,15 @@ app.post('/api/auth/register', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const { username, password } = req.body
+    const { username, password, login } = req.body
+    const loginName = username || login
 
-    if (!username || !password) {
+    if (!loginName || !password) {
       return res.status(400).json({ message: 'Username and password are required' })
     }
 
     // Get user from Redis
-    const user = await redis.hGetAll(`user:${username}`)
+    const user = await redis.hGetAll(`user:${loginName}`)
     if (!user.username) {
       return res.status(401).json({ message: 'Invalid credentials' })
     }
@@ -138,7 +142,7 @@ app.post('/api/auth/login', async (req, res) => {
     await redis.hSet(`user:${username}`, 'lastLogin', new Date().toISOString())
 
     // Generate token
-    const token = jwt.sign({ userId: user.id, username }, JWT_SECRET, { expiresIn: '24h' })
+    const token = jwt.sign({ userId: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' })
 
     // Remove password from response
     delete user.password
