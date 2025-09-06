@@ -15,6 +15,7 @@ export default function Dashboard() {
   const { t } = useI18n()
   const { token, user } = useAuth()
   const [reportData, setReportData] = useState<any>(null)
+  const [adminSummary, setAdminSummary] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [userAssets, setUserAssets] = useState<any[]>([])
   const [activeScan, setActiveScan] = useState<ScanStatus | null>(null)
@@ -28,6 +29,9 @@ export default function Dashboard() {
   const isCompanyLLD = Array.isArray(user?.organizations) && user!.organizations!.includes('Company LLD')
 
   useEffect(() => {
+    if (user?.role === 'admin') {
+      fetchAdminSummary()
+    }
     if (isCompanyLLD) {
       fetchReportData()
       fetchUserAssets()
@@ -36,6 +40,16 @@ export default function Dashboard() {
       setLoading(false)
     }
   }, [user])
+  const fetchAdminSummary = async () => {
+    try {
+      const res = await fetch(API_ENDPOINTS.ADMIN_SUMMARY, { headers: { 'Authorization': `Bearer ${token}` } })
+      if (res.ok) {
+        const data = await res.json()
+        setAdminSummary(data)
+      }
+    } catch (e) {}
+  }
+
 
   const fetchReportData = async () => {
     try {
@@ -338,8 +352,17 @@ export default function Dashboard() {
       {/* Default metrics for other users */}
       {!isCompanyLLD && (
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {metrics.map((m) => (
-            <MetricCard key={m.title} title={m.title} value={m.value} icon={m.icon} />)
+          {user?.role === 'admin' && adminSummary ? (
+            <>
+              <MetricCard title="Organizations" value={adminSummary.organizations} icon={Shield} />
+              <MetricCard title="Total Assets" value={adminSummary.totalAssets} icon={Server} />
+              <MetricCard title="Users (sum)" value={Object.values(adminSummary.usersPerOrganization).reduce((a: any, b: any) => (a as number) + (b as number), 0)} icon={Users} />
+              <MetricCard title="Orgs with Assets" value={Object.keys(adminSummary.assetsPerOrganization).length} icon={Building2} />
+            </>
+          ) : (
+            metrics.map((m) => (
+              <MetricCard key={m.title} title={m.title} value={m.value} icon={m.icon} />)
+            )
           )}
         </section>
       )}

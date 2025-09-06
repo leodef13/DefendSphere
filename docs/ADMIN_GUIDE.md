@@ -324,3 +324,20 @@ SSL_CERT_PATH=./certs/certificate.pem
 ## Navigation Changes
 
 - Incidents/Alerts are not part of the UI and were removed from navigation and tests.
+
+## Admin Summaries
+
+Endpoints:
+
+- `GET /api/admin/summary` — aggregated counts:
+  - organizations (count)
+  - usersPerOrganization (map)
+  - assetsPerOrganization (map)
+  - totalAssets (count)
+
+- `GET /api/admin/organizations` — list of organizations with details:
+  - name, userCount, assetCount
+
+UI:
+- Home (admin): shows dynamic metrics and can visualize them via charts.
+- Admin Panel: Organizations table with filter by name.

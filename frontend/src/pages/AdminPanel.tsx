@@ -109,6 +109,8 @@ export default function AdminPanel() {
   const [showPassword, setShowPassword] = useState(false)
   const [testResult, setTestResult] = useState<{success: boolean, message: string} | null>(null)
   const [testing, setTesting] = useState(false)
+  const [orgs, setOrgs] = useState<{ name: string, userCount: number, assetCount: number }[]>([])
+  const [orgFilter, setOrgFilter] = useState('')
 
   // Check if current user is admin
   if (currentUser?.role !== 'admin') {
@@ -149,7 +151,20 @@ export default function AdminPanel() {
   useEffect(() => {
     fetchUsers()
     fetchIntegrations()
+    fetchOrganizations()
   }, [])
+  const fetchOrganizations = async () => {
+    try {
+      const res = await fetch(API_ENDPOINTS.ADMIN_ORGANIZATIONS, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setOrgs(data.organizations || [])
+      }
+    } catch {}
+  }
+
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -388,6 +403,43 @@ export default function AdminPanel() {
 
   return (
     <div className="space-y-6">
+      {/* Organizations Overview */}
+      <Card>
+        <CardHeader className="p-4 pb-0">
+          <h3 className="text-lg font-semibold">Organizations</h3>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <input
+              type="text"
+              placeholder="Filter by organization..."
+              value={orgFilter}
+              onChange={(e) => setOrgFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Users</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assets</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {orgs.filter(o => !orgFilter || o.name.toLowerCase().includes(orgFilter.toLowerCase())).map((o) => (
+                  <tr key={o.name} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">{o.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{o.userCount}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{o.assetCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">{t('admin.title')}</h1>
         <button

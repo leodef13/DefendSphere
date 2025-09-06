@@ -266,6 +266,11 @@ Each section includes advanced filtering options:
 - **Zoom**: Zoom in on specific time periods
 - **Export**: Export charts as images or data
 
+## Admin vs User Views
+
+- Admin users see aggregated data across all organizations on Home and in Admin Panel.
+- Regular users see only data for their own organizations (User Dashboard and other views).
+
 ---
 
 **Version**: 1.0.0  

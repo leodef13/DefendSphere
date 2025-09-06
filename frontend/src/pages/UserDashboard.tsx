@@ -41,6 +41,7 @@ export default function UserDashboard() {
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [orgSummary, setOrgSummary] = useState<any>(null)
 
   useEffect(() => {
     if (currentUser) {
@@ -59,6 +60,21 @@ export default function UserDashboard() {
       setFormData({ email: currentUser.email, password: '', confirmPassword: '' })
       setLoading(false)
     }
+  }, [currentUser])
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(API_ENDPOINTS.ORG_SUMMARY, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setOrgSummary(data)
+        }
+      } catch {}
+    }
+    if (currentUser) load()
   }, [currentUser])
 
   const handleSave = async (e: React.FormEvent) => {
@@ -330,6 +346,27 @@ export default function UserDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Organization Summary */}
+          {orgSummary && (
+            <Card className="mt-6">
+              <CardHeader className="p-4 pb-0">
+                <h3 className="text-lg font-semibold">Organization Summary</h3>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Organizations (you belong to)</span>
+                    <span className="font-semibold">{orgSummary.organizations}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Total Assets (your orgs)</span>
+                    <span className="font-semibold">{orgSummary.totalAssets}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Permissions */}
           <Card className="mt-6">

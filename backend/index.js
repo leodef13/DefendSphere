@@ -514,6 +514,110 @@ app.use('/api/integrations', integrationsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/scan', scanRoutes);
 
+// Admin and organization summaries
+app.get('/api/admin/summary', authenticateToken, requireAdminLocal, async (req, res) => {
+  try {
+    const usernames = await redis.sMembers('users')
+    const organizationsMap = new Map()
+    const usersPerOrg = {}
+    const assetsPerOrg = {}
+    let totalAssets = 0
+
+    for (const username of usernames) {
+      const user = await redis.hGetAll(`user:${username}`)
+      if (!user.id) continue
+      const orgs = user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
+      const assets = await redis.hGetAll(`assets:${user.id}`)
+      const assetCount = Object.keys(assets).length
+      totalAssets += assetCount
+      for (const org of orgs) {
+        organizationsMap.set(org, true)
+        usersPerOrg[org] = (usersPerOrg[org] || 0) + 1
+        assetsPerOrg[org] = (assetsPerOrg[org] || 0) + assetCount
+      }
+    }
+
+    res.json({
+      organizations: organizationsMap.size,
+      usersPerOrganization: usersPerOrg,
+      assetsPerOrganization: assetsPerOrg,
+      totalAssets
+    })
+  } catch (error) {
+    console.error('Admin summary error:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+app.get('/api/admin/organizations', authenticateToken, requireAdminLocal, async (req, res) => {
+  try {
+    const usernames = await redis.sMembers('users')
+    const orgToUsers = {}
+    const orgToAssets = {}
+
+    // First pass: collect users and assets per org
+    for (const username of usernames) {
+      const user = await redis.hGetAll(`user:${username}`)
+      if (!user.id) continue
+      const orgs = user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
+      const assets = await redis.hGetAll(`assets:${user.id}`)
+      const assetCount = Object.keys(assets).length
+      for (const org of orgs) {
+        if (!orgToUsers[org]) orgToUsers[org] = new Set()
+        orgToUsers[org].add(username)
+        orgToAssets[org] = (orgToAssets[org] || 0) + assetCount
+      }
+    }
+
+    const organizations = Object.keys(orgToUsers).map((name) => ({
+      name,
+      userCount: orgToUsers[name].size,
+      assetCount: orgToAssets[name] || 0
+    }))
+
+    res.json({ organizations })
+  } catch (error) {
+    console.error('Admin organizations error:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+app.get('/api/org/summary', authenticateToken, async (req, res) => {
+  try {
+    const orgs = req.user.organizations || []
+    const usernames = await redis.sMembers('users')
+    const usersPerOrg = {}
+    const assetsPerOrg = {}
+    let totalAssets = 0
+
+    for (const username of usernames) {
+      const user = await redis.hGetAll(`user:${username}`)
+      if (!user.id) continue
+      const userOrgs = user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
+      const intersect = userOrgs.some((o) => orgs.includes(o))
+      if (!intersect) continue
+      const assets = await redis.hGetAll(`assets:${user.id}`)
+      const assetCount = Object.keys(assets).length
+      totalAssets += assetCount
+      for (const org of userOrgs) {
+        if (!orgs.includes(org)) continue
+        usersPerOrg[org] = (usersPerOrg[org] || 0) + 1
+        assetsPerOrg[org] = (assetsPerOrg[org] || 0) + assetCount
+      }
+    }
+
+    res.json({
+      organizations: orgs.length,
+      usersPerOrganization: usersPerOrg,
+      assetsPerOrganization: assetsPerOrg,
+      totalAssets
+    })
+  } catch (error) {
+    console.error('Org summary error:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
 // Start server with HTTPS if configured
 const HTTPS_ENABLED = process.env.HTTPS === 'true'
 const SSL_KEY_PATH = process.env.SSL_KEY_PATH || './certs/private-key.pem'

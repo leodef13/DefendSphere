@@ -42,6 +42,9 @@ export const API_ENDPOINTS = {
   // Admin endpoints
   ADMIN_USERS: `${API_BASE_URL}/api/admin/users`,
   ADMIN_USER: (username: string) => `${API_BASE_URL}/api/admin/users/${username}`,
+  ADMIN_SUMMARY: `${API_BASE_URL}/api/admin/summary`,
+  ADMIN_ORGANIZATIONS: `${API_BASE_URL}/api/admin/organizations`,
+  ORG_SUMMARY: `${API_BASE_URL}/api/org/summary`,
 }
 
 export default API_BASE_URL
