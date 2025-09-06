@@ -105,18 +105,6 @@ function Header() {
   return (
     <header className="flex items-center justify-between mb-4">
       <h1 className="text-2xl font-bold">{title}</h1>
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-gray-600">
-          {t('auth.welcome')}, {user?.username || 'User'}
-        </span>
-        <button 
-          onClick={logout}
-          className="btn-primary inline-flex items-center gap-2 px-3 py-2 rounded-md"
-        >
-          <User className="h-4 w-4" color="#fff" />
-          {t('auth.logout')}
-        </button>
-      </div>
     </header>
   )
 }
