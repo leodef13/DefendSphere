@@ -268,7 +268,7 @@ router.post('/', authenticateToken, async (req, res) => {
         const config = await client.hGetAll(providerKey);
         // Расшифровываем секреты (например, apiKey)
         const apiKey = config.apiKey ? decryptSecret(config.apiKey) : '';
-        const model = config.model || 'gpt-4o-mini';
+        const model = config.model || '';
 
         if (activeProvider === 'openai' && apiKey) {
           try {
@@ -280,7 +280,7 @@ router.post('/', authenticateToken, async (req, res) => {
                 'Authorization': `Bearer ${apiKey}`
               },
               body: JSON.stringify({
-                model,
+                model: model || 'gpt-4o-mini',
                 messages: [
                   { role: 'system', content: 'You are DefendSphere security assistant. Be concise.' },
                   { role: 'user', content: message }
@@ -291,6 +291,24 @@ router.post('/', authenticateToken, async (req, res) => {
             if (!resp.ok) throw new Error(`OpenAI HTTP ${resp.status}`)
             const data = await resp.json()
             const content = data?.choices?.[0]?.message?.content || 'OK'
+            response = { response: content, type: 'text' }
+          } catch (e) {
+            response = generateAssistantResponse(message, userRole, userDataResults)
+          }
+        } else if (activeProvider === 'gemini' && apiKey) {
+          try {
+            const endpoint = config.endpoint || 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key='
+            const url = endpoint.includes('key=') ? endpoint : `${endpoint}${apiKey}`
+            const resp = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: message }]}]
+              })
+            })
+            if (!resp.ok) throw new Error(`Gemini HTTP ${resp.status}`)
+            const data = await resp.json()
+            const content = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'OK'
             response = { response: content, type: 'text' }
           } catch (e) {
             response = generateAssistantResponse(message, userRole, userDataResults)

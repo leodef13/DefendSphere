@@ -181,7 +181,7 @@ router.post('/:provider/test', authenticateToken, requireAdmin, async (req, res)
     if (provider === 'openai') {
       try {
         const apiKeyEnc = config.apiKey
-        const apiKey = apiKeyEnc ? encryptSecret(decryptSecret(apiKeyEnc)) && decryptSecret(apiKeyEnc) : ''
+        const apiKey = apiKeyEnc ? decryptSecret(apiKeyEnc) : ''
         const model = config.model || 'gpt-4o-mini'
         const endpoint = config.endpoint || 'https://api.openai.com/v1/chat/completions'
 
@@ -200,6 +200,23 @@ router.post('/:provider/test', authenticateToken, requireAdmin, async (req, res)
         if (!resp.ok) throw new Error(`OpenAI HTTP ${resp.status}`)
         const data = await resp.json()
         const content = data?.choices?.[0]?.message?.content || 'OK'
+        result = { provider, ok: true, message: content, timestamp: new Date().toISOString() }
+      } catch (e) {
+        result = { provider, ok: false, error: String(e.message || e) }
+      }
+    } else if (provider === 'gemini') {
+      try {
+        const apiKey = config.apiKey ? decryptSecret(config.apiKey) : ''
+        const endpoint = config.endpoint || 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key='
+        const url = endpoint.includes('key=') ? endpoint : `${endpoint}${apiKey}`
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: req.body?.message || 'Ping' }]}] })
+        })
+        if (!resp.ok) throw new Error(`Gemini HTTP ${resp.status}`)
+        const data = await resp.json()
+        const content = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'OK'
         result = { provider, ok: true, message: content, timestamp: new Date().toISOString() }
       } catch (e) {
         result = { provider, ok: false, error: String(e.message || e) }
