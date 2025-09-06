@@ -179,7 +179,7 @@ const Reports: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Security Report - MyRockShows Analysis</h1>
+        <h1 className="text-2xl font-bold">Security Report - Company LLD Analysis</h1>
         <div className="flex gap-2">
           <Button onClick={handleExportPDF} variant="secondary">
             Export PDF

@@ -349,22 +349,101 @@ export default function Dashboard() {
         </section>
       )}
 
-      {/* Default metrics for other users */}
-      {!isCompanyLLD && (
-        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {user?.role === 'admin' && adminSummary ? (
-            <>
-              <MetricCard title="Organizations" value={adminSummary.organizations} icon={Shield} />
-              <MetricCard title="Total Assets" value={adminSummary.totalAssets} icon={Server} />
-              <MetricCard title="Users (sum)" value={Object.values(adminSummary.usersPerOrganization).reduce((a: any, b: any) => (a as number) + (b as number), 0)} icon={Users} />
-              <MetricCard title="Orgs with Assets" value={Object.keys(adminSummary.assetsPerOrganization).length} icon={Building2} />
-            </>
-          ) : (
-            metrics.map((m) => (
-              <MetricCard key={m.title} title={m.title} value={m.value} icon={m.icon} />)
-            )
-          )}
-        </section>
+      {/* Admin Home: metrics, table and charts */}
+      {user?.role === 'admin' && adminSummary && (
+        <>
+          <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+            <MetricCard title="Organizations" value={adminSummary.organizations} icon={Shield} />
+            <MetricCard title="Total Users" value={Object.values(adminSummary.usersPerOrganization).reduce((a: any, b: any) => (a as number) + (b as number), 0)} icon={Users} />
+            <MetricCard title="Total Assets" value={adminSummary.totalAssets} icon={Server} />
+            <MetricCard title="Total Suppliers" value={adminSummary.totalSuppliers} icon={Building2} />
+            <MetricCard title="Orgs with Assets" value={Object.keys(adminSummary.assetsPerOrganization).length} icon={Building2} />
+          </section>
+
+          <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+            <Card>
+              <CardHeader className="p-4 pb-0"><h3 className="text-sm font-medium">Users per Organization</h3></CardHeader>
+              <CardContent className="p-4 h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={Object.entries(adminSummary.usersPerOrganization).map(([name, value]: any) => ({ name, value }))} dataKey="value" nameKey="name" outerRadius={90}>
+                      {Object.keys(adminSummary.usersPerOrganization).map((_, idx) => (
+                        <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Legend />
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="p-4 pb-0"><h3 className="text-sm font-medium">Assets per Organization</h3></CardHeader>
+              <CardContent className="p-4 h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={Object.entries(adminSummary.assetsPerOrganization).map(([name, value]: any) => ({ name, value }))} dataKey="value" nameKey="name" outerRadius={90}>
+                      {Object.keys(adminSummary.assetsPerOrganization).map((_, idx) => (
+                        <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Legend />
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="p-4 pb-0"><h3 className="text-sm font-medium">Suppliers per Organization</h3></CardHeader>
+              <CardContent className="p-4 h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={Object.entries(adminSummary.suppliersPerOrganization || {}).map(([name, value]: any) => ({ name, value }))} dataKey="value" nameKey="name" outerRadius={90}>
+                      {Object.keys(adminSummary.suppliersPerOrganization || {}).map((_, idx) => (
+                        <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Legend />
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+            <Card className="lg:col-span-2">
+              <CardHeader className="p-4 pb-0"><h3 className="text-sm font-medium">Organizations Summary</h3></CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Organization</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Users</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Assets</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Suppliers</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {Object.keys(adminSummary.usersPerOrganization).map((org) => (
+                        <tr key={org} className="hover:bg-gray-50">
+                          <td className="px-4 py-2">{org}</td>
+                          <td className="px-4 py-2">{adminSummary.usersPerOrganization[org]}</td>
+                          <td className="px-4 py-2">{adminSummary.assetsPerOrganization[org] || 0}</td>
+                          <td className="px-4 py-2">{(adminSummary.suppliersPerOrganization || {})[org] || 0}</td>
+                        </tr>
+                      ))}
+                      <tr className="bg-gray-50 font-semibold">
+                        <td className="px-4 py-2">Total</td>
+                        <td className="px-4 py-2">{Object.values(adminSummary.usersPerOrganization).reduce((a: any, b: any) => (a as number) + (b as number), 0)}</td>
+                        <td className="px-4 py-2">{adminSummary.totalAssets}</td>
+                        <td className="px-4 py-2">{adminSummary.totalSuppliers}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        </>
       )}
 
       <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">

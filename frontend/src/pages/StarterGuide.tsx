@@ -71,7 +71,7 @@ const StarterGuide: React.FC = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-3">
         <FileText className="h-8 w-8 text-blue-600" />
-        <h1 className="text-2xl font-bold">Starter Guide - MyRockShows Security Assessment</h1>
+        <h1 className="text-2xl font-bold">Starter Guide - Company LLD Security Assessment</h1>
       </div>
 
       {isCompanyLLD && profile ? (

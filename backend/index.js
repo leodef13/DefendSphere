@@ -522,6 +522,8 @@ app.get('/api/admin/summary', authenticateToken, requireAdminLocal, async (req, 
     const usersPerOrg = {}
     const assetsPerOrg = {}
     let totalAssets = 0
+    let totalSuppliers = 0
+    const suppliersPerOrg = {}
 
     for (const username of usernames) {
       const user = await redis.hGetAll(`user:${username}`)
@@ -530,10 +532,15 @@ app.get('/api/admin/summary', authenticateToken, requireAdminLocal, async (req, 
       const assets = await redis.hGetAll(`assets:${user.id}`)
       const assetCount = Object.keys(assets).length
       totalAssets += assetCount
+      // suppliers are stored by user id if present
+      const suppliers = await redis.hGetAll(`suppliers:${user.id}`)
+      const supplierCount = Object.keys(suppliers).length
+      totalSuppliers += supplierCount
       for (const org of orgs) {
         organizationsMap.set(org, true)
         usersPerOrg[org] = (usersPerOrg[org] || 0) + 1
         assetsPerOrg[org] = (assetsPerOrg[org] || 0) + assetCount
+        suppliersPerOrg[org] = (suppliersPerOrg[org] || 0) + supplierCount
       }
     }
 
@@ -541,7 +548,9 @@ app.get('/api/admin/summary', authenticateToken, requireAdminLocal, async (req, 
       organizations: organizationsMap.size,
       usersPerOrganization: usersPerOrg,
       assetsPerOrganization: assetsPerOrg,
-      totalAssets
+      suppliersPerOrganization: suppliersPerOrg,
+      totalAssets,
+      totalSuppliers
     })
   } catch (error) {
     console.error('Admin summary error:', error)
@@ -554,6 +563,7 @@ app.get('/api/admin/organizations', authenticateToken, requireAdminLocal, async 
     const usernames = await redis.sMembers('users')
     const orgToUsers = {}
     const orgToAssets = {}
+    const orgToSuppliers = {}
 
     // First pass: collect users and assets per org
     for (const username of usernames) {
@@ -562,17 +572,21 @@ app.get('/api/admin/organizations', authenticateToken, requireAdminLocal, async 
       const orgs = user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
       const assets = await redis.hGetAll(`assets:${user.id}`)
       const assetCount = Object.keys(assets).length
+      const suppliers = await redis.hGetAll(`suppliers:${user.id}`)
+      const supplierCount = Object.keys(suppliers).length
       for (const org of orgs) {
         if (!orgToUsers[org]) orgToUsers[org] = new Set()
         orgToUsers[org].add(username)
         orgToAssets[org] = (orgToAssets[org] || 0) + assetCount
+        orgToSuppliers[org] = (orgToSuppliers[org] || 0) + supplierCount
       }
     }
 
     const organizations = Object.keys(orgToUsers).map((name) => ({
       name,
       userCount: orgToUsers[name].size,
-      assetCount: orgToAssets[name] || 0
+      assetCount: orgToAssets[name] || 0,
+      supplierCount: orgToSuppliers[name] || 0
     }))
 
     res.json({ organizations })
@@ -589,6 +603,8 @@ app.get('/api/org/summary', authenticateToken, async (req, res) => {
     const usersPerOrg = {}
     const assetsPerOrg = {}
     let totalAssets = 0
+    let totalSuppliers = 0
+    const suppliersPerOrg = {}
 
     for (const username of usernames) {
       const user = await redis.hGetAll(`user:${username}`)
@@ -599,10 +615,14 @@ app.get('/api/org/summary', authenticateToken, async (req, res) => {
       const assets = await redis.hGetAll(`assets:${user.id}`)
       const assetCount = Object.keys(assets).length
       totalAssets += assetCount
+      const suppliers = await redis.hGetAll(`suppliers:${user.id}`)
+      const supplierCount = Object.keys(suppliers).length
+      totalSuppliers += supplierCount
       for (const org of userOrgs) {
         if (!orgs.includes(org)) continue
         usersPerOrg[org] = (usersPerOrg[org] || 0) + 1
         assetsPerOrg[org] = (assetsPerOrg[org] || 0) + assetCount
+        suppliersPerOrg[org] = (suppliersPerOrg[org] || 0) + supplierCount
       }
     }
 
@@ -610,7 +630,9 @@ app.get('/api/org/summary', authenticateToken, async (req, res) => {
       organizations: orgs.length,
       usersPerOrganization: usersPerOrg,
       assetsPerOrganization: assetsPerOrg,
-      totalAssets
+      suppliersPerOrganization: suppliersPerOrg,
+      totalAssets,
+      totalSuppliers
     })
   } catch (error) {
     console.error('Org summary error:', error)

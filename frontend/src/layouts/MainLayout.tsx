@@ -14,16 +14,9 @@ function Sidebar() {
   // Fixed order of sections; only these sections are shown
   const navItems = [
     { to: '/dashboard', label: t('nav.home'), icon: LayoutDashboard, permission: 'access.dashboard' },
-    { to: '/starter-guide', label: t('nav.starterGuide'), icon: HelpCircle, permission: 'access.dashboard' },
-    { to: '/assets', label: t('nav.assets'), icon: Server, permission: 'access.assets' },
-    { to: '/reports', label: t('nav.reports'), icon: FileText, permission: 'access.reports' },
-    { to: '/compliance', label: t('nav.compliance'), icon: FileCheck, permission: 'access.compliance' },
-    { to: '/customer-trust', label: t('nav.customerTrust'), icon: Users, permission: 'access.customerTrust' },
-    { to: '/suppliers', label: t('nav.suppliers'), icon: Building2, permission: 'access.suppliers' },
-    { to: '/integrations', label: t('nav.integrations'), icon: Plug, permission: 'access.integrations' },
-    // New sections appended at the end
     { to: '/admin', label: 'Admin Panel', icon: Settings, permission: 'access.admin' },
     { to: '/user-dashboard', label: 'User Dashboard', icon: User, permission: 'access.dashboard' },
+    { to: '/integrations', label: t('nav.integrations'), icon: Plug, permission: 'access.integrations' },
   ]
 
   // Filter navigation items based on user permissions

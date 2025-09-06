@@ -170,7 +170,7 @@ const Assets: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Server className="h-8 w-8 text-blue-600" />
-          <h1 className="text-2xl font-bold">Assets - MyRockShows Infrastructure</h1>
+          <h1 className="text-2xl font-bold">Assets - Company LLD Infrastructure</h1>
         </div>
         
         {/* Scan Status Indicator */}
