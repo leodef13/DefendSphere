@@ -14,8 +14,7 @@ const translations: Record<Language, Translations> = {
     'nav.reports': 'Reports',
     'nav.starterGuide': 'Starter Guide',
     'nav.integrations': 'Integrations',
-    'nav.incidents': 'Incidents',
-    'nav.alerts': 'Alerts',
+    // incidents/alerts removed
     'nav.settings': 'Settings',
     'nav.admin': 'Admin Panel',
     
@@ -78,8 +77,7 @@ const translations: Record<Language, Translations> = {
     'permissions.suppliers': 'Suppliers Access',
     'permissions.reports': 'Reports Access',
     'permissions.integrations': 'Integrations Access',
-    'permissions.incidents': 'Incidents Access',
-    'permissions.alerts': 'Alerts Access',
+    // incidents/alerts removed
     
     // Common
     'common.loading': 'Loading...',
@@ -104,8 +102,7 @@ const translations: Record<Language, Translations> = {
     'nav.reports': 'Отчеты',
     'nav.starterGuide': 'Руководство',
     'nav.integrations': 'Интеграции',
-    'nav.incidents': 'Инциденты',
-    'nav.alerts': 'Оповещения',
+    // incidents/alerts removed
     'nav.settings': 'Настройки',
     'nav.admin': 'Панель администратора',
     
@@ -168,8 +165,7 @@ const translations: Record<Language, Translations> = {
     'permissions.suppliers': 'Доступ к поставщикам',
     'permissions.reports': 'Доступ к отчетам',
     'permissions.integrations': 'Доступ к интеграциям',
-    'permissions.incidents': 'Доступ к инцидентам',
-    'permissions.alerts': 'Доступ к оповещениям',
+    // incidents/alerts removed
     
     // Common
     'common.loading': 'Загрузка...',
@@ -194,8 +190,7 @@ const translations: Record<Language, Translations> = {
     'nav.reports': 'Informes',
     'nav.starterGuide': 'Guía de Inicio',
     'nav.integrations': 'Integraciones',
-    'nav.incidents': 'Incidentes',
-    'nav.alerts': 'Alertas',
+    // incidents/alerts removed
     'nav.settings': 'Configuración',
     'nav.admin': 'Panel de Administración',
     
@@ -258,8 +253,7 @@ const translations: Record<Language, Translations> = {
     'permissions.suppliers': 'Acceso a Proveedores',
     'permissions.reports': 'Acceso a Informes',
     'permissions.integrations': 'Acceso a Integraciones',
-    'permissions.incidents': 'Acceso a Incidentes',
-    'permissions.alerts': 'Acceso a Alertas',
+    // incidents/alerts removed
     
     // Common
     'common.loading': 'Cargando...',

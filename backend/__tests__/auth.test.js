@@ -49,7 +49,7 @@ app.post('/api/auth/login', async (req, res) => {
         email: 'user1@defendsphere.com',
         password: await bcrypt.hash('user1', 10),
         role: 'user',
-        permissions: JSON.stringify(['access.dashboard', 'access.assets', 'access.incidents', 'access.alerts']),
+        permissions: JSON.stringify(['access.dashboard', 'access.assets']),
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       },

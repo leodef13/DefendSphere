@@ -71,8 +71,6 @@ const availablePermissions = [
   'access.suppliers',
   'access.reports',
   'access.integrations',
-  'access.incidents',
-  'access.alerts',
   'access.admin'
 ]
 
