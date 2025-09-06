@@ -74,10 +74,11 @@ export default function UserDashboard() {
     try {
       const updateData: any = { email: formData.email }
       if (formData.password) {
-        updateData.password = formData.password
+        updateData.newPassword = formData.password
+        updateData.currentPassword = ''
       }
 
-      const response = await fetch(API_ENDPOINTS.ME, {
+      const response = await fetch(`${API_ENDPOINTS.HEALTH.replace('/health','')}/api/users/profile`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

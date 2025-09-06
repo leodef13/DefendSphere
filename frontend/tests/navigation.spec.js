@@ -22,8 +22,6 @@ test.describe('Navigation and Access Control Tests', () => {
         'Reports',
         'Starter Guide',
         'Integrations',
-        'Incidents',
-        'Alerts',
         'Settings'
       ]
 
@@ -44,8 +42,6 @@ test.describe('Navigation and Access Control Tests', () => {
         { link: 'Reports', title: 'Reports' },
         { link: 'Starter Guide', title: 'Starter Guide' },
         { link: 'Integrations', title: 'Integrations' },
-        { link: 'Incidents', title: 'Incidents' },
-        { link: 'Alerts', title: 'Alerts' },
         { link: 'Settings', title: 'Settings' }
       ]
 
@@ -77,8 +73,6 @@ test.describe('Navigation and Access Control Tests', () => {
       const allowedItems = [
         'Home',
         'Assets',
-        'Incidents',
-        'Alerts',
         'Starter Guide',
         'Settings'
       ]
@@ -149,8 +143,6 @@ test.describe('Navigation and Access Control Tests', () => {
       const restrictedItems = [
         'Compliance',
         'Customer Trust',
-        'Incidents',
-        'Alerts',
         'Integrations'
       ]
 

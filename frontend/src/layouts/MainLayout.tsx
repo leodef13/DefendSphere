@@ -104,8 +104,6 @@ function Header() {
     '/reports': t('nav.reports'),
     '/starter-guide': t('nav.starterGuide'),
     '/integrations': t('nav.integrations'),
-    '/incidents': t('nav.incidents'),
-    '/alerts': t('nav.alerts'),
     '/settings': t('nav.settings'),
     '/admin': t('nav.admin'),
     '/user-dashboard': 'User Dashboard',

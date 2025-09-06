@@ -27,8 +27,7 @@ test.describe('Multilanguage Support Tests', () => {
     await expect(page.locator('text=Отчеты')).toBeVisible()
     await expect(page.locator('text=Руководство для начинающих')).toBeVisible()
     await expect(page.locator('text=Интеграции')).toBeVisible()
-    await expect(page.locator('text=Инциденты')).toBeVisible()
-    await expect(page.locator('text=Оповещения')).toBeVisible()
+    // Incidents/Alerts removed
     await expect(page.locator('text=Настройки')).toBeVisible()
     await expect(page.locator('text=Панель администратора')).toBeVisible()
   })
@@ -50,8 +49,7 @@ test.describe('Multilanguage Support Tests', () => {
     await expect(page.locator('text=Informes')).toBeVisible()
     await expect(page.locator('text=Guía de inicio')).toBeVisible()
     await expect(page.locator('text=Integraciones')).toBeVisible()
-    await expect(page.locator('text=Incidentes')).toBeVisible()
-    await expect(page.locator('text=Alertas')).toBeVisible()
+    // Incidents/Alerts removed
     await expect(page.locator('text=Configuración')).toBeVisible()
     await expect(page.locator('text=Panel de administración')).toBeVisible()
   })
@@ -75,8 +73,7 @@ test.describe('Multilanguage Support Tests', () => {
     await expect(page.locator('text=Reports')).toBeVisible()
     await expect(page.locator('text=Starter Guide')).toBeVisible()
     await expect(page.locator('text=Integrations')).toBeVisible()
-    await expect(page.locator('text=Incidents')).toBeVisible()
-    await expect(page.locator('text=Alerts')).toBeVisible()
+    // Incidents/Alerts removed
     await expect(page.locator('text=Settings')).toBeVisible()
     await expect(page.locator('text=Admin Panel')).toBeVisible()
   })

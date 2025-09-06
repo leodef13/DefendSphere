@@ -37,30 +37,41 @@ const AssistantButton: React.FC = () => {
     check()
   }, [])
 
-  const send = () => {
+  const send = async () => {
     const text = input.trim()
     if (!text) return
     setMessages((prev) => [...prev, { role: 'user', text }, { role: 'ai', text: '…' }])
     setInput('')
-    setTimeout(() => {
+    try {
+      const res = await fetch(`${API_ENDPOINTS.ASSISTANT}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: text, userId: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).id : '', userRole: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).role : '' })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setMessages((prev) => {
+          const copy = [...prev]
+          copy[copy.length - 1] = { role: 'ai', text: String(data.response || data.message || 'OK') }
+          return copy
+        })
+      } else {
+        setMessages((prev) => {
+          const copy = [...prev]
+          copy[copy.length - 1] = { role: 'ai', text: 'Ассистент недоступен. Попробуйте позже.' }
+          return copy
+        })
+      }
+    } catch {
       setMessages((prev) => {
         const copy = [...prev]
-        if (available) {
-          copy[copy.length - 1] = { role: 'ai', text: `(${provider || 'LLM'}) Ответ на тестовый запрос.` }
-        } else {
-          // Simple GDPR/NIS2 fallback tips
-          const lower = text.toLowerCase()
-          let reply = 'AI ассистент недоступен. Настройте интеграцию в Admin Panel → Integrations.'
-          if (lower.includes('gdpr')) {
-            reply = 'GDPR: обеспечьте законность обработки, минимизацию данных, права субъектов и DPIA при высоких рисках.'
-          } else if (lower.includes('nis2') || lower.includes('nis 2')) {
-            reply = 'NIS2: внедрите управление рисками, инцидент-репортинг в срок, цепочку поставок и меры по устойчивости.'
-          }
-          copy[copy.length - 1] = { role: 'ai', text: reply }
-        }
+        copy[copy.length - 1] = { role: 'ai', text: 'Ошибка подключения к ассистенту.' }
         return copy
       })
-    }, 600)
+    }
   }
 
   return (

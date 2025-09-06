@@ -1,6 +1,7 @@
 import express from 'express';
 import { createClient } from 'redis';
 import { decryptSecret } from '../lib/crypto.js';
+import fetch from 'node-fetch';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -267,14 +268,36 @@ router.post('/', authenticateToken, async (req, res) => {
         const config = await client.hGetAll(providerKey);
         // Расшифровываем секреты (например, apiKey)
         const apiKey = config.apiKey ? decryptSecret(config.apiKey) : '';
-        const model = config.model || '';
+        const model = config.model || 'gpt-4o-mini';
 
-        // На данном этапе выполняем мок-ответ, имитируя внешний вызов
-        // Здесь позже подключаются реальные SDK провайдеров
-        response = {
-          response: `(${activeProvider}) ${message}\n\n[demo] Using model: ${model || 'default'}\n[demo] Provider is enabled and would be called here`,
-          type: 'text'
-        };
+        if (activeProvider === 'openai' && apiKey) {
+          try {
+            const endpoint = config.endpoint || 'https://api.openai.com/v1/chat/completions'
+            const resp = await fetch(endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+              },
+              body: JSON.stringify({
+                model,
+                messages: [
+                  { role: 'system', content: 'You are DefendSphere security assistant. Be concise.' },
+                  { role: 'user', content: message }
+                ],
+                max_tokens: 200
+              })
+            })
+            if (!resp.ok) throw new Error(`OpenAI HTTP ${resp.status}`)
+            const data = await resp.json()
+            const content = data?.choices?.[0]?.message?.content || 'OK'
+            response = { response: content, type: 'text' }
+          } catch (e) {
+            response = generateAssistantResponse(message, userRole, userDataResults)
+          }
+        } else {
+          response = generateAssistantResponse(message, userRole, userDataResults)
+        }
       } else {
         response = generateAssistantResponse(message, userRole, userDataResults);
       }

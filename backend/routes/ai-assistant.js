@@ -177,13 +177,40 @@ router.post('/:provider/test', authenticateToken, requireAdmin, async (req, res)
       return res.status(400).json({ error: 'Provider not configured' })
     }
 
-    // For now, mock external call to avoid real API dependency
-    // In real implementation, decrypt secrets and call provider SDK
-    const result = {
-      provider,
-      ok: true,
-      echo: req.body?.message || 'Hello from test',
-      timestamp: new Date().toISOString()
+    let result
+    if (provider === 'openai') {
+      try {
+        const apiKeyEnc = config.apiKey
+        const apiKey = apiKeyEnc ? encryptSecret(decryptSecret(apiKeyEnc)) && decryptSecret(apiKeyEnc) : ''
+        const model = config.model || 'gpt-4o-mini'
+        const endpoint = config.endpoint || 'https://api.openai.com/v1/chat/completions'
+
+        const resp = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: 'user', content: req.body?.message || 'Ping' }],
+            max_tokens: 64
+          })
+        })
+        if (!resp.ok) throw new Error(`OpenAI HTTP ${resp.status}`)
+        const data = await resp.json()
+        const content = data?.choices?.[0]?.message?.content || 'OK'
+        result = { provider, ok: true, message: content, timestamp: new Date().toISOString() }
+      } catch (e) {
+        result = { provider, ok: false, error: String(e.message || e) }
+      }
+    } else {
+      result = {
+        provider,
+        ok: true,
+        echo: req.body?.message || 'Hello from test',
+        timestamp: new Date().toISOString()
+      }
     }
 
     await logAction('test_provider', req.user.id, { provider })
