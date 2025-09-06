@@ -66,8 +66,8 @@ function redactConfigForResponse(config) {
   return result
 }
 
-// GET /api/ai-assistant
-router.get('/', authenticateToken, requireAdmin, async (req, res) => {
+// GET /api/ai-assistant (status) — available to any authenticated user
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const active = await client.get(ACTIVE_KEY)
     if (!active) {
