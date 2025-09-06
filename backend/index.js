@@ -168,7 +168,8 @@ app.post('/api/auth/login', async (req, res) => {
       token,
       user: {
         ...user,
-        permissions: JSON.parse(user.permissions)
+        permissions: JSON.parse(user.permissions),
+        organizations: user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
       }
     })
   } catch (error) {
@@ -188,7 +189,8 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
     res.json({
       user: {
         ...user,
-        permissions: JSON.parse(user.permissions)
+        permissions: JSON.parse(user.permissions),
+        organizations: user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
       }
     })
   } catch (error) {
@@ -443,11 +445,11 @@ async function initializeDefaultUsers() {
       const user1 = {
         id: '2',
         username: 'user1',
-        email: 'user1@defendsphere.com',
+        email: 'user1@company',
         password: hashedPassword,
         role: 'user',
         permissions: JSON.stringify(['access.dashboard', 'access.assets', 'access.reports']),
-        organization: 'Company LLD',
+        organizations: JSON.stringify(['Company LLD']),
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       }
@@ -466,13 +468,32 @@ async function initializeDefaultUsers() {
         password: hashedPassword,
         role: 'user',
         permissions: JSON.stringify(['access.dashboard', 'access.reports']),
-        organization: 'Watson Morris',
+        organizations: JSON.stringify(['Watson Morris']),
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       }
       await redis.hSet('user:user2', user2)
       await redis.sAdd('users', 'user2')
       console.log('User2 created')
+    }
+
+    const user3Exists = await redis.hGetAll('user:user3')
+    if (!user3Exists.username) {
+      const hashedPassword = await bcrypt.hash('user3', 10)
+      const user3 = {
+        id: '4',
+        username: 'user3',
+        email: 'user3@company',
+        password: hashedPassword,
+        role: 'user',
+        permissions: JSON.stringify(['access.dashboard', 'access.assets', 'access.reports']),
+        organizations: JSON.stringify(['Company LLD']),
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString()
+      }
+      await redis.hSet('user:user3', user3)
+      await redis.sAdd('users', 'user3')
+      console.log('User3 created')
     }
   } catch (error) {
     console.error('Error initializing default users:', error)

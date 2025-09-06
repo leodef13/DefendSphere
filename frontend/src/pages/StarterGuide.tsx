@@ -33,8 +33,10 @@ const StarterGuide: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const isCompanyLLD = Array.isArray(user?.organizations) && user!.organizations!.includes('Company LLD')
+
   useEffect(() => {
-    if (user?.username === 'user1') {
+    if (isCompanyLLD) {
       fetchUserProfile()
     } else {
       setLoading(false)
@@ -72,7 +74,7 @@ const StarterGuide: React.FC = () => {
         <h1 className="text-2xl font-bold">Starter Guide - MyRockShows Security Assessment</h1>
       </div>
 
-      {user?.username === 'user1' && profile ? (
+      {isCompanyLLD && profile ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Company Information */}
           <Card>

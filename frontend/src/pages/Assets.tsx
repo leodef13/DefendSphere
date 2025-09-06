@@ -32,8 +32,10 @@ const Assets: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const isCompanyLLD = Array.isArray(user?.organizations) && user!.organizations!.includes('Company LLD')
+
   useEffect(() => {
-    if (user?.username === 'user1') {
+    if (isCompanyLLD) {
       fetchAssets()
       checkActiveScan()
     } else {
@@ -172,7 +174,7 @@ const Assets: React.FC = () => {
         </div>
         
         {/* Scan Status Indicator */}
-        {user?.username === 'user1' && activeScan && (
+        {isCompanyLLD && activeScan && (
           <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-200">
             {activeScan.status === 'running' && <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />}
             {activeScan.status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600" />}
@@ -186,7 +188,7 @@ const Assets: React.FC = () => {
         )}
       </div>
 
-      {user?.username === 'user1' && assets.length > 0 ? (
+      {isCompanyLLD && assets.length > 0 ? (
         <div className="space-y-6">
           {assets.map((asset) => (
             <Card key={asset.id} className="overflow-hidden">

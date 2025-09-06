@@ -50,9 +50,11 @@ const Reports: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const isCompanyLLD = Array.isArray(user?.organizations) && user!.organizations!.includes('Company LLD')
+
   useEffect(() => {
     fetchReportData()
-    if (user?.username === 'user1') {
+    if (isCompanyLLD) {
       checkActiveScan()
     }
   }, [user])
@@ -188,7 +190,7 @@ const Reports: React.FC = () => {
       </div>
 
       {/* Greenbone Scan Reports Section */}
-      {user?.username === 'user1' && (activeScan || scanReports.length > 0) && (
+      {isCompanyLLD && (activeScan || scanReports.length > 0) && (
         <Card className="border-green-200 bg-green-50">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -353,7 +355,7 @@ const Reports: React.FC = () => {
       </div>
 
       {/* Greenbone Scan Reports Section */}
-      {user?.username === 'user1' && scanReports.length > 0 && (
+      {isCompanyLLD && scanReports.length > 0 && (
         <Card className="mb-6">
           <CardHeader>
             <div className="flex items-center justify-between">

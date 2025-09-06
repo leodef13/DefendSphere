@@ -1,19 +1,19 @@
 // Report data for user1 based on analysis results
 export const reportData = {
   user: 'user1',
-  company: 'Company LTD',
+  company: 'Company LLD',
   reportDate: '2024-01-15',
   lastScan: '2024-01-15',
   
   // Summary data
   summary: {
-    totalAssets: 1,
-    totalVulnerabilities: 7,
+    totalAssets: 4,
+    totalVulnerabilities: 32,
     riskDistribution: {
-      critical: 0,
-      high: 3,
-      medium: 3,
-      low: 1
+      critical: 5,
+      high: 9,
+      medium: 14,
+      low: 4
     },
     securityHealth: 75, // Percentage
     complianceScore: 75
@@ -23,18 +23,69 @@ export const reportData = {
   assets: [
     {
       id: 'asset-1',
-      name: 'company.ltd',
+      name: 'www.company-lld.com',
       type: 'Web Server',
       environment: 'Production',
       ip: '116.203.242.207',
-      assignedStandards: ['GDPR', 'NIS2'],
+      assignedStandards: ['NIS2', 'GDPR', 'ISO/IEC 27001'],
       compliancePercentage: 75,
       riskLevel: 'High',
       lastAssessment: '2024-01-15',
       vulnerabilities: {
-        critical: 0,
+        critical: 1,
+        high: 3,
+        medium: 5,
+        low: 1
+      }
+    },
+    {
+      id: 'asset-2',
+      name: 'db.company-lld.com',
+      type: 'Database Server',
+      environment: 'Production',
+      ip: '10.0.0.12',
+      assignedStandards: ['NIS2', 'ISO/IEC 27001'],
+      compliancePercentage: 70,
+      riskLevel: 'High',
+      lastAssessment: '2024-01-15',
+      vulnerabilities: {
+        critical: 1,
+        high: 2,
+        medium: 4,
+        low: 1
+      }
+    },
+    {
+      id: 'asset-3',
+      name: 'app.company-lld.com',
+      type: 'Application Server',
+      environment: 'Production',
+      ip: '10.0.0.21',
+      assignedStandards: ['GDPR', 'ISO/IEC 27001'],
+      compliancePercentage: 80,
+      riskLevel: 'Medium',
+      lastAssessment: '2024-01-15',
+      vulnerabilities: {
+        critical: 2,
         high: 3,
         medium: 3,
+        low: 1
+      }
+    },
+    {
+      id: 'asset-4',
+      name: 'vpn.company-lld.com',
+      type: 'VPN Gateway',
+      environment: 'Production',
+      ip: '10.0.0.30',
+      assignedStandards: ['NIS2'],
+      compliancePercentage: 75,
+      riskLevel: 'Medium',
+      lastAssessment: '2024-01-15',
+      vulnerabilities: {
+        critical: 1,
+        high: 1,
+        medium: 2,
         low: 1
       }
     }
@@ -130,17 +181,17 @@ export const reportData = {
 
   // User profile data from questionnaire
   userProfile: {
-    companyName: 'Company LTD',
-    userName: 'user1',
-    email: 'user1@user',
-    phone: 'Phone 11111-11111',
-    registeredSystems: 1,
-    recommendedStandards: ['GDPR', 'NIS2', 'DORA'],
+    companyName: 'Company LLD',
+    userName: 'Алексей',
+    email: 'user1@company',
+    phone: '+444 444 333 222',
+    registeredSystems: 4,
+    recommendedStandards: ['NIS2', 'GDPR', 'ISO/IEC 27001'],
     contacts: {
       dpo: {},
       ciso: {
-        name: 'Jon Watson',
-        email: 'ciso@user'
+        name: 'Security Officer',
+        email: 'ciso@company-lld'
       }
     }
   },

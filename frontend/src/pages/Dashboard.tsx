@@ -24,8 +24,10 @@ export default function Dashboard() {
   const [scanMessage, setScanMessage] = useState('')
   const [hasAssets, setHasAssets] = useState(false)
 
+  const isCompanyLLD = Array.isArray(user?.organizations) && user!.organizations!.includes('Company LLD')
+
   useEffect(() => {
-    if (user?.username === 'user1') {
+    if (isCompanyLLD) {
       fetchReportData()
       fetchUserAssets()
       checkActiveScan()
@@ -183,8 +185,8 @@ export default function Dashboard() {
   
   return (
     <div className="space-y-6">
-      {/* Scan Control Section for user1 */}
-      {user?.username === 'user1' && hasAssets && (
+      {/* Scan Control Section for Company LLD users */}
+      {isCompanyLLD && hasAssets && (
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -261,8 +263,8 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Security Health Section for user1 */}
-      {user?.username === 'user1' && reportData && (
+      {/* Security Health Section for Company LLD users */}
+      {isCompanyLLD && reportData && (
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
           <Card className="col-span-2">
             <CardHeader className="p-4 pb-0">
@@ -433,7 +435,7 @@ export default function Dashboard() {
       )}
 
       {/* Default metrics for other users */}
-      {user?.username !== 'user1' && (
+      {!isCompanyLLD && (
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {metrics.map((m) => (
             <MetricCard key={m.title} title={m.title} value={m.value} icon={m.icon} />)
