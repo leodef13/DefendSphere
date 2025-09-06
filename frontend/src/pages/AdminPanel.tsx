@@ -37,6 +37,10 @@ interface UserFormData {
   password: string
   role: string
   permissions: string[]
+  organization: string
+  fullName: string
+  phone: string
+  position: string
 }
 
 interface Integration {
@@ -86,7 +90,11 @@ export default function AdminPanel() {
     email: '',
     password: '',
     role: 'user',
-    permissions: ['access.dashboard']
+    permissions: ['access.dashboard'],
+    organization: '',
+    fullName: '',
+    phone: '',
+    position: ''
   })
   
   // Integration states
@@ -163,7 +171,7 @@ export default function AdminPanel() {
       }
 
       setShowAddModal(false)
-      setFormData({ username: '', email: '', password: '', role: 'user', permissions: ['access.dashboard'] })
+      setFormData({ username: '', email: '', password: '', role: 'user', permissions: ['access.dashboard'], organization: '', fullName: '', phone: '', position: '' })
       fetchUsers()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
@@ -195,7 +203,7 @@ export default function AdminPanel() {
 
       setShowEditModal(false)
       setEditingUser(null)
-      setFormData({ username: '', email: '', password: '', role: 'user', permissions: ['access.dashboard'] })
+      setFormData({ username: '', email: '', password: '', role: 'user', permissions: ['access.dashboard'], organization: '', fullName: '', phone: '', position: '' })
       fetchUsers()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
@@ -557,6 +565,16 @@ export default function AdminPanel() {
                   />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.fullName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700">Email</label>
                   <input
                     type="email"
@@ -573,6 +591,34 @@ export default function AdminPanel() {
                     required
                     value={formData.password}
                     onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Organization</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.organization}
+                    onChange={(e) => setFormData(prev => ({ ...prev, organization: e.target.value }))}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Position/Role</label>
+                  <input
+                    type="text"
+                    value={formData.position}
+                    onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Phone</label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>

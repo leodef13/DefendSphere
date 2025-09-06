@@ -34,6 +34,8 @@ const corsOptions = {
   credentials: true,
 }
 app.use(cors(corsOptions))
+// Handle preflight for all routes
+app.options('*', cors(corsOptions))
 app.use(express.json())
 app.use(morgan('dev'))
 
@@ -200,10 +202,10 @@ app.get('/api/admin/users', authenticateToken, requireAdminLocal, async (req, re
 
 app.post('/api/admin/users', authenticateToken, requireAdminLocal, async (req, res) => {
   try {
-    const { username, email, password, role, permissions } = req.body
+    const { username, email, password, role, permissions, organization, fullName, phone, position } = req.body
 
-    if (!username || !email || !password) {
-      return res.status(400).json({ message: 'Username, email, and password are required' })
+    if (!username || !email || !password || !organization) {
+      return res.status(400).json({ message: 'Username, email, password, and organization are required' })
     }
 
     // Check if user already exists
@@ -224,6 +226,10 @@ app.post('/api/admin/users', authenticateToken, requireAdminLocal, async (req, r
       password: hashedPassword,
       role: role || 'user',
       permissions: JSON.stringify(permissions || ['access.dashboard']),
+      organization,
+      fullName: fullName || '',
+      phone: phone || '',
+      position: position || '',
       createdAt: new Date().toISOString(),
       lastLogin: new Date().toISOString()
     }
@@ -247,7 +253,7 @@ app.post('/api/admin/users', authenticateToken, requireAdminLocal, async (req, r
 app.put('/api/admin/users/:username', authenticateToken, requireAdminLocal, async (req, res) => {
   try {
     const { username } = req.params
-    const { email, role, permissions, status } = req.body
+    const { email, role, permissions, status, fullName, phone, position } = req.body
 
     const user = await redis.hGetAll(`user:${username}`)
     if (!user.username) {
@@ -260,6 +266,9 @@ app.put('/api/admin/users/:username', authenticateToken, requireAdminLocal, asyn
     if (role) updates.role = role
     if (permissions) updates.permissions = JSON.stringify(permissions)
     if (status) updates.status = status
+    if (fullName !== undefined) updates.fullName = fullName
+    if (phone !== undefined) updates.phone = phone
+    if (position !== undefined) updates.position = position
 
     await redis.hSet(`user:${username}`, updates)
 
@@ -381,7 +390,8 @@ async function initializeDefaultUsers() {
         email: 'user1@defendsphere.com',
         password: hashedPassword,
         role: 'user',
-        permissions: JSON.stringify(['access.dashboard', 'access.assets', 'access.incidents', 'access.alerts', 'access.reports']),
+        permissions: JSON.stringify(['access.dashboard', 'access.assets', 'access.reports']),
+        organization: 'Company LLD',
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       }
@@ -400,6 +410,7 @@ async function initializeDefaultUsers() {
         password: hashedPassword,
         role: 'user',
         permissions: JSON.stringify(['access.dashboard', 'access.reports']),
+        organization: 'Watson Morris',
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       }

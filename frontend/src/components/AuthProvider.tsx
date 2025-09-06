@@ -6,6 +6,10 @@ interface User {
   email: string
   role: string
   permissions: string[]
+  organization?: string
+  fullName?: string
+  phone?: string
+  position?: string
 }
 
 interface AuthContextType {
