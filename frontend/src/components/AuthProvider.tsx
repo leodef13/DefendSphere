@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { API_ENDPOINTS } from '../config/api'
 
 interface User {
   id: string
@@ -20,6 +21,7 @@ interface AuthContextType {
   logout: () => void
   isAuthenticated: boolean
   initialized: boolean
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -70,13 +72,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('user')
   }
 
+  const refreshUser = async () => {
+    try {
+      const authToken = localStorage.getItem('token')
+      if (!authToken) return
+      const res = await fetch(API_ENDPOINTS.ME, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.user) {
+          setUser(data.user as any)
+          localStorage.setItem('user', JSON.stringify(data.user))
+          setIsAuthenticated(true)
+        }
+      }
+    } catch {
+      // ignore refresh errors
+    }
+  }
+
   const value = {
     user,
     token,
     login,
     logout,
     isAuthenticated,
-    initialized
+    initialized,
+    refreshUser
   }
 
   return (

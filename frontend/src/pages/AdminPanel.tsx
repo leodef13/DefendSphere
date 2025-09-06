@@ -77,7 +77,7 @@ const availablePermissions = [
 
 export default function AdminPanel() {
   const { t } = useI18n()
-  const { user: currentUser, token } = useAuth()
+  const { user: currentUser, token, refreshUser } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -187,6 +187,7 @@ export default function AdminPanel() {
       setShowAddModal(false)
       setFormData({ username: '', email: '', password: '', role: 'user', permissions: ['access.dashboard'], organization: '', fullName: '', phone: '', position: '' })
       fetchUsers()
+      await refreshUser()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     }
@@ -219,6 +220,7 @@ export default function AdminPanel() {
       setEditingUser(null)
       setFormData({ username: '', email: '', password: '', role: 'user', permissions: ['access.dashboard'], organization: '', fullName: '', phone: '', position: '' })
       fetchUsers()
+      await refreshUser()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     }
