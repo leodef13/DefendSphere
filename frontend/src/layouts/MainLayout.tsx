@@ -21,6 +21,9 @@ function Sidebar() {
     { to: '/customer-trust', label: t('nav.customerTrust'), icon: Users, permission: 'access.customerTrust' },
     { to: '/suppliers', label: t('nav.suppliers'), icon: Building2, permission: 'access.suppliers' },
     { to: '/integrations', label: t('nav.integrations'), icon: Plug, permission: 'access.integrations' },
+    // New sections appended at the end
+    { to: '/admin', label: 'Admin Panel', icon: Settings, permission: 'access.admin' },
+    { to: '/user-dashboard', label: 'User Dashboard', icon: User, permission: 'access.dashboard' },
   ]
 
   // Filter navigation items based on user permissions
@@ -28,6 +31,10 @@ function Sidebar() {
     if (!user) return false
     // Integrations is visible only for admin
     if (item.to === '/integrations') return user.role === 'admin'
+    // Admin Panel is visible only for admin
+    if (item.to === '/admin') return user.role === 'admin'
+    // User Dashboard visible to all authenticated users
+    if (item.to === '/user-dashboard') return true
     if (user.role === 'admin') return true
     return user.permissions.includes(item.permission) || user.permissions.includes('all')
   })
