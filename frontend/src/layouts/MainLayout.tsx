@@ -44,7 +44,7 @@ function Sidebar() {
         <Shield className="h-6 w-6" color="#fff" />
         <span className="font-semibold" style={{color: '#fff'}}>DefendSphere</span>
       </div>
-      <nav className="p-3" style={{display: 'grid', rowGap: '4px'}}>
+      <nav className="p-3" style={{display: 'grid', rowGap: '8px'}}>
         {filteredNavItems.map(({ to, label }) => (
           <NavLink
             key={to}

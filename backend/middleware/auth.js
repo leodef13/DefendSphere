@@ -29,7 +29,8 @@ export const authenticateToken = async (req, res, next) => {
       username: user.username,
       email: user.email,
       role: user.role,
-      permissions: user.permissions ? JSON.parse(user.permissions) : []
+      permissions: user.permissions ? JSON.parse(user.permissions) : [],
+      organizations: user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
     }
     next()
   } catch (error) {
