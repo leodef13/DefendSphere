@@ -216,6 +216,21 @@ class ScanService {
     }
   }
 
+  async getScanHistory(): Promise<ScanStatus[]> {
+    try {
+      const response = await fetch(API_ENDPOINTS.SCAN_HISTORY, {
+        method: 'GET',
+        headers: this.getAuthHeaders()
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Failed to get scan history')
+      return data.history || []
+    } catch (error) {
+      console.error('Get scan history error:', error)
+      return []
+    }
+  }
+
   // Utility method to check if user has assets for scanning
   async hasAssetsForScanning(): Promise<boolean> {
     try {

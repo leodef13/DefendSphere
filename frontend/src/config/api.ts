@@ -30,6 +30,7 @@ export const API_ENDPOINTS = {
   SCAN_UPDATE_ASSETS: (scanId: string) => `${API_BASE_URL}/api/scan/update-assets/${scanId}`,
   SCAN_TEST_CONNECTION: `${API_BASE_URL}/api/scan/test-connection`,
   SCAN_USER_ASSETS: `${API_BASE_URL}/api/scan/user-assets`,
+  SCAN_HISTORY: `${API_BASE_URL}/api/scan/history`,
   // Integration endpoints
   INTEGRATIONS_LIST: `${API_BASE_URL}/api/integrations`,
   INTEGRATION_CONFIG: (integrationId: string) => `${API_BASE_URL}/api/integrations/${integrationId}/config`,

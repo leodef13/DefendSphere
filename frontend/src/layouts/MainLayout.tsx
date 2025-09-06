@@ -60,8 +60,11 @@ function Sidebar() {
           <div className="flex items-center gap-3" style={{color: 'rgba(255,255,255,.9)'}}>
             <div className="w-8 h-8 rounded-full bg-white" style={{color: '#003a6a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700}}>
               {(() => {
-                const name = user?.username || ''
-                return name ? name.split(/\s|_/).map(s => s.charAt(0).toUpperCase()).slice(0,2).join('') : 'U'
+                function getInitials(name) {
+                  if (!name) return 'U'
+                  return name.split(/\s|_/).map((n) => n[0]).join('').slice(0,2).toUpperCase()
+                }
+                return getInitials(user?.username || '')
               })()}
             </div>
             <div>

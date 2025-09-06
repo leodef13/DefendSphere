@@ -45,7 +45,19 @@ const AssistantButton: React.FC = () => {
     setTimeout(() => {
       setMessages((prev) => {
         const copy = [...prev]
-        copy[copy.length - 1] = available ? { role: 'ai', text: `(${provider || 'LLM'}) Ответ на тестовый запрос.` } : { role: 'ai', text: 'AI ассистент недоступен. Настройте интеграцию в Admin Panel → Integrations' }
+        if (available) {
+          copy[copy.length - 1] = { role: 'ai', text: `(${provider || 'LLM'}) Ответ на тестовый запрос.` }
+        } else {
+          // Simple GDPR/NIS2 fallback tips
+          const lower = text.toLowerCase()
+          let reply = 'AI ассистент недоступен. Настройте интеграцию в Admin Panel → Integrations.'
+          if (lower.includes('gdpr')) {
+            reply = 'GDPR: обеспечьте законность обработки, минимизацию данных, права субъектов и DPIA при высоких рисках.'
+          } else if (lower.includes('nis2') || lower.includes('nis 2')) {
+            reply = 'NIS2: внедрите управление рисками, инцидент-репортинг в срок, цепочку поставок и меры по устойчивости.'
+          }
+          copy[copy.length - 1] = { role: 'ai', text: reply }
+        }
         return copy
       })
     }, 600)

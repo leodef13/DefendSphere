@@ -256,4 +256,23 @@ router.get('/user-assets', authenticateToken, async (req, res) => {
   }
 });
 
+// Get scan history (simulated)
+router.get('/history', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const history = [];
+    const statuses = greenboneService.scanStatuses;
+    if (statuses && typeof statuses.forEach === 'function') {
+      statuses.forEach((status) => {
+        if (status.userId === userId) history.push(status);
+      });
+    }
+    history.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+    res.json({ success: true, history });
+  } catch (error) {
+    console.error('Get scan history error:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
 export default router
