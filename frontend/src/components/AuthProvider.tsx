@@ -14,6 +14,7 @@ interface AuthContextType {
   login: (token: string, user: User) => void
   logout: () => void
   isAuthenticated: boolean
+  initialized: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -34,6 +35,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token')
@@ -44,6 +46,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(JSON.parse(storedUser))
       setIsAuthenticated(true)
     }
+    setInitialized(true)
   }, [])
 
   const login = (newToken: string, newUser: User) => {
@@ -67,7 +70,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     token,
     login,
     logout,
-    isAuthenticated
+    isAuthenticated,
+    initialized
   }
 
   return (

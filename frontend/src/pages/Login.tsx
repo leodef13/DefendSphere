@@ -3,9 +3,13 @@ import { Shield } from 'lucide-react'
 import { API_ENDPOINTS } from '../config/api'
 import { useI18n } from '../i18n'
 import LanguageSwitcher from '../components/LanguageSwitcher'
+import { useAuth } from '../components/AuthProvider'
+import { useNavigate } from 'react-router-dom'
 
 const Login: React.FC = () => {
   const { t } = useI18n()
+  const { login } = useAuth()
+  const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -28,9 +32,8 @@ const Login: React.FC = () => {
       const data = await response.json()
 
       if (response.ok) {
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('user', JSON.stringify(data.user))
-        window.location.href = '/dashboard'
+        login(data.token, data.user)
+        navigate('/dashboard', { replace: true })
       } else {
         setError(data.message || t('auth.loginFailed'))
       }
