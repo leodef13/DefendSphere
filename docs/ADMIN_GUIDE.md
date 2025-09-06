@@ -291,3 +291,27 @@ SSL_CERT_PATH=./certs/certificate.pem
 **Version**: 1.0.0  
 **Last Updated**: January 2024  
 **Administrator**: DefendSphere Team
+
+## Admin Panel: User Management
+
+- Add user:
+  - Fields: Login (unique), Full name, Email, Organization (required), Role/Position, Phone, Permissions
+  - Validation: unique Login, Organization required
+- Edit user:
+  - Update Email, Role/Position, Permissions
+  - Organization changes should be performed by admin only
+- Delete user
+
+## Organization-based Access
+
+- Users within the same Organization share access for:
+  - Reports
+  - Compliance
+  - Assets
+  - Suppliers
+- Configure permissions accordingly in Admin Panel
+
+## Sidebar Access
+
+- Admin Panel visible only to admins
+- User Dashboard visible to all users

@@ -21,3 +21,18 @@ Order is always:
 - Sidebar background: #003a6a; text: #ffffff
 - Bottom user block: initials + username + Logout
 - Main content uses Inter font, #f8f9fa background
+
+## New Sections
+
+- Admin Panel: “User management and system administration” (admin only)
+- User Dashboard: “Personal profile and settings” (all users)
+
+## Ordering
+
+- Sections appear after existing ones, preserving fixed order.
+
+## Access Rules
+
+- Admin Panel: requires admin role
+- User Dashboard: visible for all authenticated users
+- Organization policy: users in the same organization share access to Reports, Compliance, Assets, Suppliers

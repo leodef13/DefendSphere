@@ -193,3 +193,35 @@ DefendSphere is fully responsive and works on:
 **Version**: 1.0.0  
 **Last Updated**: January 2024  
 **Support**: DefendSphere Team
+
+## Admin Panel
+
+- Purpose: User management and system administration
+- Access: Admin only
+- Capabilities:
+  - Create users (login, name, email, organization [required], role/position, phone, permissions)
+  - Edit users (email, role/position, permissions)
+  - Delete users
+  - Validate unique login and required organization
+- Permissions mapping to Sidebar sections
+- Organization role: users of same organization share access to Reports, Compliance, Assets, Suppliers
+
+## User Dashboard
+
+- Purpose: Personal profile and settings
+- Access: All authenticated users
+- Fields shown:
+  - Full name
+  - Email
+  - Organization (read-only)
+  - Role/position
+  - Phone
+- Editing rules:
+  - Organization is not editable by user
+  - Other fields are editable
+
+## Sidebar Access Rules
+
+- Admin Panel: admin only
+- User Dashboard: all users
+- Sections visible based on user permissions and organization policy
