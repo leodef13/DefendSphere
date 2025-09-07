@@ -1,0 +1,8 @@
+/* Theme tokens (CSS variables) */
+:root {
+	--ds-primary: #56a3d9;
+	--ds-primaryDark: #134876;
+	--ds-sidebar: #003a6a;
+	--ds-background: #f8f9fa;
+	--ds-text: #2c2c2c;
+}

@@ -3,17 +3,11 @@
 @tailwind utilities;
 
 /* Импорт дополнительных стилей */
+@import './styles/tokens.css';
 @import './styles/components.css';
 
 /* Базовые стили для всего приложения */
 @layer base {
-  :root {
-    --ds-primary: #56a3d9;
-    --ds-primaryDark: #134876;
-    --ds-sidebar: #003a6a;
-    --ds-background: #f8f9fa;
-    --ds-text: #2c2c2c;
-  }
 
   * {
     box-sizing: border-box;
