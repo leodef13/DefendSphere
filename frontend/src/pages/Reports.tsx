@@ -6,6 +6,7 @@ import { useI18n } from '../i18n'
 import scanService, { type ScanStatus, type ScanReport } from '../services/scanService'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Download, FileText, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
+import VulnerabilityBarChart from '../components/VulnerabilityBarChart'
 
 interface Vulnerability {
   id: string
@@ -384,6 +385,14 @@ const Reports: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {isCompanyLLD && (
+        <Card>
+          <CardContent>
+            <VulnerabilityBarChart />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Greenbone Scan Reports Section */}
       {isCompanyLLD && scanReports.length > 0 && (
