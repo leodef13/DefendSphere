@@ -2,8 +2,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #f8f9fa;
-  color: #2c2c2c;
+  background-color: var(--ds-background, #f8f9fa);
+  color: var(--ds-text, #2c2c2c);
   height: 100vh;
   margin: 0;
   padding: 0;
@@ -11,7 +11,7 @@ body {
 }
 
 .sidebar {
-  background-color: #003a6a;
+  background-color: var(--ds-sidebar, #003a6a);
   min-height: 100vh;
   width: 250px;
   position: fixed;
@@ -53,7 +53,7 @@ body {
 }
 
 .btn-primary {
-  background-color: #56a3d9;
+  background-color: var(--ds-primary, #56a3d9);
   color: white;
   transition: all 0.3s;
   border: 0;
@@ -61,7 +61,7 @@ body {
 }
 
 .btn-primary:hover {
-  background-color: #134876;
+  background-color: var(--ds-primaryDark, #134876);
 }
 
 .chat-container {
@@ -96,7 +96,7 @@ body {
 }
 
 .chat-header {
-  background-color: #56a3d9;
+  background-color: var(--ds-primary, #56a3d9);
   color: white;
   padding: 10px 15px;
 }
@@ -121,7 +121,7 @@ body {
 }
 
 .user-message {
-  background-color: #56a3d9;
+  background-color: var(--ds-primary, #56a3d9);
   color: white;
   margin-left: auto;
 }
