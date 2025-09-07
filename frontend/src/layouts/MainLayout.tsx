@@ -61,25 +61,24 @@ function Sidebar() {
         ))}
       </nav>
       <div className="absolute bottom-0 left-0 w-full p-5" style={{borderTop: '1px solid #134876'}}>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3" style={{color: 'rgba(255,255,255,.9)'}}>
+        <div className="space-y-2" style={{color: 'rgba(255,255,255,.9)'}}>
+          <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-white" style={{color: '#003a6a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700}}>
               {(() => {
                 function getInitials(name) {
                   if (!name) return 'U'
                   return name.split(/\s|_/).map((n) => n[0]).join('').slice(0,2).toUpperCase()
                 }
-                return getInitials(user?.username || '')
+                const full = (user as any)?.fullName as string | undefined
+                return getInitials(full && full.trim().length > 0 ? full : (user?.username || ''))
               })()}
             </div>
             <div>
               <p className="text-sm font-medium">{user?.username || 'User'}</p>
-              <p className="text-xs" style={{opacity: .8}}>{user?.email || ''}</p>
             </div>
           </div>
-          <div className="flex items-center justify-between">
-            <LanguageSwitcher />
-            <button onClick={logout} className="text-xs text-white/70 hover:text-white transition-colors">Выход</button>
+          <div>
+            <button onClick={logout} className="text-xs text-white/80 hover:text-white transition-colors">{t('auth.logout')}</button>
           </div>
         </div>
       </div>
