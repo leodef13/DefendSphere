@@ -280,7 +280,7 @@ export default function Dashboard() {
 
       {/* Security Health Section for Company LLD users */}
       {isCompanyLLD && reportData && (
-        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
+        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4 metric-card">
           <Card className="col-span-2">
             <CardHeader className="p-4 pb-0">
               <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-300">Total Security Health</h3>

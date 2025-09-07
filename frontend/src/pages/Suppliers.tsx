@@ -124,7 +124,7 @@ const Suppliers: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="metric-card">
         <CardHeader>
           <div className="flex items-center gap-2 text-gray-700"><Filter className="h-4 w-4" /> Supplier Categories & Filters</div>
         </CardHeader>
@@ -165,7 +165,7 @@ const Suppliers: React.FC = () => {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card className="metric-card">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="text-lg font-semibold">Supplier Assessments</div>

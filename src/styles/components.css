@@ -24,9 +24,7 @@
 }
 
 /* Стили для карточек */
-.metric-card {
-  transition: all 0.3s ease;
-}
+.metric-card { transition: all 2s ease; }
 
 .metric-card:hover {
   transform: translateY(-2px);
@@ -82,9 +80,7 @@
   color: #6b7280;
 }
 
-.data-table tr:hover {
-  background: #f9fafb;
-}
+.data-table tr:hover { background: #f9fafb; }
 
 /* Стили для статусов */
 .status-badge {

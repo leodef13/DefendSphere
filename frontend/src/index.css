@@ -4,6 +4,7 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: var(--ds-background);
   color: var(--ds-text);
+  font-size: 14px;
   height: 100vh;
   margin: 0;
   padding: 0;
@@ -42,7 +43,7 @@ body {
 }
 
 .card {
-  background-color: #fdfeff;
+  background-color: var(--ds-card);
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   transition: all 0.3s;

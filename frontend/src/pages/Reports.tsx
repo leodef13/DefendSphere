@@ -380,7 +380,7 @@ const Reports: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="w-full flex items-center justify-center">
-            <img src={`${imageBase}/Vulsecheal.png`} alt="Risk & Health Visualization" className="max-w-full object-contain" />
+            <img src={`${imageBase}/Vulsecheal.png`} alt="Risk & Health Visualization" className="max-w-full object-contain metric-card" />
           </div>
         </CardContent>
       </Card>
