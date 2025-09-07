@@ -166,11 +166,13 @@ const Reports: React.FC = () => {
     { name: 'Low', value: summary.riskDistribution.low, color: COLORS.Low }
   ] : []
 
-  const vulnerabilityCountData = summary ? [
-    { category: 'Critical', count: summary.riskDistribution.critical },
-    { category: 'High', count: summary.riskDistribution.high },
-    { category: 'Medium', count: summary.riskDistribution.medium },
-    { category: 'Low', count: summary.riskDistribution.low }
+  const healthPieData = summary ? [
+    { name: 'Healthy', value: Math.round(summary.totalAssets * (summary.securityHealth / 100)), color: '#10B981' },
+    { name: 'Vulnerable', value: summary.totalAssets - Math.round(summary.totalAssets * (summary.securityHealth / 100)), color: '#DC2626' }
+  ] : []
+
+  const assetsPieData = summary ? [
+    { name: 'Assets', value: summary.totalAssets, color: '#3B82F6' }
   ] : []
 
   if (loading) return <div className="p-6">Loading report data...</div>
@@ -276,34 +278,99 @@ const Reports: React.FC = () => {
         </Card>
       )}
 
-      {/* Summary Cards */}
+      {/* Summary + Charts */}
       {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-blue-600">{summary.totalAssets}</div>
-              <div className="text-sm text-gray-600">Assets Scanned</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-red-600">{summary.totalVulnerabilities}</div>
-              <div className="text-sm text-gray-600">Vulnerabilities Found</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-green-600">{summary.securityHealth}%</div>
-              <div className="text-sm text-gray-600">Security Health</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-purple-600">{summary.complianceScore}%</div>
-              <div className="text-sm text-gray-600">Compliance Score</div>
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-semibold">Summary</h2>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Summary table */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-neutral-300">
+                    <tr>
+                      <th className="text-left px-4 py-2 font-medium">Metric</th>
+                      <th className="text-left px-4 py-2 font-medium">Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-t border-gray-100 dark:border-neutral-800">
+                      <td className="px-4 py-2">Total systems/assets scanned</td>
+                      <td className="px-4 py-2 font-medium">{summary.totalAssets}</td>
+                    </tr>
+                    <tr className="border-t border-gray-100 dark:border-neutral-800">
+                      <td className="px-4 py-2">Total vulnerabilities detected</td>
+                      <td className="px-4 py-2 font-medium">{summary.totalVulnerabilities}</td>
+                    </tr>
+                    <tr className="border-t border-gray-100 dark:border-neutral-800">
+                      <td className="px-4 py-2">Risk Level distribution</td>
+                      <td className="px-4 py-2">
+                        Critical: {summary.riskDistribution.critical}, High: {summary.riskDistribution.high}, Medium: {summary.riskDistribution.medium}, Low: {summary.riskDistribution.low}
+                      </td>
+                    </tr>
+                    <tr className="border-t border-gray-100 dark:border-neutral-800">
+                      <td className="px-4 py-2">Security Health</td>
+                      <td className="px-4 py-2 font-medium">{summary.securityHealth}%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Charts */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Risk Distribution Pie */}
+                <div className="w-full h-64">
+                  <ResponsiveContainer>
+                    <PieChart>
+                      <Pie data={riskDistributionData} dataKey="value" nameKey="name" outerRadius={80} label>
+                        {riskDistributionData.map((entry, index) => (
+                          <Cell key={`risk-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="text-center text-xs mt-2">Risk Level distribution</div>
+                </div>
+
+                {/* Security Health Pie */}
+                <div className="w-full h-64">
+                  <ResponsiveContainer>
+                    <PieChart>
+                      <Pie data={healthPieData} dataKey="value" nameKey="name" outerRadius={80} label>
+                        {healthPieData.map((entry, index) => (
+                          <Cell key={`health-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="text-center text-xs mt-2">Security Health</div>
+                </div>
+
+                {/* Assets Pie */}
+                <div className="w-full h-64">
+                  <ResponsiveContainer>
+                    <PieChart>
+                      <Pie data={assetsPieData} dataKey="value" nameKey="name" outerRadius={80} label>
+                        {assetsPieData.map((entry, index) => (
+                          <Cell key={`assets-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="text-center text-xs mt-2">Assets scanned</div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Static Visualization for Company LLD */}
