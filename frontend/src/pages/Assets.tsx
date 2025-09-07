@@ -5,6 +5,7 @@ import { useI18n } from '../i18n'
 import { API_ENDPOINTS } from '../config/api'
 import scanService, { type ScanStatus } from '../services/scanService'
 import { Server, Shield, AlertTriangle, CheckCircle, Clock, Globe, Database, Monitor, RefreshCw } from 'lucide-react'
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
 
 interface Asset {
   id: string
@@ -88,7 +89,7 @@ const Assets: React.FC = () => {
     switch (level.toLowerCase()) {
       case 'critical': return '#8B0000'
       case 'high': return '#DC2626'
-      case 'medium': return '#F59E0B'
+      case 'medium': return '#3B82F6'
       case 'low': return '#10B981'
       default: return '#6B7280'
     }
@@ -304,6 +305,72 @@ const Assets: React.FC = () => {
                           </span>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Charts Block: 2x2 pies for vulnerabilities + compliance donut */}
+                <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <h4 className="font-semibold text-gray-800 mb-3">Vulnerability Charts</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {(['critical','high','medium','low'] as const).map((lvl) => {
+                        const total = asset.vulnerabilities.critical + asset.vulnerabilities.high + asset.vulnerabilities.medium + asset.vulnerabilities.low
+                        const val = (asset.vulnerabilities as any)[lvl] as number
+                        const chartData = [
+                          { name: lvl, value: val, color: getVulnerabilityColor(lvl) },
+                          { name: 'rest', value: Math.max(total - val, 0), color: '#E5E7EB' }
+                        ]
+                        const label = lvl.charAt(0).toUpperCase() + lvl.slice(1)
+                        return (
+                          <div key={lvl} className="bg-white rounded-md border p-3">
+                            <div className="w-full h-48">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                  <Pie data={chartData} dataKey="value" nameKey="name" outerRadius={70} labelLine={false}>
+                                    {chartData.map((entry, idx) => (
+                                      <Cell key={idx} fill={entry.color} />
+                                    ))}
+                                  </Pie>
+                                  <Tooltip />
+                                </PieChart>
+                              </ResponsiveContainer>
+                            </div>
+                            <div className="text-center text-sm mt-2">{label}: {val}</div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-gray-800 mb-3">Compliance Score</h4>
+                    <div className="bg-white rounded-md border p-3">
+                      <div className="w-full h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            {(() => {
+                              const pct = asset.compliancePercentage
+                              const color = pct > 85 ? '#10B981' : pct >= 40 ? '#F59E0B' : '#EF4444'
+                              const data = [
+                                { name: 'compliant', value: pct, color },
+                                { name: 'gap', value: Math.max(100 - pct, 0), color: '#E5E7EB' }
+                              ]
+                              return (
+                                <>
+                                  <Pie data={data} dataKey="value" nameKey="name" innerRadius={60} outerRadius={85} labelLine={false}>
+                                    {data.map((entry, idx) => (
+                                      <Cell key={idx} fill={entry.color} />
+                                    ))}
+                                  </Pie>
+                                </>
+                              )
+                            })()}
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="text-center -mt-16 text-2xl font-bold">{asset.compliancePercentage}%</div>
+                      <div className="mt-14"></div>
                     </div>
                   </div>
                 </div>
