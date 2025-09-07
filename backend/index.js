@@ -14,6 +14,7 @@ import customerTrustRoutes from './routes/customer-trust.js'
 import assetsRoutes from './routes/assets.js'
 import complianceRoutes from './routes/compliance.js'
 import integrationsRoutes from './routes/integrations.js'
+import suppliersRoutes from './routes/suppliers.js'
 import reportsRoutes from './routes/reports.js'
 import scanRoutes from './routes/scan.js'
 import { authenticateToken, requireAdmin, requirePermission } from './middleware/auth.js'
@@ -514,6 +515,7 @@ app.use('/api/compliance', complianceRoutes);
 app.use('/api/integrations', integrationsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/scan', scanRoutes);
+app.use('/api/suppliers', suppliersRoutes);
 
 // Organizations registry endpoints (admin)
 app.get('/api/admin/organizations-names', authenticateToken, requireAdminLocal, async (req, res) => {
