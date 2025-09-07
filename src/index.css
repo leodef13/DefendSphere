@@ -204,7 +204,8 @@
   }
 
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+    @apply rounded-lg shadow-sm border border-gray-200;
+    background-color: var(--ds-card);
   }
 
   .form-input {
