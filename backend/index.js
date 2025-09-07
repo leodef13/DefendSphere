@@ -420,6 +420,27 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
   }
 })
 
+// Admin: set password for any user (including self) without current password
+app.put('/api/admin/users/:username/password', authenticateToken, requireAdminLocal, async (req, res) => {
+  try {
+    const { username } = req.params
+    const { newPassword } = req.body
+    if (!newPassword || String(newPassword).length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters' })
+    }
+    const user = await redis.hGetAll(`user:${username}`)
+    if (!user.username) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+    const hashedPassword = await bcrypt.hash(String(newPassword), 10)
+    await redis.hSet(`user:${username}`, 'password', hashedPassword)
+    res.json({ message: 'Password updated successfully' })
+  } catch (error) {
+    console.error('Admin set password error:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
 // Initialize default users if they don't exist
 async function initializeDefaultUsers() {
   try {

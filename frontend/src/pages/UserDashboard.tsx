@@ -36,6 +36,7 @@ export default function UserDashboard() {
   const [editing, setEditing] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
+    currentPassword: '',
     password: '',
     confirmPassword: ''
   })
@@ -57,7 +58,7 @@ export default function UserDashboard() {
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       })
-      setFormData({ email: currentUser.email, password: '', confirmPassword: '' })
+      setFormData({ email: currentUser.email, currentPassword: '', password: '', confirmPassword: '' })
       setLoading(false)
     }
   }, [currentUser])
@@ -91,7 +92,7 @@ export default function UserDashboard() {
       const updateData: any = { email: formData.email }
       if (formData.password) {
         updateData.newPassword = formData.password
-        updateData.currentPassword = ''
+        updateData.currentPassword = formData.currentPassword || ''
       }
 
       const response = await fetch(`${API_ENDPOINTS.HEALTH.replace('/health','')}/api/users/profile`, {
@@ -110,7 +111,7 @@ export default function UserDashboard() {
 
       setSuccess('Profile updated successfully')
       setEditing(false)
-      setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }))
+      setFormData(prev => ({ ...prev, currentPassword: '', password: '', confirmPassword: '' }))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     }
@@ -219,6 +220,18 @@ export default function UserDashboard() {
                       required
                       value={formData.email}
                       onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Current Password
+                    </label>
+                    <input
+                      type="password"
+                      value={formData.currentPassword}
+                      onChange={(e) => setFormData(prev => ({ ...prev, currentPassword: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>

@@ -17,7 +17,8 @@ import {
   Wifi,
   WifiOff,
   Eye,
-  EyeOff
+  EyeOff,
+  KeyRound
 } from 'lucide-react'
 
 interface User {
@@ -630,6 +631,27 @@ export default function AdminPanel() {
                           className="text-blue-600 hover:text-blue-900"
                         >
                           <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const newPassword = prompt(`Set new password for ${user.username}`)
+                            if (!newPassword) return
+                            const res = await fetch(API_ENDPOINTS.ADMIN_USER_PASSWORD(user.username), {
+                              method: 'PUT',
+                              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ newPassword })
+                            })
+                            if (!res.ok) {
+                              const err = await res.json().catch(()=>({message:'Failed'}))
+                              alert(err.message || 'Failed to update password')
+                            } else {
+                              alert('Password updated')
+                            }
+                          }}
+                          className="text-amber-600 hover:text-amber-800"
+                          title="Reset Password"
+                        >
+                          <KeyRound className="h-4 w-4" />
                         </button>
                         {user.username !== currentUser?.username && (
                           <button
