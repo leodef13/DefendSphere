@@ -20,8 +20,8 @@ function Sidebar() {
     { to: '/compliance', label: t('nav.compliance'), icon: FileCheck, permission: 'access.compliance' },
     { to: '/customer-trust', label: t('nav.customerTrust'), icon: Users, permission: 'access.customerTrust' },
     { to: '/suppliers', label: t('nav.suppliers'), icon: Building2, permission: 'access.suppliers' },
-    { to: '/admin', label: 'Admin Panel', icon: Settings, permission: 'access.admin' },
-    { to: '/user-dashboard', label: 'User Dashboard', icon: User, permission: 'access.dashboard' },
+    { to: '/admin', label: t('nav.admin'), icon: Settings, permission: 'access.admin' },
+    { to: '/user-dashboard', label: t('nav.userDashboard'), icon: User, permission: 'access.dashboard' },
     { to: '/integrations', label: t('nav.integrations'), icon: Plug, permission: 'access.integrations' },
   ]
 
@@ -104,7 +104,7 @@ function Header() {
     '/integrations': t('nav.integrations'),
     '/settings': t('nav.settings'),
     '/admin': t('nav.admin'),
-    '/user-dashboard': 'User Dashboard',
+    '/user-dashboard': t('nav.userDashboard'),
   }
   const title = titleMap[location.pathname] ?? 'DefendSphere'
   

@@ -154,7 +154,6 @@ export default function UserDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">User Dashboard</h1>
         <button
           onClick={() => setEditing(!editing)}
           className="btn-primary inline-flex items-center gap-2 px-4 py-2 rounded-md"

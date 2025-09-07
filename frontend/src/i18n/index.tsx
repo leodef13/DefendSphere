@@ -14,6 +14,7 @@ const translations: Record<Language, Translations> = {
     'nav.reports': 'Reports',
     'nav.starterGuide': 'Starter Guide',
     'nav.integrations': 'Integrations',
+    'nav.userDashboard': 'User Settings',
     // incidents/alerts removed
     'nav.settings': 'Settings',
     'nav.admin': 'Admin Panel',
@@ -102,6 +103,7 @@ const translations: Record<Language, Translations> = {
     'nav.reports': 'Отчеты',
     'nav.starterGuide': 'Руководство',
     'nav.integrations': 'Интеграции',
+    'nav.userDashboard': 'Настройки пользователя',
     // incidents/alerts removed
     'nav.settings': 'Настройки',
     'nav.admin': 'Панель администратора',
@@ -190,6 +192,7 @@ const translations: Record<Language, Translations> = {
     'nav.reports': 'Informes',
     'nav.starterGuide': 'Guía de Inicio',
     'nav.integrations': 'Integraciones',
+    'nav.userDashboard': 'Configuración del Usuario',
     // incidents/alerts removed
     'nav.settings': 'Configuración',
     'nav.admin': 'Panel de Administración',
