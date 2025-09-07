@@ -7,6 +7,14 @@
 
 /* Базовые стили для всего приложения */
 @layer base {
+  :root {
+    --ds-primary: #56a3d9;
+    --ds-primaryDark: #134876;
+    --ds-sidebar: #003a6a;
+    --ds-background: #f8f9fa;
+    --ds-text: #2c2c2c;
+  }
+
   * {
     box-sizing: border-box;
   }
@@ -19,8 +27,8 @@
     margin: 0;
     padding: 0;
     font-family: theme('fontFamily.sans');
-    background-color: theme('colors.background');
-    color: theme('colors.text');
+    background-color: var(--ds-background);
+    color: var(--ds-text);
     line-height: 1.6;
   }
 
@@ -68,13 +76,13 @@
 
   /* Улучшенные ссылки */
   a {
-    color: theme('colors.primary');
+    color: var(--ds-primary);
     text-decoration: none;
     transition: color 0.2s ease;
   }
 
   a:hover {
-    color: theme('colors.primaryDark');
+    color: var(--ds-primaryDark);
   }
 
   /* Улучшенные кнопки */
@@ -161,18 +169,18 @@
 
   /* Улучшенные фокусы */
   :focus {
-    outline: 2px solid theme('colors.primary');
+    outline: 2px solid var(--ds-primary);
     outline-offset: 2px;
   }
 
   /* Улучшенные выделения */
   ::selection {
-    background-color: theme('colors.primary');
+    background-color: var(--ds-primary);
     color: white;
   }
 
   ::-moz-selection {
-    background-color: theme('colors.primary');
+    background-color: var(--ds-primary);
     color: white;
   }
 }
@@ -184,8 +192,10 @@
   }
 
   .btn-primary {
-    @apply bg-primary text-white hover:bg-primaryDark focus:ring-2 focus:ring-offset-2 focus:ring-primary;
+    @apply text-white focus:ring-2 focus:ring-offset-2;
+    background-color: var(--ds-primary);
   }
+  .btn-primary:hover { background-color: var(--ds-primaryDark); }
 
   .btn-secondary {
     @apply bg-white text-gray-700 border-gray-300 hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-[#56a3d9];

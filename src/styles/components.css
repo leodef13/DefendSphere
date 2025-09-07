@@ -34,23 +34,9 @@
 }
 
 /* Стили для кнопок */
-.btn-primary {
-  background: linear-gradient(135deg, #56a3d9 0%, #134876 100%);
-  border: none;
-  color: white;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, #134876 0%, #0a2d4a 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(22, 72, 118, 0.4);
-}
-
-.btn-primary:active {
-  transform: translateY(0);
-}
+/* unify primary button style to token-based (no gradient) */
+.btn-primary { background: var(--ds-primary); color: #fff; }
+.btn-primary:hover { background: var(--ds-primaryDark); }
 
 /* Стили для форм */
 .form-input {
