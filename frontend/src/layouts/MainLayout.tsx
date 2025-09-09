@@ -41,21 +41,23 @@ function Sidebar() {
       <div className="px-5 py-4" style={{borderBottom: '1px solid #134876'}}>
         <h2 className="text-xl font-bold mb-8" style={{color: '#fff'}}>DefendSphere</h2>
       </div>
-      <nav className="p-5 space-y-2">
-        {filteredNavItems.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              `flex items-center gap-3 p-2 rounded cursor-pointer text-sm transition-colors hover:bg-[#134876] ${
-                isActive ? 'text-white bg-[#134876]' : 'text-white/90'
-              }`
-            }
-          >
-            <Icon className="h-5 w-5" />
-            {label}
-          </NavLink>
-        ))}
+      <nav className="p-5">
+        <ul className="space-y-2">
+          {filteredNavItems.map(({ to, label }) => (
+            <li key={to}>
+              <NavLink
+                to={to}
+                className={({ isActive }) =>
+                  `flex items-center p-2 rounded cursor-pointer text-sm transition-colors hover:bg-[#134876] ${
+                    isActive ? 'text-white bg-[#134876]' : 'text-white/90'
+                  }`
+                }
+              >
+                {label}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
       </nav>
       <div className="absolute bottom-0 left-0 w-full p-5" style={{borderTop: '1px solid #134876'}}>
         <div className="space-y-2" style={{color: 'rgba(255,255,255,.9)'}}>
