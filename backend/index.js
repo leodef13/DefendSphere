@@ -458,7 +458,10 @@ async function initializeDefaultUsers() {
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       }
-      await redis.hSet('user:admin', adminUser)
+      // Сохраняем поля по отдельности
+      for (const [field, value] of Object.entries(adminUser)) {
+        await redis.hSet('user:admin', field, value)
+      }
       await redis.sAdd('users', 'admin')
       console.log('Admin user created')
     }
@@ -490,7 +493,10 @@ async function initializeDefaultUsers() {
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       }
-      await redis.hSet('user:user1', user1)
+      // Сохраняем поля по отдельности
+      for (const [field, value] of Object.entries(user1)) {
+        await redis.hSet('user:user1', field, value)
+      }
       await redis.sAdd('users', 'user1')
       console.log('User1 created')
     }
@@ -509,7 +515,10 @@ async function initializeDefaultUsers() {
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       }
-      await redis.hSet('user:user2', user2)
+      // Сохраняем поля по отдельности
+      for (const [field, value] of Object.entries(user2)) {
+        await redis.hSet('user:user2', field, value)
+      }
       await redis.sAdd('users', 'user2')
       console.log('User2 created')
     }
@@ -540,7 +549,10 @@ async function initializeDefaultUsers() {
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       }
-      await redis.hSet('user:user3', user3)
+      // Сохраняем поля по отдельности
+      for (const [field, value] of Object.entries(user3)) {
+        await redis.hSet('user:user3', field, value)
+      }
       await redis.sAdd('users', 'user3')
       console.log('User3 created')
     }

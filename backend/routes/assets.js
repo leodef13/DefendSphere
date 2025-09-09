@@ -22,7 +22,8 @@ router.get('/', authenticateToken, async (req, res) => {
     const allAssets = [];
     
     for (const org of userOrgs) {
-      const companyId = `company-${org.toLowerCase().replace(/\s+/g, '-')}`;
+      // Для Company LLD используем фиксированный ID
+      const companyId = org === 'Company LLD' ? 'company-lld' : `company-${org.toLowerCase().replace(/\s+/g, '-')}`;
       const assetIds = await client.sMembers(`company:${companyId}:assetIds`);
       
       for (const assetId of assetIds) {
