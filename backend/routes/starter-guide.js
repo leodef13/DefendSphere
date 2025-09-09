@@ -12,9 +12,26 @@ const client = createClient({
 
 client.on('error', (err) => console.log('Redis Client Error', err));
 
+// Подключаемся к Redis при загрузке модуля
+(async () => {
+  try {
+    if (!client.isOpen) {
+      await client.connect();
+      console.log('Starter Guide Redis client connected');
+    }
+  } catch (error) {
+    console.error('Failed to connect to Redis in starter-guide routes:', error);
+  }
+})();
+
 // GET /api/starter-guide - Получение данных анкеты пользователя
 router.get('/', authenticateToken, async (req, res) => {
   try {
+    // Проверяем подключение к Redis
+    if (!client.isOpen) {
+      await client.connect();
+    }
+    
     const userId = req.user.id;
     const starterGuideData = await client.hGetAll(`starter-guide:${userId}`);
 
