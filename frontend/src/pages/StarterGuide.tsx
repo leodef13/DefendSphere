@@ -47,7 +47,13 @@ export default function StarterGuide() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(API_ENDPOINTS.STARTER_GUIDE, { headers: { 'Authorization': `Bearer ${token}` } })
+        setLoading(true)
+        setError('')
+        
+        const res = await fetch(API_ENDPOINTS.STARTER_GUIDE, { 
+          headers: { 'Authorization': `Bearer ${token}` } 
+        })
+        
         if (res.ok) {
           const dto = await res.json()
           setData({
@@ -76,14 +82,24 @@ export default function StarterGuide() {
           })
         } else if (res.status === 404) {
           setData(null)
+        } else if (res.status === 500) {
+          setError('Server error occurred. Please try again later.')
+        } else {
+          setError(`Failed to load data (${res.status})`)
         }
       } catch (e: any) {
-        setError(e.message || 'Failed to load')
+        console.error('StarterGuide load error:', e)
+        setError(e.message || 'Failed to load starter guide data')
       } finally {
         setLoading(false)
       }
     }
-    load()
+    
+    if (token) {
+      load()
+    } else {
+      setLoading(false)
+    }
   }, [token])
 
   // Validation
@@ -99,23 +115,61 @@ export default function StarterGuide() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!data) return
+    
     const v = validate(data)
-    if (v) { setError(v); return }
+    if (v) { 
+      setError(v)
+      return 
+    }
+    
     setSubmitting(true)
     setError('')
+    
     try {
       const body = { ...data }
+      
       if (!data.id) {
-        const res = await fetch(API_ENDPOINTS.STARTER_GUIDE, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-        if (!res.ok) throw new Error('Failed to submit')
+        const res = await fetch(API_ENDPOINTS.STARTER_GUIDE, { 
+          method: 'POST', 
+          headers: { 
+            'Authorization': `Bearer ${token}`, 
+            'Content-Type': 'application/json' 
+          }, 
+          body: JSON.stringify(body) 
+        })
+        
+        if (!res.ok) {
+          if (res.status === 500) {
+            throw new Error('Server error occurred. Please try again later.')
+          } else {
+            throw new Error(`Failed to submit (${res.status})`)
+          }
+        }
+        
         const dto = await res.json()
         setData({ ...data, id: dto.id })
       } else {
-        const res = await fetch(`${API_ENDPOINTS.STARTER_GUIDE}/${data.id}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-        if (!res.ok) throw new Error('Failed to update')
+        const res = await fetch(`${API_ENDPOINTS.STARTER_GUIDE}/${data.id}`, { 
+          method: 'PUT', 
+          headers: { 
+            'Authorization': `Bearer ${token}`, 
+            'Content-Type': 'application/json' 
+          }, 
+          body: JSON.stringify(body) 
+        })
+        
+        if (!res.ok) {
+          if (res.status === 500) {
+            throw new Error('Server error occurred. Please try again later.')
+          } else {
+            throw new Error(`Failed to update (${res.status})`)
+          }
+        }
       }
+      
       setEditMode(false)
     } catch (e: any) {
+      console.error('StarterGuide submit error:', e)
       setError(e.message || 'Error saving form')
     } finally {
       setSubmitting(false)
@@ -136,7 +190,16 @@ export default function StarterGuide() {
     URL.revokeObjectURL(url)
   }
 
-  if (loading) return <div className="p-6">Loading starter guide...</div>
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2">Loading starter guide...</span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -145,7 +208,29 @@ export default function StarterGuide() {
         <h1 className="text-2xl font-bold">Starter Guide</h1>
       </div>
 
-      {error && <div className="text-red-600 text-sm">{error}</div>}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Error</h3>
+              <div className="mt-2 text-sm text-red-700">{error}</div>
+              <div className="mt-3">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="text-sm bg-red-100 text-red-800 px-3 py-1 rounded hover:bg-red-200"
+                >
+                  Reload Page
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* If no data yet or explicitly editing -> show form */}
       {!data || editMode ? (
@@ -306,6 +391,68 @@ function CheckboxGroup({ label, options, values, onChange }: { label: string, op
           </label>
         ))}
       </div>
+    </div>
+  )
+}
+
+function SummaryRow({ label, value, onSave, helper }: { label: string, value: string, onSave: (v: string)=>void, helper?: string }) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValue, setEditValue] = useState(value)
+
+  const handleSave = () => {
+    onSave(editValue)
+    setIsEditing(false)
+  }
+
+  const handleCancel = () => {
+    setEditValue(value)
+    setIsEditing(false)
+  }
+
+  return (
+    <div className="flex items-center justify-between p-3 border rounded-lg">
+      <div className="flex-1">
+        <div className="text-sm font-medium text-gray-700">{label}</div>
+        {isEditing ? (
+          <div className="mt-1">
+            <input
+              type="text"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              className="w-full px-2 py-1 border rounded text-sm"
+              autoFocus
+            />
+            {helper && <div className="text-xs text-gray-500 mt-1">{helper}</div>}
+            <div className="flex gap-2 mt-2">
+              <button
+                type="button"
+                onClick={handleSave}
+                className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm text-gray-900 mt-1">{value}</div>
+        )}
+      </div>
+      {!isEditing && (
+        <button
+          type="button"
+          onClick={() => setIsEditing(true)}
+          className="ml-2 px-2 py-1 text-blue-600 text-xs hover:bg-blue-50 rounded"
+        >
+          Edit
+        </button>
+      )}
     </div>
   )
 }
