@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Shield, Eye, EyeOff } from 'lucide-react'
+import { Shield, Eye, EyeOff, User, Lock } from 'lucide-react'
 import { API_ENDPOINTS } from '../config/api'
 import { useI18n } from '../i18n'
 import LanguageSwitcher from '../components/LanguageSwitcher'
@@ -54,19 +54,19 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
       {/* Квадратная карточка в центре экрана */}
-      <div className="w-full max-w-md mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 p-8">
+      <div className="card p-8 w-full max-w-md mx-auto">
+        <div className="bg-white rounded-lg shadow-md p-8">
           {/* Заголовок */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <Shield className="h-12 w-12" style={{ color: '#134876' }} />
             </div>
-            <h1 className="text-3xl font-bold mb-2" style={{ color: '#134876' }}>
+            <h1 className="text-3xl font-bold text-[#134876]">
               DefendSphere
             </h1>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-600 mt-2">
               Security Compliance Dashboard
             </p>
           </div>
@@ -75,27 +75,31 @@ const Login: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Username поле */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
                 Username *
               </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
-                placeholder="Enter your username"
-              />
+              <div className="flex items-center">
+                <User className="h-5 w-5 mr-2 text-gray-400" />
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#56a3d9] text-gray-900 placeholder-gray-500"
+                  placeholder="Enter your username"
+                />
+              </div>
             </div>
 
             {/* Password поле */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password *
               </label>
-              <div className="relative">
+              <div className="flex items-center relative">
+                <Lock className="h-5 w-5 mr-2 text-gray-400" />
                 <input
                   id="password"
                   name="password"
@@ -103,7 +107,7 @@ const Login: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#56a3d9] text-gray-900 placeholder-gray-500"
                   placeholder="Enter your password"
                 />
                 <button
@@ -123,44 +127,39 @@ const Login: React.FC = () => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-[#56a3d9] focus:ring-[#56a3d9] border-gray-300 rounded"
                 />
-                <span className="ml-2 text-sm text-gray-700">Remember me</span>
+                <span className="ml-2 block text-sm text-gray-700">Remember me</span>
               </label>
               <a
                 href="#"
-                className="text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200"
-                onMouseEnter={(e) => e.currentTarget.style.color = '#134876'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#56a3d9'}
+                className="text-sm text-[#56a3d9] hover:text-[#134876] transition-colors duration-200"
               >
                 Forgot password?
               </a>
             </div>
 
             {/* Сообщение об ошибке */}
-            {error && (
-              <div className="text-center">
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
-            )}
+            <div id="login-error" className={`text-red-500 text-sm text-center ${error ? 'block' : 'hidden'}`}>
+              {error}
+            </div>
 
             {/* Кнопка Login */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 rounded-lg text-white font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full btn-primary py-2 px-4 rounded-md text-white font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#56a3d9] disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ 
-                backgroundColor: '#56a3d9',
-                ':hover': { backgroundColor: '#134876' }
+                backgroundColor: '#134876'
               }}
               onMouseEnter={(e) => {
                 if (!loading) {
-                  e.currentTarget.style.backgroundColor = '#134876'
+                  e.currentTarget.style.backgroundColor = '#0f3556'
                 }
               }}
               onMouseLeave={(e) => {
                 if (!loading) {
-                  e.currentTarget.style.backgroundColor = '#56a3d9'
+                  e.currentTarget.style.backgroundColor = '#134876'
                 }
               }}
             >
