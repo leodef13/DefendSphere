@@ -1,13 +1,14 @@
 // MainLayout.tsx
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { Shield, LayoutDashboard, Settings, User, Server, FileCheck, Users, Building2, FileText, HelpCircle, Plug } from 'lucide-react'
+import { Shield, LayoutDashboard, Settings, User, Server, FileCheck, Users, Building2, FileText, HelpCircle, Plug, Menu, X } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useState } from 'react'
 import AssistantButton from '../components/AssistantButton'
 import { useAuth } from '../components/AuthProvider'
 import { useI18n } from '../i18n'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 
-function Sidebar() {
+function Sidebar({ isMobileMenuOpen, onMobileMenuToggle }: { isMobileMenuOpen: boolean, onMobileMenuToggle: () => void }) {
   const { t } = useI18n()
   const { user, logout } = useAuth()
   
@@ -37,9 +38,15 @@ function Sidebar() {
     return user.permissions?.includes(item.permission) || user.permissions?.includes('all')
   })
   return (
-    <aside className="sidebar">
-      <div className="px-5 py-4" style={{borderBottom: '1px solid #134876'}}>
+    <aside className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
+      <div className="px-5 py-4 flex items-center justify-between" style={{borderBottom: '1px solid #134876'}}>
         <h2 className="text-xl font-bold mb-8" style={{color: '#fff'}}>DefendSphere</h2>
+        <button 
+          onClick={onMobileMenuToggle}
+          className="md:hidden text-white hover:text-gray-300 transition-colors"
+        >
+          <X className="h-6 w-6" />
+        </button>
       </div>
       <nav className="p-5">
         <ul className="space-y-2">
@@ -48,12 +55,19 @@ function Sidebar() {
               <NavLink
                 to={to}
                 className={({ isActive }) =>
-                  `flex items-center p-2 rounded cursor-pointer text-sm transition-colors hover:bg-[#134876] ${
-                    isActive ? 'text-white bg-[#134876]' : 'text-white/90'
+                  `flex items-center p-2 rounded cursor-pointer text-sm transition-all duration-200 ease-in-out hover:bg-[#134876] hover:scale-[1.02] hover:shadow-md relative ${
+                    isActive ? 'text-white bg-[#134876] shadow-lg' : 'text-white/90'
                   }`
                 }
               >
-                {label}
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-white rounded-r-full"></div>
+                    )}
+                    <span className={isActive ? 'ml-2' : ''}>{label}</span>
+                  </>
+                )}
               </NavLink>
             </li>
           ))}
@@ -85,7 +99,7 @@ function Sidebar() {
   )
 }
 
-function Header() {
+function Header({ onMobileMenuToggle }: { onMobileMenuToggle: () => void }) {
   const location = useLocation()
   const { user, logout } = useAuth()
   const { t } = useI18n()
@@ -108,17 +122,31 @@ function Header() {
   
   return (
     <header className="flex items-center justify-between mb-4">
-      <h1 className="text-2xl font-bold">{title}</h1>
+      <div className="flex items-center gap-4">
+        <button 
+          onClick={onMobileMenuToggle}
+          className="md:hidden text-gray-600 hover:text-gray-800 transition-colors"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
+        <h1 className="text-2xl font-bold">{title}</h1>
+      </div>
     </header>
   )
 }
 
 export default function MainLayout() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
+  
   return (
     <>
-      <Sidebar />
+      <Sidebar isMobileMenuOpen={isMobileMenuOpen} onMobileMenuToggle={toggleMobileMenu} />
       <div className="main-content">
-        <Header />
+        <Header onMobileMenuToggle={toggleMobileMenu} />
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
