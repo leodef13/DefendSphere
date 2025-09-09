@@ -15,20 +15,31 @@ client.on('error', (err) => console.log('Redis Client Error', err));
 // GET /api/assets - Получение всех активов для пользователя
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.id;
-    const assets = await client.hGetAll(`assets:${userId}`);
+    const user = req.user;
+    const userOrgs = user.organizations || [];
     
-    const records = Object.keys(assets).map(key => {
-      const data = JSON.parse(assets[key]);
-      return {
-        id: key,
-        ...data
-      };
-    });
+    // Get assets from all companies the user has access to
+    const allAssets = [];
+    
+    for (const org of userOrgs) {
+      const companyId = `company-${org.toLowerCase().replace(/\s+/g, '-')}`;
+      const assetIds = await client.sMembers(`company:${companyId}:assetIds`);
+      
+      for (const assetId of assetIds) {
+        const assetData = await client.hGet(`company:${companyId}:assets`, assetId);
+        if (assetData) {
+          const asset = JSON.parse(assetData);
+          allAssets.push({
+            id: asset.assetId,
+            ...asset
+          });
+        }
+      }
+    }
 
     res.json({
       success: true,
-      data: records
+      data: allAssets
     });
   } catch (error) {
     console.error('Error fetching assets:', error);

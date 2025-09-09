@@ -12,6 +12,12 @@ export const API_ENDPOINTS = {
   COMPLIANCE: `${API_BASE_URL}/api/compliance`,
   CUSTOMER_TRUST: `${API_BASE_URL}/api/customer-trust`,
   SUPPLIERS: `${API_BASE_URL}/api/suppliers`,
+  // Company endpoints
+  COMPANY: (id: string) => `${API_BASE_URL}/api/company/${id}`,
+  COMPANY_ASSETS: (id: string) => `${API_BASE_URL}/api/company/${id}/assets`,
+  COMPANY_USER: (id: string) => `${API_BASE_URL}/api/company/${id}/user`,
+  COMPANY_SUPPLIER: (id: string) => `${API_BASE_URL}/api/company/${id}/supplier`,
+  COMPANY_CUSTOMER: (id: string) => `${API_BASE_URL}/api/company/${id}/customer`,
   REPORTS: `${API_BASE_URL}/api/reports`,
   REPORTS_SUMMARY: `${API_BASE_URL}/api/reports/summary`,
   REPORTS_VULNERABILITIES: `${API_BASE_URL}/api/reports/vulnerabilities`,

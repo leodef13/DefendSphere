@@ -35,6 +35,12 @@ class MockRedis {
     return result
   }
 
+  async hGet(key, field) {
+    const keyData = this.data.get(key)
+    if (!keyData) return null
+    return keyData.get(field) || null
+  }
+
   async hDel(key, field) {
     const keyData = this.data.get(key)
     if (!keyData) return 0

@@ -9,12 +9,13 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
 
 interface Asset {
   id: string
+  assetId: string
   name: string
   type: string
   environment: string
-  ip: string
-  assignedStandards: string[]
-  compliancePercentage: number
+  ipAddress: string
+  standards: string[]
+  complianceScore: number
   riskLevel: string
   lastAssessment: string
   vulnerabilities: {
@@ -22,6 +23,7 @@ interface Asset {
     high: number
     medium: number
     low: number
+    total: number
   }
 }
 
@@ -48,7 +50,7 @@ const Assets: React.FC = () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch(API_ENDPOINTS.REPORTS_ASSETS, {
+      const response = await fetch(API_ENDPOINTS.ASSETS, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
@@ -57,7 +59,7 @@ const Assets: React.FC = () => {
       }
 
       const data = await response.json()
-      setAssets(data.assets)
+      setAssets(data.data || [])
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -120,7 +122,7 @@ const Assets: React.FC = () => {
       prevAssets.map(asset => {
         // Find reports for this asset
         const assetReports = reports.filter(report => 
-          report.host === asset.ip || report.host === asset.name
+          report.host === asset.ipAddress || report.host === asset.name
         )
         
         if (assetReports.length > 0) {
@@ -147,12 +149,13 @@ const Assets: React.FC = () => {
           return {
             ...asset,
             riskLevel: newRiskLevel,
-            compliancePercentage: newCompliance,
+            complianceScore: newCompliance,
             vulnerabilities: {
               critical: criticalCount,
               high: highCount,
               medium: mediumCount,
-              low: lowCount
+              low: lowCount,
+              total: criticalCount + highCount + mediumCount + lowCount
             },
             lastAssessment: new Date().toLocaleDateString()
           }
@@ -229,7 +232,7 @@ const Assets: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Globe className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm"><strong>IP Address:</strong> {asset.ip}</span>
+                        <span className="text-sm"><strong>IP Address:</strong> {asset.ipAddress}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-gray-500" />
@@ -244,18 +247,18 @@ const Assets: React.FC = () => {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm">Compliance Score</span>
-                        <span className="font-semibold text-lg">{asset.compliancePercentage}%</span>
+                        <span className="font-semibold text-lg">{asset.complianceScore}%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
                           className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${asset.compliancePercentage}%` }}
+                          style={{ width: `${asset.complianceScore}%` }}
                         ></div>
                       </div>
                       <div className="space-y-2">
                         <span className="text-sm font-medium">Assigned Standards:</span>
                         <div className="flex flex-wrap gap-1">
-                          {asset.assignedStandards.map((standard, index) => (
+                          {asset.standards.map((standard, index) => (
                             <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
                               {standard}
                             </span>
@@ -315,7 +318,7 @@ const Assets: React.FC = () => {
                     <h4 className="font-semibold text-gray-800 mb-3">Vulnerability Charts</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {(['critical','high','medium','low'] as const).map((lvl) => {
-                        const total = asset.vulnerabilities.critical + asset.vulnerabilities.high + asset.vulnerabilities.medium + asset.vulnerabilities.low
+                        const total = asset.vulnerabilities.total
                         const val = (asset.vulnerabilities as any)[lvl] as number
                         const chartData = [
                           { name: lvl, value: val, color: getVulnerabilityColor(lvl) },
@@ -350,7 +353,7 @@ const Assets: React.FC = () => {
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
                             {(() => {
-                              const pct = asset.compliancePercentage
+                              const pct = asset.complianceScore
                               const color = pct > 85 ? '#10B981' : pct >= 40 ? '#F59E0B' : '#EF4444'
                               const data = [
                                 { name: 'compliant', value: pct, color },
@@ -369,7 +372,7 @@ const Assets: React.FC = () => {
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
-                      <div className="text-center -mt-16 text-2xl font-bold">{asset.compliancePercentage}%</div>
+                      <div className="text-center -mt-16 text-2xl font-bold">{asset.complianceScore}%</div>
                       <div className="mt-14"></div>
                     </div>
                   </div>
@@ -389,7 +392,7 @@ const Assets: React.FC = () => {
               </p>
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> Asset data is currently available for user1. 
+                  <strong>Note:</strong> Asset data is currently available for Company LLD users (user1, user3). 
                   Contact your administrator to add your assets to the system.
                 </p>
               </div>

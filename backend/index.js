@@ -17,6 +17,7 @@ import integrationsRoutes from './routes/integrations.js'
 import suppliersRoutes from './routes/suppliers.js'
 import reportsRoutes from './routes/reports.js'
 import scanRoutes from './routes/scan.js'
+import companiesRoutes from './routes/companies.js'
 import { authenticateToken, requireAdmin, requirePermission } from './middleware/auth.js'
 
 const app = express()
@@ -170,7 +171,7 @@ app.post('/api/auth/login', async (req, res) => {
       user: {
         ...user,
         permissions: JSON.parse(user.permissions),
-        organizations: user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
+        organizations: user.organization ? [user.organization] : []
       }
     })
   } catch (error) {
@@ -191,7 +192,7 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
       user: {
         ...user,
         permissions: JSON.parse(user.permissions),
-        organizations: user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
+        organizations: user.organization ? [user.organization] : []
       }
     })
   } catch (error) {
@@ -468,11 +469,24 @@ async function initializeDefaultUsers() {
       const user1 = {
         id: '2',
         username: 'user1',
-        email: 'user1@company',
+        fullName: 'John Smith',
+        email: 'user1@company-lld.com',
         password: hashedPassword,
-        role: 'CEO',
-        permissions: JSON.stringify(['access.dashboard', 'access.assets', 'access.reports']),
-        organizations: JSON.stringify(['Company LLD']),
+        organization: 'Company LLD',
+        position: 'CEO',
+        role: 'admin',
+        phone: '+1-555-0101',
+        permissions: JSON.stringify([
+          'access.dashboard',
+          'access.assets',
+          'access.compliance',
+          'access.customerTrust',
+          'access.suppliers',
+          'access.reports',
+          'access.integrations',
+          'access.admin'
+        ]),
+        additionalOrganizations: JSON.stringify([]),
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       }
@@ -506,11 +520,23 @@ async function initializeDefaultUsers() {
       const user3 = {
         id: '4',
         username: 'user3',
-        email: 'user3@company',
+        fullName: 'Jane Doe',
+        email: 'user3@company-lld.com',
         password: hashedPassword,
-        role: 'CISO',
-        permissions: JSON.stringify(['access.dashboard', 'access.assets', 'access.reports']),
-        organizations: JSON.stringify(['Company LLD']),
+        organization: 'Company LLD',
+        position: 'CISO',
+        role: 'user',
+        phone: '+1-555-0103',
+        permissions: JSON.stringify([
+          'access.dashboard',
+          'access.assets',
+          'access.compliance',
+          'access.customerTrust',
+          'access.suppliers',
+          'access.reports',
+          'access.integrations'
+        ]),
+        additionalOrganizations: JSON.stringify([]),
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       }
@@ -526,6 +552,89 @@ async function initializeDefaultUsers() {
 // Initialize default users on startup
 await initializeDefaultUsers()
 
+// Initialize Company LLD data
+async function initializeCompanyLLDData() {
+  try {
+    // Create Company LLD if it doesn't exist
+    const companyId = 'company-lld'
+    const companyExists = await redis.hGetAll(`company:${companyId}`)
+    if (!companyExists.data) {
+      const companyData = {
+        id: companyId,
+        name: 'Company LLD',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      await redis.hSet(`company:${companyId}`, 'data', JSON.stringify(companyData))
+      await redis.sAdd('companies', companyId)
+      console.log('Company LLD created')
+    }
+
+    // Create demo assets for Company LLD
+    const assets = [
+      {
+        assetId: 'asset-1',
+        name: 'www.company-lld.com',
+        type: 'Web Server',
+        environment: 'Production',
+        ipAddress: '116.203.242.207',
+        lastAssessment: '2024-01-15',
+        complianceScore: 75,
+        standards: ['NIS2', 'GDPR', 'ISO/IEC 27001'],
+        vulnerabilities: { critical: 1, high: 3, medium: 5, low: 1, total: 10 }
+      },
+      {
+        assetId: 'asset-2',
+        name: 'db.company-lld.com',
+        type: 'Database Server',
+        environment: 'Production',
+        ipAddress: '10.0.0.12',
+        lastAssessment: '2024-01-15',
+        complianceScore: 70,
+        standards: ['NIS2', 'ISO/IEC 27001'],
+        vulnerabilities: { critical: 1, high: 2, medium: 4, low: 1, total: 8 }
+      },
+      {
+        assetId: 'asset-3',
+        name: 'app.company-lld.com',
+        type: 'Application Server',
+        environment: 'Production',
+        ipAddress: '10.0.0.21',
+        lastAssessment: '2024-01-15',
+        complianceScore: 80,
+        standards: ['GDPR', 'ISO/IEC 27001'],
+        vulnerabilities: { critical: 2, high: 3, medium: 3, low: 1, total: 9 }
+      },
+      {
+        assetId: 'asset-4',
+        name: 'vpn.company-lld.com',
+        type: 'VPN Gateway',
+        environment: 'Production',
+        ipAddress: '10.0.0.30',
+        lastAssessment: '2024-01-15',
+        complianceScore: 75,
+        standards: ['NIS2'],
+        vulnerabilities: { critical: 1, high: 1, medium: 2, low: 1, total: 5 }
+      }
+    ]
+
+    // Store assets for Company LLD
+    for (const asset of assets) {
+      const existingAsset = await redis.hGet(`company:${companyId}:assets`, asset.assetId)
+      if (!existingAsset) {
+        await redis.hSet(`company:${companyId}:assets`, asset.assetId, JSON.stringify(asset))
+        await redis.sAdd(`company:${companyId}:assetIds`, asset.assetId)
+      }
+    }
+    console.log('Company LLD assets initialized')
+  } catch (error) {
+    console.error('Error initializing Company LLD data:', error)
+  }
+}
+
+// Initialize Company LLD data on startup
+await initializeCompanyLLDData()
+
 // Подключаем маршруты
 app.use('/api/assistant', assistantRoutes);
 app.use('/api/ai-assistant', aiAssistantRoutes);
@@ -537,6 +646,7 @@ app.use('/api/integrations', integrationsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/scan', scanRoutes);
 app.use('/api/suppliers', suppliersRoutes);
+app.use('/api/company', companiesRoutes);
 
 // Organizations registry endpoints (admin)
 app.get('/api/admin/organizations-names', authenticateToken, requireAdminLocal, async (req, res) => {
