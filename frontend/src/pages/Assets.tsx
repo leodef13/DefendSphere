@@ -174,7 +174,7 @@ const Assets: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Server className="h-8 w-8 text-blue-600" />
-          <h1 className="text-2xl font-bold">Assets - Company LLD Infrastructure</h1>
+          <h1 className="text-3xl font-bold mb-6">Assets - Company LLD Infrastructure</h1>
         </div>
         
         {/* Scan Status Indicator */}
@@ -220,7 +220,7 @@ const Assets: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Asset Details */}
                   <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-800">Asset Information</h4>
+                    <h3 className="text-xl font-medium mb-2">Asset Information</h3>
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Monitor className="h-4 w-4 text-gray-500" />
@@ -243,7 +243,7 @@ const Assets: React.FC = () => {
 
                   {/* Compliance */}
                   <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-800">Compliance</h4>
+                    <h3 className="text-xl font-medium mb-2">Compliance</h3>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm">Compliance Score</span>
@@ -270,7 +270,7 @@ const Assets: React.FC = () => {
 
                   {/* Vulnerability Summary */}
                   <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-800">Vulnerability Summary</h4>
+                    <h3 className="text-xl font-medium mb-2">Vulnerability Summary</h3>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -315,7 +315,7 @@ const Assets: React.FC = () => {
                 {/* Charts Block: 2x2 pies for vulnerabilities + compliance donut */}
                 <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-2">
-                    <h4 className="font-semibold text-gray-800 mb-3">Vulnerability Charts</h4>
+                    <h3 className="text-xl font-medium mb-2">Vulnerability Charts</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {(['critical','high','medium','low'] as const).map((lvl) => {
                         const total = asset.vulnerabilities.total
@@ -347,7 +347,7 @@ const Assets: React.FC = () => {
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-gray-800 mb-3">Compliance Score</h4>
+                    <h3 className="text-xl font-medium mb-2">Compliance Score</h3>
                     <div className="bg-white rounded-md border p-3">
                       <div className="w-full h-64">
                         <ResponsiveContainer width="100%" height="100%">
@@ -386,7 +386,7 @@ const Assets: React.FC = () => {
           <CardContent className="p-6">
             <div className="text-center">
               <Server className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Asset Management</h3>
+              <h2 className="text-2xl font-semibold mb-4">Asset Management</h2>
               <p className="text-gray-600 mb-4">
                 Monitor and manage your IT assets, track compliance, and assess security vulnerabilities.
               </p>

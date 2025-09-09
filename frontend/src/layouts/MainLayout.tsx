@@ -50,7 +50,7 @@ function Sidebar({ isMobileMenuOpen, onMobileMenuToggle }: { isMobileMenuOpen: b
       </div>
       <nav className="p-5">
         <ul className="space-y-2">
-          {filteredNavItems.map(({ to, label }) => (
+          {filteredNavItems.map(({ to, label, icon: Icon }) => (
             <li key={to}>
               <NavLink
                 to={to}
@@ -65,6 +65,7 @@ function Sidebar({ isMobileMenuOpen, onMobileMenuToggle }: { isMobileMenuOpen: b
                     {isActive && (
                       <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-white rounded-r-full"></div>
                     )}
+                    <Icon className="h-5 w-5 mr-3" />
                     <span className={isActive ? 'ml-2' : ''}>{label}</span>
                   </>
                 )}
@@ -129,7 +130,7 @@ function Header({ onMobileMenuToggle }: { onMobileMenuToggle: () => void }) {
         >
           <Menu className="h-6 w-6" />
         </button>
-        <h1 className="text-2xl font-bold">{title}</h1>
+        <h1 className="text-3xl font-bold mb-6">{title}</h1>
       </div>
     </header>
   )

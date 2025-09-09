@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, Button } from '../components/ui'
+import { Card, CardContent, CardHeader, Button, PrimaryButton, SecondaryButton, DangerButton } from '../components/ui'
 import { useAuth } from '../components/AuthProvider'
 import { API_ENDPOINTS } from '../config/api'
 import { FileText } from 'lucide-react'
@@ -205,7 +205,7 @@ export default function StarterGuide() {
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-3">
         <FileText className="h-8 w-8 text-blue-600" />
-        <h1 className="text-2xl font-bold">Starter Guide</h1>
+        <h1 className="text-3xl font-bold mb-6">Starter Guide</h1>
       </div>
 
       {error && (
@@ -220,12 +220,12 @@ export default function StarterGuide() {
               <h3 className="text-sm font-medium text-red-800">Error</h3>
               <div className="mt-2 text-sm text-red-700">{error}</div>
               <div className="mt-3">
-                <button
+                <DangerButton
                   onClick={() => window.location.reload()}
-                  className="text-sm bg-red-100 text-red-800 px-3 py-1 rounded hover:bg-red-200"
+                  className="text-sm px-3 py-1"
                 >
                   Reload Page
-                </button>
+                </DangerButton>
               </div>
             </div>
           </div>
@@ -237,7 +237,7 @@ export default function StarterGuide() {
         <Card>
           <CardHeader>
             <div className="space-y-1">
-              <h3 className="text-xl font-semibold">Fill out this Form to Get an Express Check-Up of your Digital Infrastructure</h3>
+              <h2 className="text-2xl font-semibold mb-4">Fill out this Form to Get an Express Check-Up of your Digital Infrastructure</h2>
               <p className="text-gray-600">We’ll scan for risks and give you quick feedback — no technical background required.</p>
               <p className="text-gray-600">Fast & Confidential.</p>
             </div>
@@ -272,7 +272,7 @@ export default function StarterGuide() {
               <TextField label="Phone" value={data?.phone || ''} onChange={(v)=> setData(prev => ({ ...(prev || {} as StarterData), phone: v }))} />
               <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={!!data?.privacyPolicyAccepted} onChange={(e)=> setData(prev => ({ ...(prev || {} as StarterData), privacyPolicyAccepted: e.target.checked }))} /> Privacy Policy accepted</label>
               <div className="flex justify-end pt-2">
-                <Button type="submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Check My Systems'}</Button>
+                <PrimaryButton type="submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Check My Systems'}</PrimaryButton>
               </div>
             </form>
           </CardContent>
@@ -280,7 +280,7 @@ export default function StarterGuide() {
       ) : (
         <Card>
           <CardHeader>
-            <h3 className="text-lg font-semibold">Summary</h3>
+            <h2 className="text-2xl font-semibold mb-4">Summary</h2>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -306,10 +306,10 @@ export default function StarterGuide() {
               </div>
             </div>
             <div className="flex justify-between items-center mt-6">
-              <button className="px-3 py-2 bg-gray-100 rounded hover:bg-gray-200" onClick={()=> setEditMode(true)}>Edit Form</button>
+              <SecondaryButton onClick={()=> setEditMode(true)}>Edit Form</SecondaryButton>
               <div className="flex gap-2">
-                <button className="px-3 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200" onClick={()=> exportData('pdf')}>Export PDF</button>
-                <button className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={()=> exportData('excel')}>Export Excel</button>
+                <SecondaryButton onClick={()=> exportData('pdf')}>Export PDF</SecondaryButton>
+                <PrimaryButton onClick={()=> exportData('excel')}>Export Excel</PrimaryButton>
               </div>
             </div>
           </CardContent>
@@ -424,20 +424,20 @@ function SummaryRow({ label, value, onSave, helper }: { label: string, value: st
             />
             {helper && <div className="text-xs text-gray-500 mt-1">{helper}</div>}
             <div className="flex gap-2 mt-2">
-              <button
+              <PrimaryButton
                 type="button"
                 onClick={handleSave}
-                className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                className="px-2 py-1 text-xs"
               >
                 Save
-              </button>
-              <button
+              </PrimaryButton>
+              <SecondaryButton
                 type="button"
                 onClick={handleCancel}
-                className="px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400"
+                className="px-2 py-1 text-xs"
               >
                 Cancel
-              </button>
+              </SecondaryButton>
             </div>
           </div>
         ) : (
@@ -445,13 +445,13 @@ function SummaryRow({ label, value, onSave, helper }: { label: string, value: st
         )}
       </div>
       {!isEditing && (
-        <button
+        <SecondaryButton
           type="button"
           onClick={() => setIsEditing(true)}
-          className="ml-2 px-2 py-1 text-blue-600 text-xs hover:bg-blue-50 rounded"
+          className="ml-2 px-2 py-1 text-xs"
         >
           Edit
-        </button>
+        </SecondaryButton>
       )}
     </div>
   )
