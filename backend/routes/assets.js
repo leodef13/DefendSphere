@@ -12,11 +12,30 @@ const client = createClient({
 
 client.on('error', (err) => console.log('Redis Client Error', err));
 
+// Подключаемся к Redis при загрузке модуля
+(async () => {
+  try {
+    if (!client.isOpen) {
+      await client.connect();
+      console.log('Assets Redis client connected');
+    }
+  } catch (error) {
+    console.error('Failed to connect to Redis in assets routes:', error);
+  }
+})();
+
 // GET /api/assets - Получение всех активов для пользователя
 router.get('/', authenticateToken, async (req, res) => {
   try {
+    // Проверяем подключение к Redis
+    if (!client.isOpen) {
+      await client.connect();
+    }
+    
     const user = req.user;
     const userOrgs = user.organizations || [];
+    
+    console.log('Assets request for user:', user.username, 'organizations:', userOrgs);
     
     // Get assets from all companies the user has access to
     const allAssets = [];
@@ -24,12 +43,16 @@ router.get('/', authenticateToken, async (req, res) => {
     for (const org of userOrgs) {
       // Для Company LLD используем фиксированный ID
       const companyId = org === 'Company LLD' ? 'company-lld' : `company-${org.toLowerCase().replace(/\s+/g, '-')}`;
+      console.log(`Looking for assets in company: ${companyId}`);
+      
       const assetIds = await client.sMembers(`company:${companyId}:assetIds`);
+      console.log(`Found asset IDs for ${companyId}:`, assetIds);
       
       for (const assetId of assetIds) {
         const assetData = await client.hGet(`company:${companyId}:assets`, assetId);
         if (assetData) {
           const asset = JSON.parse(assetData);
+          console.log(`Loaded asset:`, asset.name);
           allAssets.push({
             id: asset.assetId,
             ...asset
@@ -37,6 +60,8 @@ router.get('/', authenticateToken, async (req, res) => {
         }
       }
     }
+    
+    console.log(`Total assets found for user ${user.username}:`, allAssets.length);
 
     res.json({
       success: true,
