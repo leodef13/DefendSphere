@@ -115,4 +115,4 @@
 - `src/pages/auth/Login.tsx` (удален)
 
 **Коммиты:**
-- `[будет добавлен]` - refactor: Remove unused Login.tsx file from src/pages/auth/
+- `be19e9e` - refactor: Remove unused Login.tsx file from src/pages/auth/
