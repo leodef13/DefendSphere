@@ -38,24 +38,21 @@ function Sidebar() {
   })
   return (
     <aside className="sidebar">
-      <div className="h-16 flex items-center gap-3 px-5" style={{borderBottom: '1px solid #134876'}}>
-        <Shield className="h-6 w-6" color="#fff" />
-        <span className="font-semibold" style={{color: '#fff'}}>DefendSphere</span>
+      <div className="px-5 py-4" style={{borderBottom: '1px solid #134876'}}>
+        <h2 className="text-xl font-bold mb-8" style={{color: '#fff'}}>DefendSphere</h2>
       </div>
-      <nav className="p-3" style={{display: 'grid', rowGap: '8px'}}>
-        {filteredNavItems.map(({ to, label }) => (
+      <nav className="p-5 space-y-2">
+        {filteredNavItems.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                isActive ? 'text-white' : 'text-white/90'
+              `flex items-center gap-3 p-2 rounded cursor-pointer text-sm transition-colors hover:bg-[#134876] ${
+                isActive ? 'text-white bg-[#134876]' : 'text-white/90'
               }`
             }
-            style={({ isActive }) => ({
-              backgroundColor: isActive ? '#134876' : 'transparent'
-            })}
           >
+            <Icon className="h-5 w-5" />
             {label}
           </NavLink>
         ))}
