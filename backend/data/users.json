@@ -45,5 +45,47 @@
     "additionalOrganizations": [],
     "createdAt": "2025-09-10T12:32:11.845Z",
     "lastLogin": "2025-09-10T12:32:11.845Z"
+  },
+  {
+    "id": "3",
+    "username": "user2",
+    "fullName": "Bob Wilson",
+    "email": "user2@watson-morris.com",
+    "password": "user2",
+    "organization": "Watson Morris",
+    "position": "Security Analyst",
+    "role": "user",
+    "phone": "+1-555-0102",
+    "permissions": [
+      "access.dashboard",
+      "access.reports",
+      "access.assets",
+      "access.suppliers"
+    ],
+    "additionalOrganizations": [],
+    "createdAt": "2025-09-10T12:32:11.845Z",
+    "lastLogin": "2025-09-10T12:32:11.845Z"
+  },
+  {
+    "id": "5",
+    "username": "jon",
+    "fullName": "Jon Smith",
+    "email": "jon@watson-morris.com",
+    "password": "jon123",
+    "organization": "Watson Morris",
+    "position": "Security Manager",
+    "role": "user",
+    "phone": "+1-555-0104",
+    "permissions": [
+      "access.dashboard",
+      "access.assets",
+      "access.reports",
+      "access.compliance",
+      "access.customerTrust",
+      "access.suppliers"
+    ],
+    "additionalOrganizations": [],
+    "createdAt": "2025-09-10T12:32:11.845Z",
+    "lastLogin": "2025-09-10T12:32:11.845Z"
   }
 ]

@@ -32,7 +32,7 @@ router.get('/fallback', authenticateTokenFallback, async (req, res) => {
     console.log('Assets fallback request for user:', user.username, 'organizations:', userOrgs);
     
     // Загружаем данные из файлов
-    const { users, assets } = loadDataFromFiles();
+    const { users } = loadDataFromFiles();
     
     // Проверяем, есть ли пользователь в файлах
     const userData = users.find(u => u.username === user.username);
@@ -43,20 +43,26 @@ router.get('/fallback', authenticateTokenFallback, async (req, res) => {
       });
     }
     
-    // Проверяем, принадлежит ли пользователь к Company LLD
-    if (userData.organization !== 'Company LLD') {
-      return res.json({
-        success: true,
-        data: []
-      });
+    // Загружаем активы в зависимости от организации пользователя
+    let userAssets = [];
+    
+    if (userData.organization === 'Company LLD') {
+      const assetsFile = path.join(dataDir, 'assets.json');
+      const assets = JSON.parse(fs.readFileSync(assetsFile, 'utf8'));
+      userAssets = assets;
+      console.log(`Loaded Company LLD assets: ${assets.length}`);
+    } else if (userData.organization === 'Watson Morris') {
+      const assetsFile = path.join(dataDir, 'watson-morris-assets.json');
+      const assets = JSON.parse(fs.readFileSync(assetsFile, 'utf8'));
+      userAssets = assets;
+      console.log(`Loaded Watson Morris assets: ${assets.length}`);
     }
     
-    // Возвращаем все активы Company LLD
-    console.log(`Found ${assets.length} assets for user ${user.username}`);
+    console.log(`Found ${userAssets.length} assets for user ${user.username} (${userData.organization})`);
     
     res.json({
       success: true,
-      data: assets
+      data: userAssets
     });
   } catch (error) {
     console.error('Error in assets fallback:', error);

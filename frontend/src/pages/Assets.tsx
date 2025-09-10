@@ -35,15 +35,15 @@ const Assets: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const isCompanyLLD = Array.isArray(user?.organizations) && user!.organizations!.includes('Company LLD')
+  const hasOrganizations = Array.isArray(user?.organizations) && user.organizations.length > 0
 
   // Отладочная информация
   console.log('Assets page - User data:', user)
   console.log('Assets page - User organizations:', user?.organizations)
-  console.log('Assets page - isCompanyLLD:', isCompanyLLD)
+  console.log('Assets page - hasOrganizations:', hasOrganizations)
 
   useEffect(() => {
-    if (isCompanyLLD) {
+    if (hasOrganizations) {
       fetchAssets()
       checkActiveScan()
     } else {
@@ -402,7 +402,7 @@ const Assets: React.FC = () => {
               </p>
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> Asset data is currently available for Company LLD users (user1, user3). 
+                  <strong>Note:</strong> Asset data is available for users from Company LLD and Watson Morris organizations. 
                   Contact your administrator to add your assets to the system.
                 </p>
               </div>

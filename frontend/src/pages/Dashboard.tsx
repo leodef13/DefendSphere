@@ -24,15 +24,17 @@ export default function Dashboard() {
   const [scanProgress, setScanProgress] = useState(0)
   const [scanMessage, setScanMessage] = useState('')
   const [hasAssets, setHasAssets] = useState(false)
-  const imageBase = '/reports/organizations/CompanyLLDL'
+  const imageBase = user?.organizations?.[0] === 'Company LLD' 
+    ? '/reports/organizations/CompanyLLDL' 
+    : '/reports/organizations/WatsonMorris'
 
-  const isCompanyLLD = Array.isArray(user?.organizations) && user!.organizations!.includes('Company LLD')
+  const hasOrganizations = Array.isArray(user?.organizations) && user.organizations.length > 0
 
   useEffect(() => {
     if (user?.role === 'admin') {
       fetchAdminSummary()
     }
-    if (isCompanyLLD) {
+    if (hasOrganizations) {
       fetchReportData()
       fetchUserAssets()
       checkActiveScan()

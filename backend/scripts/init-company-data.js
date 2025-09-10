@@ -272,6 +272,62 @@ async function initializeCompanyData() {
     await redis.sAdd(`company:${companyId}:assetIds`, ...assets.map(a => a.assetId))
     console.log('✅ Demo assets created for Company LLD')
 
+    // Create Watson Morris company
+    const watsonMorrisId = 'company-watson-morris'
+    const watsonMorrisData = {
+      id: watsonMorrisId,
+      name: 'Watson Morris',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    await redis.hSet(`company:${watsonMorrisId}`, 'data', JSON.stringify(watsonMorrisData))
+    await redis.sAdd('companies', watsonMorrisId)
+    console.log('✅ Watson Morris company created')
+
+    // Create demo assets for Watson Morris
+    const watsonMorrisAssets = [
+      {
+        assetId: 'wm-asset-1',
+        name: 'www.watson-morris.com',
+        type: 'Web Server',
+        environment: 'Production',
+        ipAddress: '192.168.1.100',
+        lastAssessment: '2024-01-20',
+        complianceScore: 85,
+        standards: ['ISO/IEC 27001', 'SOC 2'],
+        vulnerabilities: { critical: 0, high: 2, medium: 3, low: 2, total: 7 }
+      },
+      {
+        assetId: 'wm-asset-2',
+        name: 'db.watson-morris.com',
+        type: 'Database Server',
+        environment: 'Production',
+        ipAddress: '192.168.1.101',
+        lastAssessment: '2024-01-20',
+        complianceScore: 90,
+        standards: ['ISO/IEC 27001'],
+        vulnerabilities: { critical: 0, high: 1, medium: 2, low: 1, total: 4 }
+      },
+      {
+        assetId: 'wm-asset-3',
+        name: 'api.watson-morris.com',
+        type: 'API Server',
+        environment: 'Production',
+        ipAddress: '192.168.1.102',
+        lastAssessment: '2024-01-20',
+        complianceScore: 88,
+        standards: ['ISO/IEC 27001', 'SOC 2', 'PCI DSS'],
+        vulnerabilities: { critical: 0, high: 1, medium: 4, low: 3, total: 8 }
+      }
+    ]
+
+    // Store assets for Watson Morris
+    for (const asset of watsonMorrisAssets) {
+      await redis.hSet(`company:${watsonMorrisId}:assets`, asset.assetId, JSON.stringify(asset))
+    }
+    await redis.sAdd(`company:${watsonMorrisId}:assetIds`, ...watsonMorrisAssets.map(a => a.assetId))
+    console.log('✅ Demo assets created for Watson Morris')
+
     // Create admin user
     const adminExists = await redis.hGetAll('user:admin')
     if (!adminExists.username) {
@@ -327,6 +383,39 @@ async function initializeCompanyData() {
       console.log('✅ User2 created for Watson Morris')
     } else {
       console.log('ℹ️  User2 already exists')
+    }
+
+    // Create jon for Watson Morris
+    const jonExists = await redis.hGetAll('user:jon')
+    if (!jonExists.username) {
+      const hashedPassword = await bcrypt.hash('jon123', 10)
+      const jon = {
+        id: '5',
+        username: 'jon',
+        fullName: 'Jon Smith',
+        email: 'jon@watson-morris.com',
+        passwordHash: hashedPassword,
+        organization: 'Watson Morris',
+        position: 'Security Manager',
+        role: 'user',
+        phone: '+1-555-0104',
+        permissions: JSON.stringify([
+          'access.dashboard',
+          'access.assets',
+          'access.reports',
+          'access.compliance',
+          'access.customerTrust',
+          'access.suppliers'
+        ]),
+        additionalOrganizations: JSON.stringify([]),
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString()
+      }
+      await redis.hSet('user:jon', jon)
+      await redis.sAdd('users', 'jon')
+      console.log('✅ Jon created for Watson Morris')
+    } else {
+      console.log('ℹ️  Jon already exists')
     }
 
     // Initialize system data

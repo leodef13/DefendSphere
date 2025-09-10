@@ -73,15 +73,23 @@ router.get('/', authenticateToken, async (req, res) => {
         const fs = await import('fs');
         const path = await import('path');
         const dataDir = path.join(process.cwd(), 'data');
-        const assetsFile = path.join(dataDir, 'assets.json');
         
-        const assets = JSON.parse(fs.readFileSync(assetsFile, 'utf8'));
-        
-        // Check if user has access to Company LLD assets
-        if (userOrgs.includes('Company LLD')) {
-          allAssets = assets;
-          console.log(`Using fallback assets for user ${user.username}:`, allAssets.length);
+        // Load assets for all user organizations
+        for (const org of userOrgs) {
+          if (org === 'Company LLD') {
+            const assetsFile = path.join(dataDir, 'assets.json');
+            const assets = JSON.parse(fs.readFileSync(assetsFile, 'utf8'));
+            allAssets = [...allAssets, ...assets];
+            console.log(`Loaded Company LLD assets: ${assets.length}`);
+          } else if (org === 'Watson Morris') {
+            const assetsFile = path.join(dataDir, 'watson-morris-assets.json');
+            const assets = JSON.parse(fs.readFileSync(assetsFile, 'utf8'));
+            allAssets = [...allAssets, ...assets];
+            console.log(`Loaded Watson Morris assets: ${assets.length}`);
+          }
         }
+        
+        console.log(`Using fallback assets for user ${user.username}:`, allAssets.length);
       } catch (fallbackError) {
         console.error('Fallback assets error:', fallbackError);
         return res.status(500).json({
