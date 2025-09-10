@@ -54,7 +54,7 @@ const Login: React.FC = () => {
           <form id="login-form" onSubmit={handleSubmit} className="space-y-6">
             {/* Username поле */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="username" className="login-label">
                 Username
               </label>
               <input
@@ -64,13 +64,13 @@ const Login: React.FC = () => {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#56a3d9]"
+                className="login-input"
               />
             </div>
 
             {/* Password поле */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="login-label">
                 Password
               </label>
               <input
@@ -80,7 +80,7 @@ const Login: React.FC = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#56a3d9]"
+                className="login-input"
               />
             </div>
 

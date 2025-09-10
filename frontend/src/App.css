@@ -1,4 +1,5 @@
-#root {
+/* Стили для основного контента (не применяются к странице авторизации) */
+.dashboard-root {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
