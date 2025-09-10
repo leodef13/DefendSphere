@@ -36,9 +36,24 @@ body {
   }
 }
 
+/* Sidebar text color overrides */
+.sidebar,
+.sidebar *,
 .sidebar a,
-.sidebar .menu-item {
+.sidebar .menu-item,
+.sidebar h1,
+.sidebar h2,
+.sidebar h3,
+.sidebar h4,
+.sidebar h5,
+.sidebar h6,
+.sidebar p,
+.sidebar span,
+.sidebar div,
+.sidebar button,
+.sidebar svg {
   color: #ffffff !important;
+  fill: #ffffff !important;
 }
 
 .sidebar a:hover,

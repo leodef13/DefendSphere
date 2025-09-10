@@ -49,7 +49,7 @@ function Sidebar({ isMobileMenuOpen, onMobileMenuToggle }: { isMobileMenuOpen: b
             onClick={onMobileMenuToggle}
             className="md:hidden text-white hover:text-gray-300 transition-colors"
           >
-            <X className="h-6 w-6" />
+            <X className="h-6 w-6 text-white" />
           </button>
         </div>
 
@@ -66,8 +66,8 @@ function Sidebar({ isMobileMenuOpen, onMobileMenuToggle }: { isMobileMenuOpen: b
                     }`
                   }
                 >
-                  <Icon className="h-5 w-5 mr-3" />
-                  <span>{label}</span>
+                  <Icon className="h-5 w-5 mr-3 text-white" />
+                  <span className="text-white">{label}</span>
                 </NavLink>
               </li>
             ))}
