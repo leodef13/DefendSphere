@@ -1,6 +1,6 @@
 // MainLayout.tsx
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { Shield, LayoutDashboard, Settings, User, Server, FileCheck, Users, Building2, FileText, HelpCircle, Plug, Menu, X } from 'lucide-react'
+import { Shield, LayoutDashboard, Settings, User, Server, FileCheck, Users, Building2, FileText, HelpCircle, Plug, Menu } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import AssistantButton from '../components/AssistantButton'
@@ -43,14 +43,8 @@ function Sidebar({ isMobileMenuOpen, onMobileMenuToggle }: { isMobileMenuOpen: b
       {/* Sidebar Container */}
       <div className="p-5 flex flex-col min-h-screen bg-[#003a6a]">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-8">
           <h2 className="text-xl font-bold text-white">DefendSphere</h2>
-          <button 
-            onClick={onMobileMenuToggle}
-            className="md:hidden text-white hover:text-gray-300 transition-colors"
-          >
-            <X className="h-6 w-6 text-white" />
-          </button>
         </div>
 
         {/* Navigation Menu */}
