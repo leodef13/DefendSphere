@@ -38,8 +38,8 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div id="login-page" className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#f8f9fa' }}>
-      <div className="card p-8 w-full max-w-md mx-auto">
+    <div id="login-page" className="login-page">
+      <div className="login-card">
           {/* Заголовок */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-[#134876]">

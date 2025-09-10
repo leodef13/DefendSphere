@@ -1,6 +1,5 @@
 /* index.css */
 @import './styles/tokens.css';
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 body {
   font-family: 'Inter', sans-serif;
   background-color: var(--ds-background);
@@ -8,7 +7,6 @@ body {
   height: 100vh;
   margin: 0;
   padding: 0;
-  overflow: hidden;
 }
 
 .sidebar {
@@ -172,4 +170,29 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+
+/* Специфичные стили для страницы авторизации */
+.login-page {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.login-card {
+  background-color: #fdfeff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s;
+  padding: 2rem;
+  width: 100%;
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+.login-card:hover {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
 }
