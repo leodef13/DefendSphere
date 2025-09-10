@@ -49,14 +49,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const storedUser = localStorage.getItem('user')
 
     if (storedToken && storedUser) {
+      const parsedUser = JSON.parse(storedUser)
+      console.log('AuthProvider - Initialization user:', parsedUser)
+      console.log('AuthProvider - Initialization organizations:', parsedUser.organizations)
       setToken(storedToken)
-      setUser(JSON.parse(storedUser))
+      setUser(parsedUser)
       setIsAuthenticated(true)
     }
     setInitialized(true)
   }, [])
 
   const login = (newToken: string, newUser: User) => {
+    console.log('AuthProvider - Login user:', newUser)
+    console.log('AuthProvider - User organizations:', newUser.organizations)
     setToken(newToken)
     setUser(newUser)
     setIsAuthenticated(true)
@@ -81,14 +86,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       })
       if (res.ok) {
         const data = await res.json()
+        console.log('AuthProvider - Refresh user data:', data.user)
+        console.log('AuthProvider - Refresh user organizations:', data.user?.organizations)
         if (data.user) {
           setUser(data.user as any)
           localStorage.setItem('user', JSON.stringify(data.user))
           setIsAuthenticated(true)
         }
       }
-    } catch {
-      // ignore refresh errors
+    } catch (error) {
+      console.error('AuthProvider - Refresh error:', error)
     }
   }
 

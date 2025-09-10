@@ -37,6 +37,11 @@ const Assets: React.FC = () => {
 
   const isCompanyLLD = Array.isArray(user?.organizations) && user!.organizations!.includes('Company LLD')
 
+  // Отладочная информация
+  console.log('Assets page - User data:', user)
+  console.log('Assets page - User organizations:', user?.organizations)
+  console.log('Assets page - isCompanyLLD:', isCompanyLLD)
+
   useEffect(() => {
     if (isCompanyLLD) {
       fetchAssets()
@@ -50,17 +55,22 @@ const Assets: React.FC = () => {
     setLoading(true)
     setError(null)
     try {
+      console.log('Assets page - Fetching assets...')
       const response = await fetch(API_ENDPOINTS.ASSETS, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
+
+      console.log('Assets page - Response status:', response.status)
 
       if (!response.ok) {
         throw new Error('Failed to fetch assets data')
       }
 
       const data = await response.json()
+      console.log('Assets page - Assets data:', data)
       setAssets(data.data || [])
     } catch (err: any) {
+      console.error('Assets page - Fetch error:', err)
       setError(err.message)
     } finally {
       setLoading(false)

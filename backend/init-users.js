@@ -19,30 +19,51 @@ async function initializeUsers() {
     // Создаем пользователей если их нет
     const users = [
       {
-        id: 'user1',
+        id: '2',
         username: 'user1',
-        fullName: 'User One',
+        fullName: 'John Smith',
         email: 'user1@company-lld.com',
-        password: 'user1', // В реальном приложении должен быть хеш
+        password: await bcrypt.hash('user1', 10),
         organization: 'Company LLD',
-        position: 'Security Analyst',
-        role: 'user',
+        position: 'CEO',
+        role: 'admin',
         phone: '+1-555-0101',
-        permissions: JSON.stringify(['view_assets', 'view_reports']),
-        additionalOrganizations: JSON.stringify([])
+        permissions: JSON.stringify([
+          'access.dashboard',
+          'access.assets',
+          'access.compliance',
+          'access.customerTrust',
+          'access.suppliers',
+          'access.reports',
+          'access.integrations',
+          'access.admin'
+        ]),
+        additionalOrganizations: JSON.stringify([]),
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString()
       },
       {
-        id: 'user3',
+        id: '4',
         username: 'user3',
-        fullName: 'User Three',
+        fullName: 'Jane Doe',
         email: 'user3@company-lld.com',
-        password: 'user3', // В реальном приложении должен быть хеш
+        password: await bcrypt.hash('user3', 10),
         organization: 'Company LLD',
-        position: 'IT Manager',
+        position: 'CISO',
         role: 'user',
         phone: '+1-555-0103',
-        permissions: JSON.stringify(['view_assets', 'view_reports', 'manage_assets']),
-        additionalOrganizations: JSON.stringify([])
+        permissions: JSON.stringify([
+          'access.dashboard',
+          'access.assets',
+          'access.compliance',
+          'access.customerTrust',
+          'access.suppliers',
+          'access.reports',
+          'access.integrations'
+        ]),
+        additionalOrganizations: JSON.stringify([]),
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString()
       }
     ]
     
