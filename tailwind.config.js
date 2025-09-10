@@ -17,6 +17,7 @@ export default {
         danger: '#EF4444'
       },
       fontFamily: {
+        inter: ['Inter', 'sans-serif'],
         sans: ['Inter', 'system-ui', 'sans-serif']
       }
     }

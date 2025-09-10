@@ -38,8 +38,8 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div id="login-page" className="min-h-screen flex items-center justify-center bg-white p-4">
-      <div className="bg-white rounded-md shadow-md p-8 w-full max-w-md mx-auto">
+    <div id="login-page" className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#f8f9fa' }}>
+      <div className="card p-8 w-full max-w-md mx-auto">
           {/* Заголовок */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-[#134876]">
@@ -116,7 +116,7 @@ const Login: React.FC = () => {
             {/* Кнопка Login */}
             <button
               type="submit"
-              className="w-full py-2 px-4 rounded-md text-white font-medium transition-colors duration-200 bg-[#56a3d9] hover:bg-[#134876]"
+              className="w-full py-2 px-4 rounded-md text-white font-medium btn-primary"
             >
               Login
             </button>
