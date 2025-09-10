@@ -9,9 +9,11 @@ const Login: React.FC = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('') // Очищаем предыдущие ошибки
 
     try {
       const response = await fetch(API_ENDPOINTS.LOGIN, {
@@ -28,24 +30,16 @@ const Login: React.FC = () => {
         login(data.token, data.user)
         navigate('/dashboard', { replace: true })
       } else {
-        // Показать сообщение об ошибке
-        const errorElement = document.getElementById('login-error')
-        if (errorElement) {
-          errorElement.classList.remove('hidden')
-        }
+        setError('Invalid username or password. Please try again.')
       }
     } catch (err) {
-      // Показать сообщение об ошибке
-      const errorElement = document.getElementById('login-error')
-      if (errorElement) {
-        errorElement.classList.remove('hidden')
-      }
+      setError('Invalid username or password. Please try again.')
     }
   }
 
   return (
-    <div id="login-page" className="min-h-screen flex items-center justify-center bg-white">
-      <div className="card p-8 w-full max-w-md">
+    <div id="login-page" className="min-h-screen flex items-center justify-center bg-white p-4">
+      <div className="bg-white rounded-md shadow-md p-8 w-full max-w-md mx-auto">
           {/* Заголовок */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-[#134876]">
@@ -113,19 +107,28 @@ const Login: React.FC = () => {
             </div>
 
             {/* Сообщение об ошибке */}
-            <div id="login-error" className="text-red-500 text-sm text-center hidden">
-              Invalid username or password. Please try again.
-            </div>
+            {error && (
+              <div className="text-red-500 text-sm text-center">
+                {error}
+              </div>
+            )}
 
             {/* Кнопка Login */}
-            <div>
-              <button
-                type="submit"
-                className="w-full btn-primary py-2 px-4 rounded-md text-white font-medium"
-              >
-                Login
-              </button>
-            </div>
+            <button
+              type="submit"
+              className="w-full py-2 px-4 rounded-md text-white font-medium transition-colors duration-200"
+              style={{ 
+                backgroundColor: '#56a3d9'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#134876'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#56a3d9'
+              }}
+            >
+              Login
+            </button>
           </form>
       </div>
     </div>
