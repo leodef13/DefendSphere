@@ -188,7 +188,7 @@ const Assets: React.FC = () => {
         </div>
         
         {/* Scan Status Indicator */}
-        {isCompanyLLD && activeScan && (
+        {hasOrganizations && activeScan && (
           <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-200">
             {activeScan.status === 'running' && <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />}
             {activeScan.status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600" />}
@@ -202,7 +202,7 @@ const Assets: React.FC = () => {
         )}
       </div>
 
-      {isCompanyLLD && assets.length > 0 ? (
+      {hasOrganizations && assets.length > 0 ? (
         <div className="space-y-6">
           {assets.map((asset) => (
             <Card key={asset.id} className="overflow-hidden">

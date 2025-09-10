@@ -203,7 +203,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Scan Control Section for Company LLD users */}
-      {isCompanyLLD && hasAssets && (
+      {hasOrganizations && hasAssets && (
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -281,7 +281,7 @@ export default function Dashboard() {
       )}
 
       {/* Security Health Section for Company LLD users */}
-      {isCompanyLLD && reportData && (
+      {hasOrganizations && reportData && (
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4 metric-card">
           <Card className="col-span-2">
             <CardHeader className="p-4 pb-0">
