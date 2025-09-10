@@ -204,7 +204,7 @@ app.post('/api/auth/login', async (req, res) => {
       user: {
         ...user,
         permissions: Array.isArray(user.permissions) ? user.permissions : JSON.parse(user.permissions || '[]'),
-        organizations: user.organization ? [user.organization] : []
+        organizations: user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
       }
     })
   } catch (error) {
@@ -256,7 +256,7 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
       user: {
         ...user,
         permissions: Array.isArray(user.permissions) ? user.permissions : JSON.parse(user.permissions || '[]'),
-        organizations: user.organization ? [user.organization] : []
+        organizations: user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
       }
     })
   } catch (error) {

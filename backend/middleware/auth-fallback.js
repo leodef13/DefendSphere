@@ -44,7 +44,7 @@ export const authenticateTokenFallback = async (req, res, next) => {
       email: user.email,
       role: user.role,
       permissions: user.permissions || [],
-      organizations: user.organization ? [user.organization] : []
+      organizations: user.organizations || (user.organization ? [user.organization] : [])
     }
     next()
   } catch (error) {
