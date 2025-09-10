@@ -2,7 +2,65 @@ import React, { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, Button, PrimaryButton, SecondaryButton, DangerButton } from '../components/ui'
 import { useAuth } from '../components/AuthProvider'
 import { API_ENDPOINTS } from '../config/api'
-import { FileText } from 'lucide-react'
+import { FileText, Edit2, Save, X, HelpCircle } from 'lucide-react'
+
+// SummaryRow component moved to top to avoid ReferenceError
+function SummaryRow({ label, value, onSave, helper }: { label: string, value: string, onSave: (v: string)=>void, helper?: string }) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValue, setEditValue] = useState(value)
+
+  const handleSave = () => {
+    onSave(editValue)
+    setIsEditing(false)
+  }
+
+  const handleCancel = () => {
+    setEditValue(value)
+    setIsEditing(false)
+  }
+
+  return (
+    <div className="flex items-center justify-between p-3 border rounded-lg">
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-gray-700">{label}</span>
+          {helper && (
+            <div className="group relative">
+              <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                {helper}
+              </div>
+            </div>
+          )}
+        </div>
+        {isEditing ? (
+          <div className="flex items-center gap-2 mt-1">
+            <input
+              type="text"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              className="flex-1 px-2 py-1 border rounded text-sm"
+              autoFocus
+            />
+            <Button size="sm" onClick={handleSave} className="p-1">
+              <Save className="w-4 h-4" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleCancel} className="p-1">
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-gray-600">{value}</span>
+            <Button size="sm" variant="outline" onClick={() => setIsEditing(true)} className="p-1">
+              <Edit2 className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 // Types for questionnaire data
 interface StarterData {
@@ -391,68 +449,6 @@ function CheckboxGroup({ label, options, values, onChange }: { label: string, op
           </label>
         ))}
       </div>
-    </div>
-  )
-}
-
-function SummaryRow({ label, value, onSave, helper }: { label: string, value: string, onSave: (v: string)=>void, helper?: string }) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editValue, setEditValue] = useState(value)
-
-  const handleSave = () => {
-    onSave(editValue)
-    setIsEditing(false)
-  }
-
-  const handleCancel = () => {
-    setEditValue(value)
-    setIsEditing(false)
-  }
-
-  return (
-    <div className="flex items-center justify-between p-3 border rounded-lg">
-      <div className="flex-1">
-        <div className="text-sm font-medium text-gray-700">{label}</div>
-        {isEditing ? (
-          <div className="mt-1">
-            <input
-              type="text"
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              className="w-full px-2 py-1 border rounded text-sm"
-              autoFocus
-            />
-            {helper && <div className="text-xs text-gray-500 mt-1">{helper}</div>}
-            <div className="flex gap-2 mt-2">
-              <PrimaryButton
-                type="button"
-                onClick={handleSave}
-                className="px-2 py-1 text-xs"
-              >
-                Save
-              </PrimaryButton>
-              <SecondaryButton
-                type="button"
-                onClick={handleCancel}
-                className="px-2 py-1 text-xs"
-              >
-                Cancel
-              </SecondaryButton>
-            </div>
-          </div>
-        ) : (
-          <div className="text-sm text-gray-900 mt-1">{value}</div>
-        )}
-      </div>
-      {!isEditing && (
-        <SecondaryButton
-          type="button"
-          onClick={() => setIsEditing(true)}
-          className="ml-2 px-2 py-1 text-xs"
-        >
-          Edit
-        </SecondaryButton>
-      )}
     </div>
   )
 }

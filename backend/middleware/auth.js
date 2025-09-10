@@ -12,15 +12,49 @@ export const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1]
 
+  console.log('Auth middleware - token present:', !!token)
+
   if (!token) {
     return res.status(401).json({ message: 'Access token required' })
   }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET)
-    const user = await redis.hGetAll(`user:${decoded.username}`)
+    console.log('Token decoded:', { userId: decoded.userId, username: decoded.username })
     
-    if (!user.username) {
+    let user = null;
+    let useFallback = false;
+
+    try {
+      user = await redis.hGetAll(`user:${decoded.username}`)
+      if (!user.username) {
+        useFallback = true;
+      }
+    } catch (redisError) {
+      console.log('Redis not available in auth middleware, using fallback')
+      useFallback = true;
+    }
+
+    if (useFallback) {
+      // Fallback to file-based authentication
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const dataDir = path.join(process.cwd(), 'data');
+        const usersFile = path.join(dataDir, 'users.json');
+        const users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
+        user = users.find(u => u.username === decoded.username);
+        
+        if (!user) {
+          return res.status(401).json({ message: 'User not found' })
+        }
+      } catch (fallbackError) {
+        console.error('Fallback auth error:', fallbackError);
+        return res.status(500).json({ message: 'Authentication service unavailable' })
+      }
+    }
+    
+    if (!user || !user.username) {
       return res.status(401).json({ message: 'Invalid token' })
     }
 
@@ -29,11 +63,14 @@ export const authenticateToken = async (req, res, next) => {
       username: user.username,
       email: user.email,
       role: user.role,
-      permissions: user.permissions ? JSON.parse(user.permissions) : [],
-      organizations: user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
+      permissions: Array.isArray(user.permissions) ? user.permissions : (user.permissions ? JSON.parse(user.permissions) : []),
+      organizations: Array.isArray(user.organizations) ? user.organizations : (user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : []))
     }
+    
+    console.log('User authenticated:', { username: req.user.username, organizations: req.user.organizations })
     next()
   } catch (error) {
+    console.error('Token verification error:', error)
     return res.status(403).json({ message: 'Invalid token' })
   }
 }

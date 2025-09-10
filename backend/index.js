@@ -142,6 +142,8 @@ app.post('/api/auth/login', async (req, res) => {
     const { username, password, login } = req.body
     const loginName = username || login
 
+    console.log('Login attempt:', { username, login, loginName, hasPassword: !!password })
+
     if (!loginName || !password) {
       return res.status(400).json({ message: 'Username and password are required' })
     }
@@ -206,6 +208,7 @@ app.post('/api/auth/login', async (req, res) => {
       organizations: Array.isArray(user.organizations) ? user.organizations : (user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : []))
     };
 
+    console.log('Login successful for user:', loginName);
     console.log('Processed user data:', JSON.stringify(processedUser, null, 2));
 
     res.json({
