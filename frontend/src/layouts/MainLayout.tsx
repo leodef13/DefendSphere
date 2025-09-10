@@ -37,47 +37,48 @@ function Sidebar({ isMobileMenuOpen, onMobileMenuToggle }: { isMobileMenuOpen: b
     if (item.to === '/user-dashboard') return true
     return user.permissions?.includes(item.permission) || user.permissions?.includes('all')
   })
+  
   return (
     <aside className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
-      <div className="px-5 py-4 flex items-center justify-between" style={{borderBottom: '1px solid #134876'}}>
-        <h2 className="text-xl font-bold mb-8" style={{color: '#fff'}}>DefendSphere</h2>
-        <button 
-          onClick={onMobileMenuToggle}
-          className="md:hidden text-white hover:text-gray-300 transition-colors"
-        >
-          <X className="h-6 w-6" />
-        </button>
-      </div>
-      <nav className="p-5">
-        <ul className="space-y-2">
-          {filteredNavItems.map(({ to, label, icon: Icon }) => (
-            <li key={to}>
-              <NavLink
-                to={to}
-                className={({ isActive }) =>
-                  `flex items-center p-2 rounded cursor-pointer text-sm transition-all duration-200 ease-in-out hover:bg-[#134876] hover:scale-[1.02] hover:shadow-md relative ${
-                    isActive ? 'text-white bg-[#134876] shadow-lg' : 'text-white/90'
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    {isActive && (
-                      <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-white rounded-r-full"></div>
-                    )}
-                    <Icon className="h-5 w-5 mr-3" />
-                    <span className={isActive ? 'ml-2' : ''}>{label}</span>
-                  </>
-                )}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <div className="absolute bottom-0 left-0 w-full p-5" style={{borderTop: '1px solid #134876'}}>
-        <div className="space-y-2" style={{color: 'rgba(255,255,255,.9)'}}>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-white" style={{color: '#003a6a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700}}>
+      {/* Sidebar Container */}
+      <div className="p-5 flex flex-col min-h-screen bg-[#003a6a]">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-xl font-bold text-white">DefendSphere</h2>
+          <button 
+            onClick={onMobileMenuToggle}
+            className="md:hidden text-white hover:text-gray-300 transition-colors"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        {/* Navigation Menu */}
+        <nav className="flex-1">
+          <ul className="space-y-2">
+            {filteredNavItems.map(({ to, label, icon: Icon }) => (
+              <li key={to} className="p-2 rounded">
+                <NavLink
+                  to={to}
+                  className={({ isActive }) =>
+                    `flex items-center p-2 rounded cursor-pointer text-white transition-all duration-200 hover:bg-[#134876] ${
+                      isActive ? 'bg-[#134876]' : ''
+                    }`
+                  }
+                >
+                  <Icon className="h-5 w-5 mr-3" />
+                  <span>{label}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* User Block - Fixed at bottom */}
+        <div className="mt-auto">
+          <div className="flex items-center gap-2 p-2">
+            {/* Avatar */}
+            <div className="rounded-full bg-[#134876] w-8 h-8 flex items-center justify-center text-white font-bold">
               {(() => {
                 function getInitials(name) {
                   if (!name) return 'U'
@@ -87,13 +88,26 @@ function Sidebar({ isMobileMenuOpen, onMobileMenuToggle }: { isMobileMenuOpen: b
                 return getInitials(full && full.trim().length > 0 ? full : (user?.username || ''))
               })()}
             </div>
-            <div>
-              <p className="text-sm font-medium">{user?.username || 'User'}</p>
-              <p className="text-xs text-white/70">{user?.role || 'user'}</p>
+            
+            {/* User Info */}
+            <div className="flex-1">
+              <p className="text-sm font-medium text-white">
+                {(user as any)?.fullName || user?.username || 'User'}
+              </p>
+              <p className="text-xs text-white/70">
+                {user?.role === 'admin' ? 'Security Admin' : 'User'}
+              </p>
             </div>
           </div>
-          <div>
-            <button onClick={logout} className="text-xs text-white/80 hover:text-white transition-colors">{t('auth.logout')}</button>
+          
+          {/* Logout Button */}
+          <div className="mt-2">
+            <button 
+              onClick={logout} 
+              className="text-xs text-white/80 hover:text-white transition-colors"
+            >
+              {t('auth.logout')}
+            </button>
           </div>
         </div>
       </div>
