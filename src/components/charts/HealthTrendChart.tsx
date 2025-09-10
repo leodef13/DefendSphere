@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface HealthData {
   date: string;
@@ -10,6 +10,7 @@ interface HealthTrendChartProps {
 }
 
 const HealthTrendChart: React.FC<HealthTrendChartProps> = ({ data }) => {
+  const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
   const maxHealth = Math.max(...data.map(d => d.health));
   const minHealth = Math.min(...data.map(d => d.health));
   const range = maxHealth - minHealth;
@@ -27,6 +28,13 @@ const HealthTrendChart: React.FC<HealthTrendChartProps> = ({ data }) => {
     if (health >= 60) return '#f59e0b'; // yellow
     if (health >= 40) return '#f97316'; // orange
     return '#ef4444'; // red
+  };
+
+  const getStatus = (health: number) => {
+    if (health >= 80) return 'Good';
+    if (health >= 60) return 'Fair';
+    if (health >= 40) return 'Poor';
+    return 'Critical';
   };
 
   return (
@@ -65,6 +73,7 @@ const HealthTrendChart: React.FC<HealthTrendChartProps> = ({ data }) => {
             const x = (index / (data.length - 1)) * (100 - 8);
             const y = 100 - ((item.health - minHealth) / range) * 100;
             const color = getColor(item.health);
+            const isHovered = hoveredPoint === index;
             
             return (
               <g key={index}>
@@ -72,7 +81,7 @@ const HealthTrendChart: React.FC<HealthTrendChartProps> = ({ data }) => {
                 <circle
                   cx={`${x}%`}
                   cy={`${y}%`}
-                  r="6"
+                  r={isHovered ? "8" : "6"}
                   fill="rgba(0,0,0,0.1)"
                   className="transition-all duration-300"
                 />
@@ -80,18 +89,20 @@ const HealthTrendChart: React.FC<HealthTrendChartProps> = ({ data }) => {
                 <circle
                   cx={`${x}%`}
                   cy={`${y}%`}
-                  r="4"
+                  r={isHovered ? "6" : "4"}
                   fill={color}
                   stroke="white"
                   strokeWidth="2"
-                  className="transition-all duration-300 hover:r-6"
+                  className="transition-all duration-300 cursor-pointer hover:r-6"
+                  onMouseEnter={() => setHoveredPoint(index)}
+                  onMouseLeave={() => setHoveredPoint(null)}
                 />
                 {/* Значение */}
                 <text
                   x={`${x}%`}
                   y={`${y - 15}%`}
                   textAnchor="middle"
-                  className="text-xs font-medium fill-gray-700"
+                  className={`text-xs font-medium fill-gray-700 transition-all duration-300 ${isHovered ? 'text-sm font-bold' : ''}`}
                 >
                   {item.health}%
                 </text>
@@ -99,6 +110,26 @@ const HealthTrendChart: React.FC<HealthTrendChartProps> = ({ data }) => {
             );
           })}
         </svg>
+
+        {/* Hover индикатор */}
+        {hoveredPoint !== null && (
+          <div 
+            className="absolute bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg z-10 pointer-events-none"
+            style={{
+              left: `${32 + (hoveredPoint / (data.length - 1)) * (100 - 8)}%`,
+              top: `${100 - ((data[hoveredPoint].health - minHealth) / range) * 100 - 60}%`,
+              transform: 'translateX(-50%)'
+            }}
+          >
+            <div className="text-sm font-medium">{formatDate(data[hoveredPoint].date)}</div>
+            <div className="text-xs text-gray-300">
+              Health: {data[hoveredPoint].health}% ({getStatus(data[hoveredPoint].health)})
+            </div>
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
+              <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Подписи осей */}
