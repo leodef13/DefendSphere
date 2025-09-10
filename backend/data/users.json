@@ -1,0 +1,49 @@
+[
+  {
+    "id": "2",
+    "username": "user1",
+    "fullName": "John Smith",
+    "email": "user1@company-lld.com",
+    "password": "user1",
+    "organization": "Company LLD",
+    "position": "CEO",
+    "role": "admin",
+    "phone": "+1-555-0101",
+    "permissions": [
+      "access.dashboard",
+      "access.assets",
+      "access.compliance",
+      "access.customerTrust",
+      "access.suppliers",
+      "access.reports",
+      "access.integrations",
+      "access.admin"
+    ],
+    "additionalOrganizations": [],
+    "createdAt": "2025-09-10T12:32:11.841Z",
+    "lastLogin": "2025-09-10T12:32:11.845Z"
+  },
+  {
+    "id": "4",
+    "username": "user3",
+    "fullName": "Jane Doe",
+    "email": "user3@company-lld.com",
+    "password": "user3",
+    "organization": "Company LLD",
+    "position": "CISO",
+    "role": "user",
+    "phone": "+1-555-0103",
+    "permissions": [
+      "access.dashboard",
+      "access.assets",
+      "access.compliance",
+      "access.customerTrust",
+      "access.suppliers",
+      "access.reports",
+      "access.integrations"
+    ],
+    "additionalOrganizations": [],
+    "createdAt": "2025-09-10T12:32:11.845Z",
+    "lastLogin": "2025-09-10T12:32:11.845Z"
+  }
+]

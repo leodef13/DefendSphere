@@ -1,0 +1,86 @@
+[
+  {
+    "id": "asset-1",
+    "assetId": "asset-1",
+    "name": "www.company-lld.com",
+    "type": "Web Server",
+    "environment": "Production",
+    "ipAddress": "116.203.242.207",
+    "lastAssessment": "2024-01-15",
+    "complianceScore": 75,
+    "standards": [
+      "NIS2",
+      "GDPR",
+      "ISO/IEC 27001"
+    ],
+    "vulnerabilities": {
+      "critical": 1,
+      "high": 3,
+      "medium": 5,
+      "low": 1,
+      "total": 10
+    }
+  },
+  {
+    "id": "asset-2",
+    "assetId": "asset-2",
+    "name": "db.company-lld.com",
+    "type": "Database Server",
+    "environment": "Production",
+    "ipAddress": "10.0.0.12",
+    "lastAssessment": "2024-01-15",
+    "complianceScore": 70,
+    "standards": [
+      "NIS2",
+      "ISO/IEC 27001"
+    ],
+    "vulnerabilities": {
+      "critical": 1,
+      "high": 2,
+      "medium": 4,
+      "low": 1,
+      "total": 8
+    }
+  },
+  {
+    "id": "asset-3",
+    "assetId": "asset-3",
+    "name": "app.company-lld.com",
+    "type": "Application Server",
+    "environment": "Production",
+    "ipAddress": "10.0.0.21",
+    "lastAssessment": "2024-01-15",
+    "complianceScore": 80,
+    "standards": [
+      "GDPR",
+      "ISO/IEC 27001"
+    ],
+    "vulnerabilities": {
+      "critical": 2,
+      "high": 3,
+      "medium": 3,
+      "low": 1,
+      "total": 9
+    }
+  },
+  {
+    "id": "asset-4",
+    "assetId": "asset-4",
+    "name": "vpn.company-lld.com",
+    "type": "VPN Gateway",
+    "environment": "Production",
+    "ipAddress": "10.0.0.30",
+    "lastAssessment": "2024-01-15",
+    "complianceScore": 75,
+    "standards": [
+      "NIS2"
+    ],
+    "vulnerabilities": {
+      "critical": 1,
+      "high": 1,
+      "medium": 2,
+      "low": 1,
+      "total": 5
+    }
+  }
+]

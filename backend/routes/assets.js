@@ -27,37 +27,67 @@ client.on('error', (err) => console.log('Redis Client Error', err));
 // GET /api/assets - Получение всех активов для пользователя
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    // Проверяем подключение к Redis
-    if (!client.isOpen) {
-      await client.connect();
-    }
-    
     const user = req.user;
     const userOrgs = user.organizations || [];
     
     console.log('Assets request for user:', user.username, 'organizations:', userOrgs);
     
-    // Get assets from all companies the user has access to
-    const allAssets = [];
-    
-    for (const org of userOrgs) {
-      // Для Company LLD используем фиксированный ID
-      const companyId = org === 'Company LLD' ? 'company-lld' : `company-${org.toLowerCase().replace(/\s+/g, '-')}`;
-      console.log(`Looking for assets in company: ${companyId}`);
+    let allAssets = [];
+    let useFallback = false;
+
+    try {
+      // Проверяем подключение к Redis
+      if (!client.isOpen) {
+        await client.connect();
+      }
       
-      const assetIds = await client.sMembers(`company:${companyId}:assetIds`);
-      console.log(`Found asset IDs for ${companyId}:`, assetIds);
-      
-      for (const assetId of assetIds) {
-        const assetData = await client.hGet(`company:${companyId}:assets`, assetId);
-        if (assetData) {
-          const asset = JSON.parse(assetData);
-          console.log(`Loaded asset:`, asset.name);
-          allAssets.push({
-            id: asset.assetId,
-            ...asset
-          });
+      // Get assets from all companies the user has access to
+      for (const org of userOrgs) {
+        // Для Company LLD используем фиксированный ID
+        const companyId = org === 'Company LLD' ? 'company-lld' : `company-${org.toLowerCase().replace(/\s+/g, '-')}`;
+        console.log(`Looking for assets in company: ${companyId}`);
+        
+        const assetIds = await client.sMembers(`company:${companyId}:assetIds`);
+        console.log(`Found asset IDs for ${companyId}:`, assetIds);
+        
+        for (const assetId of assetIds) {
+          const assetData = await client.hGet(`company:${companyId}:assets`, assetId);
+          if (assetData) {
+            const asset = JSON.parse(assetData);
+            console.log(`Loaded asset:`, asset.name);
+            allAssets.push({
+              id: asset.assetId,
+              ...asset
+            });
+          }
         }
+      }
+    } catch (redisError) {
+      console.log('Redis not available, using fallback for assets:', redisError.message);
+      useFallback = true;
+    }
+
+    if (useFallback) {
+      // Fallback to file-based assets
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const dataDir = path.join(process.cwd(), 'data');
+        const assetsFile = path.join(dataDir, 'assets.json');
+        
+        const assets = JSON.parse(fs.readFileSync(assetsFile, 'utf8'));
+        
+        // Check if user has access to Company LLD assets
+        if (userOrgs.includes('Company LLD')) {
+          allAssets = assets;
+          console.log(`Using fallback assets for user ${user.username}:`, allAssets.length);
+        }
+      } catch (fallbackError) {
+        console.error('Fallback assets error:', fallbackError);
+        return res.status(500).json({
+          success: false,
+          message: 'Assets service unavailable'
+        });
       }
     }
     

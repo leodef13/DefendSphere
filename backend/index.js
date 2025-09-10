@@ -12,6 +12,7 @@ import aiAssistantRoutes from './routes/ai-assistant.js'
 import starterGuideRoutes from './routes/starter-guide.js'
 import customerTrustRoutes from './routes/customer-trust.js'
 import assetsRoutes from './routes/assets.js'
+import assetsFallbackRoutes from './routes/assets-fallback.js'
 import complianceRoutes from './routes/compliance.js'
 import integrationsRoutes from './routes/integrations.js'
 import suppliersRoutes from './routes/suppliers.js'
@@ -145,20 +146,52 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ message: 'Username and password are required' })
     }
 
-    // Get user from Redis
-    const user = await redis.hGetAll(`user:${loginName}`)
-    if (!user.username) {
-      return res.status(401).json({ message: 'Invalid credentials' })
+    let user = null;
+    let useFallback = false;
+
+    try {
+      // Try to get user from Redis first
+      user = await redis.hGetAll(`user:${loginName}`)
+      if (!user.username) {
+        useFallback = true;
+      }
+    } catch (redisError) {
+      console.log('Redis not available, using fallback:', redisError.message)
+      useFallback = true;
     }
 
-    // Check password
-    const isValidPassword = await bcrypt.compare(password, user.password)
-    if (!isValidPassword) {
-      return res.status(401).json({ message: 'Invalid credentials' })
-    }
+    if (useFallback) {
+      // Fallback to file-based authentication
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const dataDir = path.join(process.cwd(), 'data');
+        const usersFile = path.join(dataDir, 'users.json');
+        
+        const users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
+        user = users.find(u => u.username === loginName);
+        
+        if (!user) {
+          return res.status(401).json({ message: 'Invalid credentials' })
+        }
 
-    // Update last login
-    await redis.hSet(`user:${username}`, 'lastLogin', new Date().toISOString())
+        // Simple password check for fallback (in production, use proper hashing)
+        if (user.password !== password) {
+          return res.status(401).json({ message: 'Invalid credentials' })
+        }
+
+        console.log('Using fallback authentication for user:', loginName);
+      } catch (fallbackError) {
+        console.error('Fallback authentication error:', fallbackError);
+        return res.status(500).json({ message: 'Authentication service unavailable' })
+      }
+    } else {
+      // Check password with bcrypt for Redis users
+      const isValidPassword = await bcrypt.compare(password, user.password)
+      if (!isValidPassword) {
+        return res.status(401).json({ message: 'Invalid credentials' })
+      }
+    }
 
     // Generate token
     const token = jwt.sign({ userId: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' })
@@ -170,7 +203,7 @@ app.post('/api/auth/login', async (req, res) => {
       token,
       user: {
         ...user,
-        permissions: JSON.parse(user.permissions),
+        permissions: Array.isArray(user.permissions) ? user.permissions : JSON.parse(user.permissions || '[]'),
         organizations: user.organization ? [user.organization] : []
       }
     })
@@ -182,16 +215,47 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
   try {
-    const user = await redis.hGetAll(`user:${req.user.username}`)
-    if (!user.username) {
-      return res.status(404).json({ message: 'User not found' })
+    let user = null;
+    let useFallback = false;
+
+    try {
+      // Try to get user from Redis first
+      user = await redis.hGetAll(`user:${req.user.username}`)
+      if (!user.username) {
+        useFallback = true;
+      }
+    } catch (redisError) {
+      console.log('Redis not available for /me, using fallback:', redisError.message)
+      useFallback = true;
+    }
+
+    if (useFallback) {
+      // Fallback to file-based user data
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const dataDir = path.join(process.cwd(), 'data');
+        const usersFile = path.join(dataDir, 'users.json');
+        
+        const users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
+        user = users.find(u => u.username === req.user.username);
+        
+        if (!user) {
+          return res.status(404).json({ message: 'User not found' })
+        }
+
+        console.log('Using fallback user data for:', req.user.username);
+      } catch (fallbackError) {
+        console.error('Fallback user data error:', fallbackError);
+        return res.status(500).json({ message: 'User service unavailable' })
+      }
     }
 
     delete user.password
     res.json({
       user: {
         ...user,
-        permissions: JSON.parse(user.permissions),
+        permissions: Array.isArray(user.permissions) ? user.permissions : JSON.parse(user.permissions || '[]'),
         organizations: user.organization ? [user.organization] : []
       }
     })
@@ -653,6 +717,7 @@ app.use('/api/ai-assistant', aiAssistantRoutes);
 app.use('/api/starter-guide', starterGuideRoutes);
 app.use('/api/customer-trust', customerTrustRoutes);
 app.use('/api/assets', assetsRoutes);
+app.use('/api/assets', assetsFallbackRoutes);
 app.use('/api/compliance', complianceRoutes);
 app.use('/api/integrations', integrationsRoutes);
 app.use('/api/reports', reportsRoutes);
