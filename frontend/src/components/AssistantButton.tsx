@@ -79,7 +79,7 @@ const AssistantButton: React.FC = () => {
       {/* Floating Assistant Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 w-12 h-12 bg-blue-500 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-50"
+        className="fixed bottom-5 right-5 w-[50px] h-[50px] bg-blue-500 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-50"
         style={{ backgroundColor: '#56a3d9' }}
       >
         {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
@@ -87,7 +87,7 @@ const AssistantButton: React.FC = () => {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-20 right-6 w-80 h-96 bg-white rounded-lg shadow-xl border border-gray-200 z-40 flex flex-col slide-in">
+        <div className="fixed bottom-20 right-5 w-[300px] h-[400px] bg-white rounded-lg shadow-xl border border-gray-200 z-40 flex flex-col slide-in">
           {/* Chat Header */}
           <div className="bg-blue-500 text-white p-3 rounded-t-lg flex items-center gap-2" style={{ backgroundColor: '#56a3d9' }}>
             <MessageCircle size={20} />
