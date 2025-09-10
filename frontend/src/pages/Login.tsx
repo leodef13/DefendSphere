@@ -116,16 +116,7 @@ const Login: React.FC = () => {
             {/* Кнопка Login */}
             <button
               type="submit"
-              className="w-full py-2 px-4 rounded-md text-white font-medium transition-colors duration-200"
-              style={{ 
-                backgroundColor: '#56a3d9'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#134876'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#56a3d9'
-              }}
+              className="w-full py-2 px-4 rounded-md text-white font-medium transition-colors duration-200 bg-[#56a3d9] hover:bg-[#134876]"
             >
               Login
             </button>
