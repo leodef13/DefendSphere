@@ -1,48 +1,31 @@
 import { createClient } from 'redis'
 
-const redis = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6380'
-})
-
-redis.on('error', (err) => console.log('Redis Client Error', err))
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6380'
 
 async function checkRedisData() {
+  const redis = createClient({ url: REDIS_URL })
+  
   try {
     await redis.connect()
-    console.log('✅ Подключение к Redis установлено')
+    console.log('Connected to Redis')
     
-    // Проверяем пользователей
-    const users = await redis.sMembers('users')
-    console.log('Пользователи:', users)
+    // Проверяем все ключи пользователей
+    const userKeys = await redis.keys('user:*')
+    console.log('User keys in Redis:', userKeys)
     
-    // Проверяем user1
-    if (users.includes('user1')) {
-      const user1 = await redis.hGetAll('user:user1')
-      console.log('User1:', user1)
+    for (const key of userKeys) {
+      console.log(`\n--- ${key} ---`)
+      const user = await redis.hGetAll(key)
+      console.log('Username:', user.username)
+      console.log('Email:', user.email)
+      console.log('Organizations:', user.organizations)
+      console.log('Role:', user.role)
     }
-    
-    // Проверяем user3
-    if (users.includes('user3')) {
-      const user3 = await redis.hGetAll('user:user3')
-      console.log('User3:', user3)
-    }
-    
-    // Проверяем компании
-    const companies = await redis.sMembers('companies')
-    console.log('Компании:', companies)
-    
-    // Проверяем активы Company LLD
-    const assetIds = await redis.sMembers('company:company-lld:assetIds')
-    console.log('Активы Company LLD:', assetIds)
-    
-    // Проверяем все ключи
-    const keys = await redis.keys('*')
-    console.log('Все ключи:', keys)
     
   } catch (error) {
-    console.error('Ошибка:', error.message)
+    console.error('Error:', error.message)
   } finally {
-    await redis.disconnect()
+    await redis.quit()
   }
 }
 

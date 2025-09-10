@@ -26,7 +26,11 @@ export const authenticateToken = async (req, res, next) => {
     let useFallback = false;
 
     try {
+      // Try both possible Redis keys
       user = await redis.hGetAll(`user:${decoded.username}`)
+      if (!user.username) {
+        user = await redis.hGetAll(`user:${decoded.userId}`)
+      }
       if (!user.username) {
         useFallback = true;
       }
