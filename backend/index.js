@@ -181,6 +181,7 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         console.log('Using fallback authentication for user:', loginName);
+        console.log('User data from fallback:', JSON.stringify(user, null, 2));
       } catch (fallbackError) {
         console.error('Fallback authentication error:', fallbackError);
         return res.status(500).json({ message: 'Authentication service unavailable' })
@@ -199,13 +200,17 @@ app.post('/api/auth/login', async (req, res) => {
     // Remove password from response
     delete user.password
 
+    const processedUser = {
+      ...user,
+      permissions: Array.isArray(user.permissions) ? user.permissions : JSON.parse(user.permissions || '[]'),
+      organizations: Array.isArray(user.organizations) ? user.organizations : (user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : []))
+    };
+
+    console.log('Processed user data:', JSON.stringify(processedUser, null, 2));
+
     res.json({
       token,
-      user: {
-        ...user,
-        permissions: Array.isArray(user.permissions) ? user.permissions : JSON.parse(user.permissions || '[]'),
-        organizations: user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
-      }
+      user: processedUser
     })
   } catch (error) {
     console.error('Login error:', error)
@@ -256,7 +261,7 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
       user: {
         ...user,
         permissions: Array.isArray(user.permissions) ? user.permissions : JSON.parse(user.permissions || '[]'),
-        organizations: user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
+        organizations: Array.isArray(user.organizations) ? user.organizations : (user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : []))
       }
     })
   } catch (error) {
