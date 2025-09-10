@@ -161,8 +161,18 @@ const Home: React.FC = () => {
     { label: 'Critical Problems', value: 5, color: 'bg-red-500' },
     { label: 'High Problems', value: 12, color: 'bg-orange-500' },
     { label: 'Medium Problems', value: 28, color: 'bg-yellow-500' },
-    { label: 'Low Problems', value: 43, color: 'bg-green-500' }
+    { label: 'Low Problems', value: 43, color: 'bg-green-500' },
+    { label: 'Total Problems', value: 88, color: 'bg-gray-500' }
   ];
+
+  // Функция для расчета дней с последнего скана
+  const getDaysSinceLastScan = () => {
+    const lastScanDate = new Date('2025-09-07'); // Пример даты последнего скана
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - lastScanDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
 
   return (
     <div className="space-y-6">
@@ -200,29 +210,29 @@ const Home: React.FC = () => {
             </div>
             <div className="flex items-center justify-center space-x-2">
               <Clock className="h-4 w-4 text-gray-400" />
-              <span className="text-sm text-gray-600">Last scan: 2 days ago</span>
+              <span className="text-sm text-gray-600">Last scan: {getDaysSinceLastScan()} days ago</span>
             </div>
           </div>
         </div>
 
-        {/* Problems Overview */}
+        {/* Assets Monitoring */}
         <div className="card p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Problems Overview</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Assets Monitoring</h2>
           <ProblemsOverview data={problemsData} />
         </div>
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Health Trend Chart */}
+        {/* Health Over Time Chart */}
         <div className="card p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Health Trend</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Health Over Time</h2>
           <HealthTrendChart data={healthTrendData} />
         </div>
 
-        {/* Critical Levels Chart */}
+        {/* Level Critically by Elements Chart */}
         <div className="card p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Critical Levels by Element</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Level Critically by Elements</h2>
           <CriticalLevelsChart data={criticalLevelsData} />
         </div>
       </div>

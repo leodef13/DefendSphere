@@ -89,6 +89,7 @@ function Sidebar({ isMobileMenuOpen, onMobileMenuToggle }: { isMobileMenuOpen: b
             </div>
             <div>
               <p className="text-sm font-medium">{user?.username || 'User'}</p>
+              <p className="text-xs text-white/70">{user?.role || 'user'}</p>
             </div>
           </div>
           <div>
