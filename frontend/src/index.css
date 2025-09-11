@@ -83,13 +83,13 @@ body {
 }
 
 .btn-primary {
-  background-color: var(--ds-primary);
-  color: white;
+  background-color: #2563EB;
+  color: #FFFFFF;
   transition: all 0.3s;
 }
 
 .btn-primary:hover {
-  background-color: var(--ds-primaryDark);
+  background-color: #2563EB; /* kept for backward compat, overridden by .login-button hover */
 }
 
 .chat-container {
@@ -189,7 +189,7 @@ body {
 
 /* Специфичные стили для страницы авторизации */
 .login-page {
-  background-color: #f8f9fa;
+  background-color: #F5F7FA;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -198,13 +198,13 @@ body {
 }
 
 .login-card {
-  background-color: #fdfeff;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  background-color: #FFFFFF;
+  border-radius: 1rem; /* rounded-2xl */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0,0,0,0.1); /* shadow-xl */
   transition: all 0.3s;
   padding: 2rem;
   width: 100%;
-  max-width: 28rem;
+  max-width: 25rem; /* 400px */
   margin: 0 auto;
 }
 
@@ -215,18 +215,20 @@ body {
 /* Специфичные стили для полей ввода */
 .login-input {
   width: 100%;
-  padding: 0.5rem 1rem;
+  height: 2.75rem; /* h-11 */
+  padding: 0.5rem 0.75rem; /* py-2 px-3 */
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem; /* rounded-lg */
   font-size: 0.875rem;
   transition: all 0.3s;
   background-color: white;
+  color: #111827; /* text color */
 }
 
 .login-input:focus {
   outline: none;
-  border-color: #56a3d9;
-  box-shadow: 0 0 0 2px rgba(86, 163, 217, 0.2);
+  border-color: #2563EB; /* border-blue-500 */
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25); /* ring-2 ring-blue-500 */
 }
 
 .login-input:hover {
@@ -238,6 +240,34 @@ body {
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  color: #111827; /* primary text for labels */
   margin-bottom: 0.25rem;
+}
+
+/* Login button per spec */
+.login-button {
+  background-color: #2563EB; /* accent */
+  color: #FFFFFF;
+  height: 2.75rem; /* h-11 */
+  border-radius: 0.5rem; /* rounded-lg */
+  font-weight: 600; /* font-semibold */
+}
+.login-button:hover {
+  background-color: #1D4ED8; /* hover:bg-blue-600 */
+}
+
+/* Links under form */
+.login-link {
+  color: #2563EB;
+}
+.login-link:hover {
+  text-decoration: underline;
+}
+.login-secondary {
+  color: #6B7280;
+}
+
+/* Error color */
+.login-error {
+  color: #DC2626;
 }

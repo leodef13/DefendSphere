@@ -1,9 +1,9 @@
 :root {
-	--ds-primary: #56a3d9;
-	--ds-primaryDark: #134876;
+	--ds-primary: #2563EB; /* accent */
+	--ds-primaryDark: #1D4ED8; /* hover */
 	--ds-sidebar: #003a6a;
-	--ds-background: #f8f9fa;
-	--ds-text: #2c2c2c;
-	--ds-card: #fdfeff;
-	--ds-border: #134876;
+	--ds-background: #F5F7FA; /* page background */
+	--ds-text: #111827; /* primary text */
+	--ds-card: #FFFFFF; /* form bg */
+	--ds-border: #D1D5DB;
 }
