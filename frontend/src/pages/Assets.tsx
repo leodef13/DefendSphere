@@ -78,7 +78,8 @@ const Assets: React.FC = () => {
   }
 
   const getRiskLevelColor = (riskLevel: string | undefined | null) => {
-    const lvl = (riskLevel || '').toString().toLowerCase()
+    if (typeof riskLevel !== 'string') return 'text-gray-700 bg-gray-50'
+    const lvl = riskLevel.toLowerCase()
     switch (lvl) {
       case 'critical': return 'text-red-800 bg-red-100'
       case 'high': return 'text-red-700 bg-red-50'
@@ -89,7 +90,8 @@ const Assets: React.FC = () => {
   }
 
   const getRiskLevelIcon = (riskLevel: string | undefined | null) => {
-    const lvl = (riskLevel || '').toString().toLowerCase()
+    if (typeof riskLevel !== 'string') return <Shield className="h-4 w-4 text-gray-500" />
+    const lvl = riskLevel.toLowerCase()
     switch (lvl) {
       case 'critical': return <AlertTriangle className="h-4 w-4 text-red-600" />
       case 'high': return <AlertTriangle className="h-4 w-4 text-red-500" />
@@ -100,7 +102,8 @@ const Assets: React.FC = () => {
   }
 
   const getVulnerabilityColor = (level: string | undefined | null) => {
-    const lvl = (level || '').toString().toLowerCase()
+    if (typeof level !== 'string') return '#6B7280'
+    const lvl = level.toLowerCase()
     switch (lvl) {
       case 'critical': return '#8B0000'
       case 'high': return '#DC2626'
