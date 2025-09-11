@@ -8,7 +8,6 @@ const Login: React.FC = () => {
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,20 +39,14 @@ const Login: React.FC = () => {
   return (
     <div id="login-page" className="login-page">
       <div className="login-card">
-          {/* Заголовок */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-[#134876]">
-              DefendSphere
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Security Compliance Dashboard
-            </p>
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold mb-6" style={{ color: '#111827' }}>
+              Sign in to your account
+            </h2>
           </div>
 
-          {/* Форма входа */}
-          <form id="login-form" onSubmit={handleSubmit} className="space-y-6">
-            {/* Username поле */}
-            <div>
+          <form id="login-form" onSubmit={handleSubmit}>
+            <div className="mb-4">
               <label htmlFor="username" className="login-label">
                 Username
               </label>
@@ -69,8 +62,7 @@ const Login: React.FC = () => {
               />
             </div>
 
-            {/* Password поле */}
-            <div>
+            <div className="mb-4">
               <label htmlFor="password" className="login-label">
                 Password
               </label>
@@ -86,42 +78,27 @@ const Login: React.FC = () => {
               />
             </div>
 
-            {/* Remember me и Forgot password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="remember-me"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-[#56a3d9] focus:ring-[#56a3d9] border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  Remember me
-                </label>
-              </div>
-              <a
-                href="#"
-                className="text-sm text-[#56a3d9] hover:text-[#134876]"
-              >
-                Forgot password?
-              </a>
-            </div>
-
-            {/* Сообщение об ошибке */}
             {error && (
-              <div className="text-red-500 text-sm text-center">
+              <div className="login-error text-sm text-center mb-2">
                 {error}
               </div>
             )}
 
-            {/* Кнопка Login */}
             <button
               type="submit"
-              className="w-full py-2 px-4 rounded-md text-white font-medium btn-primary"
+              className="login-button w-full mt-2 mb-4"
             >
-              Login
+              Sign in
             </button>
+
+            <div className="text-center">
+              <a href="#" className="text-sm login-link">Forgot your password?</a>
+            </div>
+            <div className="text-center mt-2">
+              <p className="text-sm login-secondary">
+                Don’t have an account? <a href="#" className="login-link">Sign up</a>
+              </p>
+            </div>
           </form>
       </div>
     </div>
