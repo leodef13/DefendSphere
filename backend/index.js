@@ -1,6 +1,8 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
 import morgan from 'morgan'
 import https from 'https'
 import fs from 'fs'
@@ -13,15 +15,22 @@ import starterGuideRoutes from './routes/starter-guide.js'
 import customerTrustRoutes from './routes/customer-trust.js'
 import assetsRoutes from './routes/assets.js'
 import assetsFallbackRoutes from './routes/assets-fallback.js'
+import assetsDbRoutes from './routes/assets-db.js'
 import complianceRoutes from './routes/compliance.js'
 import integrationsRoutes from './routes/integrations.js'
 import suppliersRoutes from './routes/suppliers.js'
 import reportsRoutes from './routes/reports.js'
+import uploadRoutes from './routes/upload.js'
+import parseRoutes from './routes/parse.js'
 import scanRoutes from './routes/scan.js'
 import companiesRoutes from './routes/companies.js'
 import { authenticateToken, requireAdmin, requirePermission } from './middleware/auth.js'
 
 const app = express()
+app.use(helmet())
+app.disable('x-powered-by')
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 })
+app.use(limiter)
 // CORS setup: allow multiple origins via comma-separated CORS_ORIGIN, with sensible defaults
 const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173,http://217.65.144.232:5173')
   .split(',')
@@ -726,9 +735,12 @@ app.use('/api/starter-guide', starterGuideRoutes);
 app.use('/api/customer-trust', customerTrustRoutes);
 app.use('/api/assets', assetsRoutes);
 app.use('/api/assets', assetsFallbackRoutes);
+app.use('/api/assets', assetsDbRoutes);
 app.use('/api/compliance', complianceRoutes);
 app.use('/api/integrations', integrationsRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/reports', uploadRoutes);
+app.use('/api/reports', parseRoutes);
 app.use('/api/scan', scanRoutes);
 app.use('/api/suppliers', suppliersRoutes);
 app.use('/api/company', companiesRoutes);

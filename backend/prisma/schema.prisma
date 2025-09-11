@@ -16,6 +16,7 @@ model Organization {
   suppliers    Supplier[]
   reportsFiles ReportsFile[]
   reports      Reports[]
+  customerTrust CustomerTrust[]
 }
 
 model User {
@@ -79,6 +80,7 @@ model Reports {
   createdAt        DateTime            @default(now())
   assets           ReportAsset[]
   vulnerabilities  ReportVulnerability[]
+  customerTrust    CustomerTrust[]
 }
 
 model ReportAsset {
@@ -107,5 +109,16 @@ model ReportVulnerability {
   description        String?
   recommendations    String?
   detectedAt         DateTime     @default(now())
+}
+
+model CustomerTrust {
+  id             Int           @id @default(autoincrement())
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  organizationId Int
+  report         Reports?      @relation(fields: [reportId], references: [id])
+  reportId       Int?
+  metric         String
+  value          Float
+  capturedAt     DateTime      @default(now())
 }
 
