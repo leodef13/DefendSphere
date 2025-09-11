@@ -452,3 +452,26 @@ go get github.com/defendsphere/go-client
 **API Version**: 1.0.0  
 **Last Updated**: January 2024  
 **Base URL**: `https://your-domain.com/api`
+
+## Reports Upload & Processing
+
+- POST `/api/reports/upload`
+  - Auth: Bearer JWT
+  - Body: multipart/form-data `file` (pdf|xlsx|xls|csv), `organizationId`
+  - Response: `{ report_file_id: number, file_type: 'pdf'|'excel', status: 'uploaded' }`
+
+- POST `/api/reports/:report_file_id/parse`
+  - Queues parsing job (BullMQ)
+  - Response: `{ jobId, status: 'queued' }`
+
+- GET `/api/reports/:id`
+  - Returns report metadata + aggregates
+
+- GET `/api/reports/export/pdf|excel`
+  - Initiates export, returns `downloadUrl`
+
+## Assets (DB)
+
+- GET `/api/assets`
+  - Returns assets for organizations the user belongs to (PostgreSQL)
+  - Cached in Redis with TTL; invalidation on uploads/parse completion

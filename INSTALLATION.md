@@ -1,96 +1,49 @@
-# DefendSphere Installation Guide
+# Installation (Defend branch)
 
 This guide will help you install and run DefendSphere on your system.
 
-## 🚀 Quick Installation
+## Requirements
 
-### Prerequisites
+- Docker & Docker Compose
+- Node.js 18+
 
-Before you begin, ensure you have the following installed:
-
-- **Node.js** 18.0 or higher
-- **Redis** 6.0 or higher  
-- **Docker** (optional, for containerized deployment)
-- **Git** (for cloning the repository)
-
-### Method 1: Docker Installation (Recommended)
-
-The easiest way to get started is using Docker:
+## Quick Start
 
 ```bash
-# Clone the repository
-git clone https://github.com/leodef13/DefendSphere.git
-cd DefendSphere
-
-# Build and start all services
-make build
-make up
-
-# Check if services are running
-docker ps
+docker compose up -d
 ```
 
-**Access the application:**
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:5000
+Then open:
+- Backend health: `http://localhost:5000/api/health`
+- Frontend: `http://localhost:3000`
+- MinIO Console: `http://localhost:9001` (minioadmin/minioadmin)
 
-### Method 2: Manual Installation
+## Services
 
-If you prefer to install manually:
+- redis:6379 (host 6380)
+- postgres:5432
+- minio:9000 (console 9001)
+- backend:5000
+- frontend:3000
 
-```bash
-# Clone the repository
-git clone https://github.com/leodef13/DefendSphere.git
-cd DefendSphere
-
-# Install frontend dependencies
-cd frontend
-npm install
-
-# Install backend dependencies  
-cd ../backend
-npm install
-
-# Start Redis (if not already running)
-docker run -d -p 6380:6379 redis:alpine
-# OR install Redis locally and run: redis-server
-
-# Start the backend server
-cd backend
-npm start
-
-# In a new terminal, start the frontend
-cd frontend
-npm run dev
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Create a `.env` file in the backend directory:
+## Backend env (.env)
 
 ```env
-PORT=5000
-REDIS_URL=redis://localhost:6380
-JWT_SECRET=your_secure_jwt_secret_here
-NODE_ENV=development
+REDIS_URL=redis://redis:6379
+DATABASE_URL=postgresql://postgres:postgres@postgres:5432/defendsphere?schema=public
+MINIO_ENDPOINT=minio
+MINIO_PORT=9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_BUCKET=reports
+JWT_SECRET=change-me
 ```
 
-Create a `.env` file in the frontend directory:
+## Notes
 
-```env
-VITE_API_URL=http://localhost:5000/api
-VITE_APP_NAME=DefendSphere
-```
-
-## 🎯 First Login
-
-After installation, you can log in with these default accounts:
-
-- **Admin**: `admin` / `admin`
-- **User 1**: `user1` / `user1`  
-- **User 2**: `user2` / `user2`
+- For local Redis only you can run: `sudo docker run -d -p 6380:6379 redis:alpine`
+- Health endpoint returns Redis ping result.
+- Prisma is configured to use PostgreSQL; run migrations and seed as needed.
 
 ## 📁 Project Structure
 

@@ -1,0 +1,111 @@
+// Prisma schema for DefendSphere
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  users        User[]
+  assets       Asset[]
+  suppliers    Supplier[]
+  reportsFiles ReportsFile[]
+  reports      Reports[]
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  username      String         @unique
+  email         String         @unique
+  passwordHash  String
+  role          String
+  permissions   String         // JSON string array
+  organizations Organization[]
+  createdAt     DateTime       @default(now())
+  lastLogin     DateTime       @default(now())
+}
+
+model Asset {
+  id                Int           @id @default(autoincrement())
+  organization      Organization  @relation(fields: [organizationId], references: [id])
+  organizationId    Int
+  name              String
+  type              String
+  environment       String
+  compliancePercent Float
+  riskLevel         String
+  lastScan          DateTime?
+  ownerId           Int?
+  details           Json?
+}
+
+model Supplier {
+  id             Int           @id @default(autoincrement())
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  organizationId Int
+  name           String
+  details        Json?
+}
+
+model ReportsFile {
+  id             Int           @id @default(autoincrement())
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  organizationId Int
+  uploadedBy     Int
+  fileName       String
+  fileType       String
+  filePath       String
+  uploadedAt     DateTime      @default(now())
+  report         Reports?
+}
+
+model Reports {
+  id               Int                 @id @default(autoincrement())
+  organization     Organization        @relation(fields: [organizationId], references: [id])
+  organizationId   Int
+  reportFile       ReportsFile?        @relation(fields: [reportFileId], references: [id])
+  reportFileId     Int?                @unique
+  reportName       String?
+  reportType       String?
+  ownerId          Int?
+  department       String?
+  status           String?
+  riskLevel        String?
+  createdAt        DateTime            @default(now())
+  assets           ReportAsset[]
+  vulnerabilities  ReportVulnerability[]
+}
+
+model ReportAsset {
+  id                 Int                  @id @default(autoincrement())
+  report             Reports              @relation(fields: [reportId], references: [id])
+  reportId           Int
+  assetName          String
+  assetType          String
+  environment        String
+  compliancePercent  Float
+  riskLevel          String
+  lastScan           DateTime?
+  ownerId            Int?
+  details            Json?
+  vulnerabilities    ReportVulnerability[]
+}
+
+model ReportVulnerability {
+  id                 Int          @id @default(autoincrement())
+  report             Reports      @relation(fields: [reportId], references: [id])
+  reportId           Int
+  asset              ReportAsset? @relation(fields: [assetId], references: [id])
+  assetId            Int?
+  vulnerabilityName  String
+  severity           String
+  description        String?
+  recommendations    String?
+  detectedAt         DateTime     @default(now())
+}
+

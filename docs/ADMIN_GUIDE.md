@@ -302,14 +302,16 @@ SSL_CERT_PATH=./certs/certificate.pem
   - Organization changes should be performed by admin only
 - Delete user
 
-## Organization-based Access
+## Organizations & Users
 
-- Users within the same Organization share access for:
-  - Reports
-  - Compliance
-  - Assets
-  - Suppliers
-- Configure permissions accordingly in Admin Panel
+- Organizations: Company LLD, Watson Morris
+- Users: admin, user1 (Company LLD), jon (Watson Morris)
+- Admin can see and manage all organizations and users
+
+## Data
+
+- Demo data initialized in Redis; Defend branch migrates domain data to PostgreSQL via Prisma (migrations/seeds).
+- Reports uploaded to MinIO (S3 compatible), parsed to PostgreSQL; aggregates cached in Redis.
 
 ## Sidebar Access
 
