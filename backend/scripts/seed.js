@@ -25,7 +25,7 @@ async function main() {
     update: {},
     create: {
       username: 'jon',
-      email: 'jon@watson-morris.com',
+      email: 'jon@watsonmorris.com',
       passwordHash: await bcrypt.hash('jon123', 10),
       role: 'user',
       permissions: JSON.stringify(['access.dashboard','access.assets','access.reports']),
@@ -47,15 +47,15 @@ async function main() {
   })
 
   await prisma.user.upsert({
-    where: { username: 'user3' },
+    where: { username: 'user2' },
     update: {},
     create: {
-      username: 'user3',
-      email: 'user3@company-lld.com',
-      passwordHash: await bcrypt.hash('user3', 10),
+      username: 'user2',
+      email: 'user2@defendsphere.com',
+      passwordHash: await bcrypt.hash('user2', 10),
       role: 'user',
-      permissions: JSON.stringify(['access.dashboard','access.assets','access.reports']),
-      organizations: { connect: [{ id: org2.id }] },
+      permissions: JSON.stringify(['access.dashboard','access.reports']),
+      organizations: { connect: [{ id: org1.id }] },
     }
   })
 

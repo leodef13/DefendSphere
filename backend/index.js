@@ -261,26 +261,23 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 })
 
 // User management endpoints (admin only)
-app.get('/api/admin/users', authenticateToken, requireAdminLocal, async (req, res) => {
+app.get('/api/admin/users', authenticateToken, requireAdminLocal, async (_req, res) => {
   try {
-    const usernames = await redis.sMembers('users')
-    const users = []
-
-    for (const username of usernames) {
-      const user = await redis.hGetAll(`user:${username}`)
-      if (user.username) {
-        delete user.password
-        users.push({
-          ...user,
-          permissions: JSON.parse(user.permissions),
-          organizations: user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : [])
-        })
-      }
-    }
-
+    const { PrismaClient } = await import('@prisma/client')
+    const prismaDb = new PrismaClient()
+    const dbUsers = await prismaDb.user.findMany({ include: { organizations: true } })
+    const users = dbUsers.map(u => ({
+      id: u.id,
+      username: u.username,
+      email: u.email,
+      role: u.role,
+      permissions: JSON.parse(u.permissions || '[]'),
+      organizations: (u.organizations || []).map(o => o.name),
+      lastLogin: u.lastLogin
+    }))
     res.json({ users })
   } catch (error) {
-    console.error('Get users error:', error)
+    console.error('Get users (DB) error:', error)
     res.status(500).json({ message: 'Internal server error' })
   }
 })
@@ -574,46 +571,11 @@ async function initializeDefaultUsers() {
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       }
-      // Сохраняем поля по отдельности
       for (const [field, value] of Object.entries(user2)) {
         await redis.hSet('user:user2', field, value)
       }
       await redis.sAdd('users', 'user2')
       console.log('User2 created')
-    }
-
-    const user3Exists = await redis.hGetAll('user:user3')
-    if (!user3Exists.username) {
-      const hashedPassword = await bcrypt.hash('user3', 10)
-      const user3 = {
-        id: '4',
-        username: 'user3',
-        fullName: 'Jane Doe',
-        email: 'user3@company-lld.com',
-        password: hashedPassword,
-        organization: 'Company LLD',
-        position: 'CISO',
-        role: 'user',
-        phone: '+1-555-0103',
-        permissions: JSON.stringify([
-          'access.dashboard',
-          'access.assets',
-          'access.compliance',
-          'access.customerTrust',
-          'access.suppliers',
-          'access.reports',
-          'access.integrations'
-        ]),
-        additionalOrganizations: JSON.stringify([]),
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString()
-      }
-      // Сохраняем поля по отдельности
-      for (const [field, value] of Object.entries(user3)) {
-        await redis.hSet('user:user3', field, value)
-      }
-      await redis.sAdd('users', 'user3')
-      console.log('User3 created')
     }
   } catch (error) {
     console.error('Error initializing default users:', error)
