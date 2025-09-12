@@ -27,7 +27,7 @@ async function main() {
     create: {
       username: 'jon',
       email: 'jon@watson-morris.com',
-      passwordHash: await bcrypt.hash('jon', 10),
+      passwordHash: await bcrypt.hash('jon123', 10),
       role: 'user',
       permissions: JSON.stringify(['access.dashboard','access.assets','access.reports']),
       organizations: { connect: [{ id: org1.id }] },
