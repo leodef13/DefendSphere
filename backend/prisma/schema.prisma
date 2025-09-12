@@ -17,6 +17,7 @@ model Organization {
   reportsFiles ReportsFile[]
   reports      Reports[]
   customerTrust CustomerTrust[]
+  complianceRecords ComplianceRecord[]
 }
 
 model User {
