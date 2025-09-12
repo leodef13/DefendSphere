@@ -5,11 +5,11 @@
 - Node.js 18+
 
 ## Сервисы и порты
-- Redis: 6380 (в контейнере и на хосте)
-- PostgreSQL: 5432
+- Redis: 6380 (в контейнере; хост-порт 6380)
+- PostgreSQL: 5432 (внутри docker-сети; при необходимости хост-порт 55555)
 - MinIO: 9000 (S3), 9001 (консоль)
 - Backend API: 5000
-- Frontend: 3000
+- Frontend: 3001 (хост)
 
 ## Шаги установки
 1. Клонировать репозиторий и перейти в ветку `Defend`.
@@ -31,10 +31,10 @@ docker compose up -d
 4. Проверить:
 - Backend: `curl http://localhost:5000/api/health` (поле `redis` → `PONG`)
 - MinIO Console: `http://localhost:9001` (minioadmin/minioadmin)
-- Frontend: `http://localhost:3000`
+- Frontend: `http://localhost:3001`
 
 ## Инициализация БД
-- Установить зависимости backend и сгенерировать Prisma Client:
+- Установить зависимости backend и сгенерировать Prisma Client (локально, если нужно):
 ```
 cd backend
 npm i
@@ -72,3 +72,10 @@ docker run -d -p 6380:6380 redis:alpine redis-server --port 6380
 ## Обновление токенов
 - `POST /api/auth/token/refresh` — получить новую пару токенов
 - `POST /api/auth/token/revoke` — добавить refresh‑токен в blacklist
+
+## Примечания по CORS
+- По умолчанию backend разрешает `http://localhost:3001` и `http://217.65.144.232:3001`. Можно задать свой список через `CORS_ORIGIN` (через запятую).
+
+## Устранение неполадок
+- Если backend перезапускается, проверьте логи: `docker compose logs --tail=200 backend`
+- Для ручного прогона Prisma в контейнере: `docker compose exec backend npx prisma generate && npx prisma migrate deploy`

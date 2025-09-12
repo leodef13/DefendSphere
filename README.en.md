@@ -27,9 +27,8 @@ A comprehensive cybersecurity dashboard and compliance management platform built
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
-- Redis 6+
-- Docker (optional)
+- Docker & Docker Compose (recommended)
+- Node.js 18+ (for manual/local development)
 
 ### Installation
 
@@ -50,16 +49,16 @@ cd ../backend
 npm install
 ```
 
-3. **Start Redis**
+3. **Start with Docker (recommended)**
 ```bash
-# Using Docker
-docker run -d -p 6380:6380 redis:alpine redis-server --port 6380
+# Build and start all services
+docker compose up -d
 
-# Or install Redis locally
-redis-server
+# Check backend health
+curl http://localhost:5000/api/health
 ```
 
-4. **Start the application**
+4. **Start the application (manual/local)**
 ```bash
 # Backend (from backend directory)
 npm start
@@ -68,16 +67,9 @@ npm start
 npm run dev
 ```
 
-### Docker Deployment
-
-```bash
-# Build and start all services
-make build
-make up
-
-# Stop services
-make down
-```
+### Access URLs
+- Frontend: http://localhost:3001
+- Backend: http://localhost:5000
 
 ## 🏗️ Architecture
 
@@ -93,17 +85,16 @@ make down
 ### Backend (Node.js + Express)
 - **Runtime**: Node.js 18+
 - **Framework**: Express.js
-- **Database**: Redis (primary data store)
+- **Databases**: PostgreSQL (via Prisma) and Redis (cache, sessions, queues)
+- **Object Storage**: MinIO (S3 compatible)
 - **Authentication**: JWT tokens
 - **Security**: Helmet, CORS, Rate limiting
 - **Validation**: Express-validator
 
-### Database (Redis)
-- **User Management**: User accounts, roles, and permissions
-- **Security Data**: Incidents, alerts, system metrics
-- **Compliance**: Standards, assessments, reports
-- **Assets**: IT assets, configurations, scans
-- **Logs**: Audit trails and system logs
+### Data Layer
+- **PostgreSQL (Prisma)**: Organizations, Users, Assets, Reports, ReportAssets, ReportVulnerabilities, CustomerTrust, etc.
+- **Redis**: Users cache, sessions, rate limiting, JWT blacklist, queues (BullMQ)
+- **MinIO (S3)**: Report files storage (uploads and parsed artifacts)
 
 ## 📊 Dashboard Sections
 
@@ -224,7 +215,8 @@ DefendSphere/
 #### Authentication
 - `POST /api/auth/login` - User login
 - `POST /api/auth/register` - User registration
-- `POST /api/auth/logout` - User logout
+- `POST /api/auth/token/refresh` - Refresh JWT
+- `POST /api/auth/token/revoke` - Revoke refresh token (blacklist)
 
 #### Dashboard Data
 - `GET /api/dashboard` - Dashboard metrics
@@ -232,7 +224,7 @@ DefendSphere/
 - `GET /api/alerts` - Security alerts
 
 #### Assets Management
-- `GET /api/assets` - Get all assets
+- `GET /api/assets` - Get all assets (DB + cache)
 - `POST /api/assets` - Create new asset
 - `PUT /api/assets/:id` - Update asset
 - `DELETE /api/assets/:id` - Delete asset
@@ -252,9 +244,10 @@ DefendSphere/
 - `DELETE /api/customer-trust/:id` - Delete customer trust record
 
 #### Reports
-- `GET /api/reports` - Get reports
-- `POST /api/reports` - Create report
-- `GET /api/reports/:id/export` - Export report
+- `POST /api/reports/upload` - Upload report file (multipart)
+- `POST /api/reports/:reportFileId/parse` - Enqueue parsing job (BullMQ)
+- `GET /api/reports/:id` - Report metadata and aggregates
+- `GET /api/reports/export/pdf|excel` - Export (stubs)
 
 #### AI Assistant
 - `POST /api/assistant` - Chat with AI assistant
@@ -267,7 +260,13 @@ For centralized provider management (OpenAI, Claude, Gemini, Azure, Mistral, etc
 #### Backend (.env)
 ```env
 PORT=5000
-REDIS_URL=redis://localhost:6380
+REDIS_URL=redis://redis:6380
+DATABASE_URL=postgresql://postgres:postgres@postgres:5432/defendsphere?schema=public
+MINIO_ENDPOINT=minio
+MINIO_PORT=9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_BUCKET=reports
 JWT_SECRET=your_jwt_secret_here
 NODE_ENV=development
 ```
@@ -312,10 +311,8 @@ cd backend
 npm run build
 ```
 
-### Docker Production
-```bash
-docker-compose -f docker-compose.prod.yml up -d
-```
+### Docker Compose
+The default `docker-compose.yml` brings up: redis:6380, postgres, minio:9000/9001, backend:5000, frontend:3001.
 
 ### Environment Configuration
 - Set production environment variables

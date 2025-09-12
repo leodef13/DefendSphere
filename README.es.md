@@ -27,9 +27,8 @@ Una plataforma integral de gestión de ciberseguridad y cumplimiento construida 
 ## 🚀 Inicio Rápido
 
 ### Prerrequisitos
-- Node.js 18+ 
-- Redis 6+
-- Docker (opcional)
+- Docker y Docker Compose (recomendado)
+- Node.js 18+ (para desarrollo local/manual)
 
 ### Instalación
 
@@ -50,16 +49,16 @@ cd backend
 npm install
 ```
 
-3. **Iniciar Redis**
+3. **Iniciar con Docker (recomendado)**
 ```bash
-# Usando Docker
-docker run -d -p 6380:6380 redis:alpine redis-server --port 6380
+# Construir e iniciar todos los servicios
+docker compose up -d
 
-# O instalar Redis localmente
-redis-server
+# Verificar salud del backend
+curl http://localhost:5000/api/health
 ```
 
-4. **Iniciar la aplicación**
+4. **Iniciar la aplicación (manual/local)**
 ```bash
 # Backend (desde directorio backend)
 npm start
@@ -68,16 +67,9 @@ npm start
 npm run dev
 ```
 
-### Despliegue con Docker
-
-```bash
-# Construir e iniciar todos los servicios
-make build
-make up
-
-# Detener servicios
-make down
-```
+### URLs de acceso
+- Frontend: http://localhost:3001
+- Backend: http://localhost:5000
 
 ## 🏗️ Arquitectura
 
@@ -93,17 +85,16 @@ make down
 ### Backend (Node.js + Express)
 - **Runtime**: Node.js 18+
 - **Framework**: Express.js
-- **Base de Datos**: Redis (almacén de datos principal)
+- **Bases de Datos**: PostgreSQL (via Prisma) y Redis (cache, sesiones, colas)
+- **Almacenamiento de Objetos**: MinIO (compatible S3)
 - **Autenticación**: Tokens JWT
 - **Seguridad**: Helmet, CORS, Limitación de velocidad
 - **Validación**: Express-validator
 
-### Base de Datos (Redis)
-- **Gestión de Usuarios**: Cuentas de usuario, roles y permisos
-- **Datos de Seguridad**: Incidentes, alertas, métricas del sistema
-- **Cumplimiento**: Estándares, evaluaciones, reportes
-- **Activos**: Activos IT, configuraciones, escaneos
-- **Logs**: Trails de auditoría y logs del sistema
+### Capa de Datos
+- **PostgreSQL (Prisma)**: Organizations, Users, Assets, Reports, ReportAssets, ReportVulnerabilities, CustomerTrust, etc.
+- **Redis**: Cache de usuarios, sesiones, limitación de tasa, blacklist de JWT, colas (BullMQ)
+- **MinIO (S3)**: Almacenamiento de archivos de reportes
 
 ## 📊 Secciones del Panel
 
@@ -224,7 +215,8 @@ DefendSphere/
 #### Autenticación
 - `POST /api/auth/login` - Inicio de sesión de usuario
 - `POST /api/auth/register` - Registro de usuario
-- `POST /api/auth/logout` - Cierre de sesión de usuario
+- `POST /api/auth/token/refresh` - Rotación de token
+- `POST /api/auth/token/revoke` - Revocar refresh token (blacklist)
 
 #### Datos del Panel
 - `GET /api/dashboard` - Métricas del panel
@@ -232,7 +224,7 @@ DefendSphere/
 - `GET /api/alerts` - Alertas de seguridad
 
 #### Gestión de Activos
-- `GET /api/assets` - Obtener todos los activos
+- `GET /api/assets` - Obtener todos los activos (BD + cache)
 - `POST /api/assets` - Crear nuevo activo
 - `PUT /api/assets/:id` - Actualizar activo
 - `DELETE /api/assets/:id` - Eliminar activo
@@ -252,9 +244,10 @@ DefendSphere/
 - `DELETE /api/customer-trust/:id` - Eliminar registro de confianza del cliente
 
 #### Reportes
-- `GET /api/reports` - Obtener reportes
-- `POST /api/reports` - Crear reporte
-- `GET /api/reports/:id/export` - Exportar reporte
+- `POST /api/reports/upload` - Subir archivo de reporte (multipart)
+- `POST /api/reports/:reportFileId/parse` - Encolar parsing (BullMQ)
+- `GET /api/reports/:id` - Metadatos y agregados
+- `GET /api/reports/export/pdf|excel` - Exportación (stubs)
 
 #### Asistente IA
 - `POST /api/assistant` - Chatear con asistente IA
@@ -264,7 +257,13 @@ DefendSphere/
 #### Backend (.env)
 ```env
 PORT=5000
-REDIS_URL=redis://localhost:6380
+REDIS_URL=redis://redis:6380
+DATABASE_URL=postgresql://postgres:postgres@postgres:5432/defendsphere?schema=public
+MINIO_ENDPOINT=minio
+MINIO_PORT=9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_BUCKET=reports
 JWT_SECRET=your_jwt_secret_here
 NODE_ENV=development
 ```
@@ -309,10 +308,8 @@ cd backend
 npm run build
 ```
 
-### Docker Producción
-```bash
-docker-compose -f docker-compose.prod.yml up -d
-```
+### Docker Compose
+El `docker-compose.yml` levanta: redis:6380, postgres, minio:9000/9001, backend:5000, frontend:3001.
 
 ### Configuración de Entorno
 - Establecer variables de entorno de producción

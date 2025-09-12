@@ -7,11 +7,24 @@ A comprehensive cybersecurity dashboard and compliance management platform.
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- Redis 6+
+- Docker & Docker Compose (recommended)
+- Node.js 18+ (for manual/local development)
 - Git
 
-### Installation
+### Installation (Docker Compose - recommended)
+```bash
+# Clone repository
+git clone https://github.com/leodef13/DefendSphere.git
+cd DefendSphere
+
+# Start all services
+docker compose up -d
+
+# Check backend health
+curl http://localhost:5000/api/health
+```
+
+### Installation (Manual / local)
 ```bash
 # Clone repository
 git clone https://github.com/leodef13/DefendSphere.git
@@ -35,9 +48,9 @@ cd frontend && npm run dev
 ```
 
 ### Access URLs
-- **Frontend**: http://localhost:5173
+- **Frontend**: http://localhost:3001
 - **Backend**: http://localhost:5000
-- **Admin Panel**: http://localhost:5173/admin
+- **Admin Panel**: http://localhost:3001/admin
 
 ### Default Users
 - **admin/admin** - Full administrative access
@@ -116,11 +129,31 @@ docker run -d -p 6380:6380 redis:alpine redis-server --port 6380
 ## 🏗️ Technology Stack
 
 - **Frontend**: React 18, TypeScript, Vite, TailwindCSS
-- **Backend**: Node.js, Express.js, Redis
+- **Backend**: Node.js, Express.js, Redis, PostgreSQL (Prisma), MinIO (S3), BullMQ (Redis)
 - **Authentication**: JWT tokens
 - **Security**: Helmet, CORS, Rate limiting
 - **Charts**: Custom SVG + Recharts
 - **Icons**: Lucide React
+
+### Containers and Ports
+- **redis**: 6380 (host 6380)
+- **postgres**: 5432 (exposed internally; optional host port 55555)
+- **minio**: 9000 (S3) and 9001 (console)
+- **backend**: 5000
+- **frontend**: 3001
+
+### Backend Environment (Docker)
+Key variables used by the backend container:
+```
+REDIS_URL=redis://redis:6380
+DATABASE_URL=postgresql://postgres:postgres@postgres:5432/defendsphere?schema=public
+MINIO_ENDPOINT=minio
+MINIO_PORT=9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_BUCKET=reports
+JWT_SECRET=change-me
+```
 
 ## 📊 Dashboard Sections
 
