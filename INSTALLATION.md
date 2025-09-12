@@ -21,7 +21,7 @@ Then open:
 ## Services
 
 - redis:6380 (host 6380)
-- postgres:5432
+- postgres:5432 (доступ из сети compose; порт на хост не пробрасывается по умолчанию)
 - minio:9000 (console 9001)
 - backend:5000
 - frontend:3000
