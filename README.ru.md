@@ -53,7 +53,7 @@ npm install
 3. **Запуск Redis**
 ```bash
 # Используя Docker
-docker run -d -p 6380:6379 redis:alpine
+docker run -d -p 6380:6380 redis:alpine redis-server --port 6380
 
 # Или установка Redis локально
 redis-server

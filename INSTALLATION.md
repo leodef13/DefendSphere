@@ -20,7 +20,7 @@ Then open:
 
 ## Services
 
-- redis:6379 (host 6380)
+- redis:6380 (host 6380)
 - postgres:5432
 - minio:9000 (console 9001)
 - backend:5000
@@ -29,7 +29,7 @@ Then open:
 ## Backend env (.env)
 
 ```env
-REDIS_URL=redis://redis:6379
+REDIS_URL=redis://redis:6380
 DATABASE_URL=postgresql://postgres:postgres@postgres:5432/defendsphere?schema=public
 MINIO_ENDPOINT=minio
 MINIO_PORT=9000
@@ -41,7 +41,7 @@ JWT_SECRET=change-me
 
 ## Notes
 
-- For local Redis only you can run: `sudo docker run -d -p 6380:6379 redis:alpine`
+- For local Redis only you can run: `sudo docker run -d -p 6380:6380 redis:alpine redis-server --port 6380`
 - Health endpoint returns Redis ping result.
 - Prisma is configured to use PostgreSQL; run migrations and seed as needed.
 

@@ -4,10 +4,11 @@ services:
     image: redis:7-alpine
     container_name: ds_redis
     ports:
-      - "6380:6379"
+      - "6380:6380"
     volumes:
       - redis-data:/data
     restart: unless-stopped
+    command: redis-server --port 6380 --appendonly yes
 
   api:
     build: ./

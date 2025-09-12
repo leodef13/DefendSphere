@@ -6,13 +6,13 @@ services:
     image: redis:7-alpine
     container_name: defendsphere-redis
     ports:
-      - "6380:6379"
+      - "6380:6380"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+    command: redis-server --port 6380 --appendonly yes
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-p", "6380", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -28,7 +28,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5000
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://redis:6380
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/defendsphere?schema=public
       - MINIO_ENDPOINT=minio
       - MINIO_PORT=9000

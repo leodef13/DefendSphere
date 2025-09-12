@@ -48,7 +48,7 @@ cd ../backend
 npm install
 
 # Iniciar Redis (si no está ejecutándose)
-docker run -d -p 6380:6379 redis:alpine
+docker run -d -p 6380:6380 redis:alpine redis-server --port 6380
 # O instalar Redis localmente y ejecutar: redis-server
 
 # Iniciar el servidor backend
