@@ -11,7 +11,7 @@
     "worker:parse": "node workers/parseWorker.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
-    "db:seed": "ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/seed.ts",
+    "db:seed": "node scripts/seed.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
