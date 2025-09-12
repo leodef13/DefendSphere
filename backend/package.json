@@ -5,6 +5,7 @@
   "description": "DefendSphere Security Dashboard Backend API",
   "main": "index.js",
   "scripts": {
+    "prestart": "prisma generate",
     "start": "node index.js",
     "dev": "nodemon index.js",
     "worker:parse": "node workers/parseWorker.js",
