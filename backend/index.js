@@ -24,6 +24,7 @@ import uploadRoutes from './routes/upload.js'
 import parseRoutes from './routes/parse.js'
 import scanRoutes from './routes/scan.js'
 import companiesRoutes from './routes/companies.js'
+import authRefreshRoutes from './routes/auth-refresh.js'
 import { authenticateToken, requireAdmin, requirePermission } from './middleware/auth.js'
 
 const app = express()
@@ -732,6 +733,7 @@ await initializeCompanyLLDData()
 app.use('/api/assistant', assistantRoutes);
 app.use('/api/ai-assistant', aiAssistantRoutes);
 app.use('/api/starter-guide', starterGuideRoutes);
+app.use('/api/auth', authRefreshRoutes);
 app.use('/api/customer-trust', customerTrustRoutes);
 app.use('/api/assets', assetsRoutes);
 app.use('/api/assets', assetsFallbackRoutes);

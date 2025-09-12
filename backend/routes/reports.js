@@ -2,6 +2,7 @@ import express from 'express'
 import { createClient } from 'redis'
 import { authenticateToken, requirePermission } from '../middleware/auth.js'
 import { reportData } from '../data/report-data.js'
+import prisma from '../lib/prisma.js'
 
 const router = express.Router()
 const redis = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6380' })
@@ -115,3 +116,47 @@ router.get('/export/excel', authenticateToken, requirePermission('access.reports
 })
 
 export default router
+
+// Additional Defend routes
+router.get('/:id', authenticateToken, requirePermission('access.reports'), async (req, res) => {
+  try {
+    const id = Number(req.params.id)
+    const report = await prisma.reports.findUnique({
+      where: { id },
+      include: { assets: true, vulnerabilities: true, reportFile: true }
+    })
+    if (!report) return res.status(404).json({ message: 'Report not found' })
+    res.json({ report })
+  } catch (error) {
+    console.error('Error fetching report by id:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+router.get('/export/pdf', authenticateToken, requirePermission('access.reports'), async (_req, res) => {
+  try {
+    // Stub implementation: return queued status and a placeholder URL
+    res.json({
+      message: 'PDF export queued',
+      downloadUrl: '/downloads/report-latest.pdf',
+      status: 'queued'
+    })
+  } catch (error) {
+    console.error('Error exporting PDF:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+router.get('/export/excel', authenticateToken, requirePermission('access.reports'), async (_req, res) => {
+  try {
+    // Stub implementation: return queued status and a placeholder URL
+    res.json({
+      message: 'Excel export queued',
+      downloadUrl: '/downloads/report-latest.xlsx',
+      status: 'queued'
+    })
+  } catch (error) {
+    console.error('Error exporting Excel:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
