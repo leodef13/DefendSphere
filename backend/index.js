@@ -201,7 +201,7 @@ app.post('/api/auth/login', async (req, res) => {
     console.log('Login successful for user:', loginName);
     console.log('Processed user data:', JSON.stringify(processedUser, null, 2));
 
-    res.json({ accessToken: token, refreshToken, user: processedUser })
+    res.json({ accessToken: token, token, refreshToken, user: processedUser })
   } catch (error) {
     console.error('Login error:', error)
     res.status(500).json({ message: 'Internal server error' })
