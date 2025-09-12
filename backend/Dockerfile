@@ -6,11 +6,14 @@ WORKDIR /app
 # Копирование package.json и package-lock.json
 COPY package*.json ./
 
-# Установка зависимостей
-RUN npm ci --only=production
+# Установка зависимостей (включая dev для генерации Prisma Client)
+RUN npm ci
 
 # Копирование исходного кода
 COPY . .
+
+# Генерация Prisma Client
+RUN npx prisma generate
 
 # Создание непривилегированного пользователя
 RUN addgroup -g 1001 -S nodejs
