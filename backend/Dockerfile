@@ -3,8 +3,10 @@ FROM node:18-alpine
 # Установка рабочей директории
 WORKDIR /app
 
-# System deps for Prisma (OpenSSL)
-RUN apk add --no-cache openssl1.1-compat openssl
+# System deps for Prisma
+# Alpine 3.21 provides OpenSSL 3; Prisma works with libssl provided in musl environments
+# Also include libstdc++ for native deps
+RUN apk add --no-cache openssl libstdc++
 
 # Копирование package.json и package-lock.json
 COPY package*.json ./
