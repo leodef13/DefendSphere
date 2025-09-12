@@ -7,7 +7,7 @@ const router = express.Router();
 
 // Подключение к Redis
 const client = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6380'
+  url: process.env.REDIS_URL || 'redis://redis:6380'
 });
 
 client.on('error', (err) => console.log('Redis Client Error', err));

@@ -5,7 +5,7 @@ import encryptionService from '../services/encryptionService.js'
 import greenboneService from '../services/greenboneService.cjs'
 
 const router = express.Router()
-const redis = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6380' })
+const redis = createClient({ url: process.env.REDIS_URL || 'redis://redis:6380' })
 redis.on('error', (e) => console.error('Redis error in integrations routes:', e))
 await redis.connect()
 

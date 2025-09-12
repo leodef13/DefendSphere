@@ -5,7 +5,7 @@ import { reportData } from '../data/report-data.js'
 import prisma from '../lib/prisma.js'
 
 const router = express.Router()
-const redis = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6380' })
+const redis = createClient({ url: process.env.REDIS_URL || 'redis://redis:6380' })
 redis.on('error', (e) => console.error('Redis error in reports routes:', e))
 await redis.connect()
 

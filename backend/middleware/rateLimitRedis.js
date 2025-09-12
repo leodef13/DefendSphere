@@ -6,13 +6,21 @@ const REDIS_URL = process.env.REDIS_URL || 'redis://redis:6380'
 
 const redis = createClient({ url: REDIS_URL })
 redis.on('error', (e) => console.error('Redis rate-limit error:', e))
-await redis.connect()
+let limiterEnabled = true
+try {
+  await redis.connect()
+} catch (e) {
+  limiterEnabled = false
+  console.error('Rate limiter disabled: failed to connect to Redis:', e?.message || e)
+}
 
 export function rateLimitRedis() {
   return async (req, res, next) => {
     try {
       // Never rate-limit CORS preflight
       if (req.method === 'OPTIONS') return next()
+
+      if (!limiterEnabled) return next()
 
       const ip = (req.ip || req.connection?.remoteAddress || 'unknown').replace('::ffff:', '')
       const windowStart = Math.floor(Date.now() / WINDOW_MS) * WINDOW_MS

@@ -7,7 +7,7 @@ const router = express.Router()
 
 // Redis client local to this router (mirrors other routes)
 const client = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6380'
+  url: process.env.REDIS_URL || 'redis://redis:6380'
 })
 client.on('error', (err) => console.log('Redis Client Error', err))
 // Ensure Redis connection for this router
