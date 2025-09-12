@@ -61,7 +61,7 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: defendsphere-frontend
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - VITE_API_URL=${VITE_API_URL:-http://localhost:5000}
     depends_on:

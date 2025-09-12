@@ -15,7 +15,7 @@ docker compose up -d
 
 Then open:
 - Backend health: `http://localhost:5000/api/health`
-- Frontend: `http://localhost:3000`
+- Frontend: `http://localhost:3001`
 - MinIO Console: `http://localhost:9001` (minioadmin/minioadmin)
 
 ## Services
@@ -24,7 +24,7 @@ Then open:
 - postgres:5432 (внутри сети), хост-порт: 55555 (проброшен для локального доступа)
 - minio:9000 (console 9001)
 - backend:5000
-- frontend:3000
+- frontend:3001 (host)
 
 ## Backend env (.env)
 
