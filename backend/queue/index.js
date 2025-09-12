@@ -1,9 +1,8 @@
-import { Queue, Worker, QueueScheduler } from 'bullmq'
+import bullmq from 'bullmq'
+const { Queue, Worker, QueueScheduler } = bullmq
 import { createClient } from 'redis'
 
-const connection = {
-  url: process.env.REDIS_URL || 'redis://localhost:6380'
-}
+const connection = { url: process.env.REDIS_URL || 'redis://redis:6380' }
 
 export const parseQueue = new Queue('report-parse', { connection })
 export const parseScheduler = new QueueScheduler('report-parse', { connection })
