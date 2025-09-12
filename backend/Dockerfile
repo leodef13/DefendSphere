@@ -3,6 +3,9 @@ FROM node:18-alpine
 # Установка рабочей директории
 WORKDIR /app
 
+# System deps for Prisma (OpenSSL)
+RUN apk add --no-cache openssl1.1-compat openssl
+
 # Копирование package.json и package-lock.json
 COPY package*.json ./
 
