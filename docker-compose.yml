@@ -36,7 +36,7 @@ services:
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET=reports
       - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
+      - CORS_ORIGIN=http://localhost:3001,http://217.65.144.232:3001
     depends_on:
       redis:
         condition: service_healthy
