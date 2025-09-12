@@ -11,6 +11,9 @@ await redis.connect()
 export function rateLimitRedis() {
   return async (req, res, next) => {
     try {
+      // Never rate-limit CORS preflight
+      if (req.method === 'OPTIONS') return next()
+
       const ip = (req.ip || req.connection?.remoteAddress || 'unknown').replace('::ffff:', '')
       const windowStart = Math.floor(Date.now() / WINDOW_MS) * WINDOW_MS
       const key = `ratelimit:${ip}:${windowStart}`
