@@ -47,12 +47,39 @@ async function main() {
     }
   })
 
+  await prisma.user.upsert({
+    where: { username: 'user3' },
+    update: {},
+    create: {
+      username: 'user3',
+      email: 'user3@company-lld.com',
+      passwordHash: await bcrypt.hash('user3', 10),
+      role: 'user',
+      permissions: JSON.stringify(['access.dashboard','access.assets','access.reports']),
+      organizations: { connect: [{ id: org2.id }] },
+    }
+  })
+
   await prisma.asset.createMany({
     data: [
       { organizationId: org2.id, name: 'www.company-lld.com', type: 'Web Server', environment: 'Production', compliancePercent: 75, riskLevel: 'Medium' },
       { organizationId: org2.id, name: 'db.company-lld.com', type: 'Database', environment: 'Production', compliancePercent: 70, riskLevel: 'High' },
+      { organizationId: org2.id, name: 'app.company-lld.com', type: 'Application Server', environment: 'Production', compliancePercent: 80, riskLevel: 'Medium' },
+      { organizationId: org2.id, name: 'vpn.company-lld.com', type: 'VPN Gateway', environment: 'Production', compliancePercent: 75, riskLevel: 'Low' },
+      { organizationId: org1.id, name: 'www.watson-morris.com', type: 'Web Server', environment: 'Production', compliancePercent: 78, riskLevel: 'Medium' },
+      { organizationId: org1.id, name: 'db.watson-morris.com', type: 'Database', environment: 'Production', compliancePercent: 72, riskLevel: 'High' },
+      { organizationId: org1.id, name: 'vpn.watson-morris.com', type: 'VPN Gateway', environment: 'Production', compliancePercent: 76, riskLevel: 'Low' },
     ],
     skipDuplicates: true
+  })
+
+  // Seed minimal compliance records
+  await prisma.complianceRecord.createMany({
+    data: [
+      { organizationId: org2.id, standard: 'ISO/IEC 27001', department: 'IT', status: 'Compliant', compliancePercentage: 92 },
+      { organizationId: org2.id, standard: 'GDPR', department: 'Security', status: 'Partial', compliancePercentage: 75 },
+      { organizationId: org1.id, standard: 'NIS2', department: 'Operations', status: 'Non-Compliant', compliancePercentage: 35 }
+    ]
   })
 
   console.log('Seed completed')

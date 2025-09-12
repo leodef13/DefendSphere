@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
+import { rateLimitRedis } from './middleware/rateLimitRedis.js'
 import morgan from 'morgan'
 import https from 'https'
 import fs from 'fs'
@@ -30,10 +31,22 @@ import { authenticateToken, requireAdmin, requirePermission } from './middleware
 const app = express()
 app.use(helmet())
 app.disable('x-powered-by')
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 })
-app.use(limiter)
+// Prefer Redis-backed rate limiting if REDIS_URL is available
+app.use(rateLimitRedis())
 // CORS setup: allow multiple origins via comma-separated CORS_ORIGIN, with sensible defaults (3001 and 5173)
-const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3001,http://217.65.144.232:3001,http://localhost:5173,http://217.65.144.232:5173')
+// Load CORS origins from env or optional config file
+let corsList = process.env.CORS_ORIGIN
+try {
+  if (!corsList) {
+    const fs2 = await import('fs')
+    const path2 = await import('path')
+    const cfgPath = path2.join(process.cwd(), 'config', 'cors-origins.txt')
+    if (fs2.existsSync(cfgPath)) {
+      corsList = fs2.readFileSync(cfgPath, 'utf8')
+    }
+  }
+} catch {}
+const allowedOrigins = (corsList || 'http://localhost:3001,http://217.65.144.232:3001')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean)
@@ -158,73 +171,37 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ message: 'Username and password are required' })
     }
 
-    let user = null;
-    let useFallback = false;
-
-    try {
-      // Try to get user from Redis first
-      user = await redis.hGetAll(`user:${loginName}`)
-      if (!user.username) {
-        useFallback = true;
-      }
-    } catch (redisError) {
-      console.log('Redis not available, using fallback:', redisError.message)
-      useFallback = true;
-    }
-
-    if (useFallback) {
-      // Fallback to file-based authentication
-      try {
-        const fs = await import('fs');
-        const path = await import('path');
-        const dataDir = path.join(process.cwd(), 'data');
-        const usersFile = path.join(dataDir, 'users.json');
-        
-        const users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
-        user = users.find(u => u.username === loginName);
-        
-        if (!user) {
-          return res.status(401).json({ message: 'Invalid credentials' })
-        }
-
-        // Simple password check for fallback (in production, use proper hashing)
-        if (user.password !== password) {
-          return res.status(401).json({ message: 'Invalid credentials' })
-        }
-
-        console.log('Using fallback authentication for user:', loginName);
-        console.log('User data from fallback:', JSON.stringify(user, null, 2));
-      } catch (fallbackError) {
-        console.error('Fallback authentication error:', fallbackError);
-        return res.status(500).json({ message: 'Authentication service unavailable' })
-      }
-    } else {
-      // Check password with bcrypt for Redis users
-      const isValidPassword = await bcrypt.compare(password, user.password)
-      if (!isValidPassword) {
-        return res.status(401).json({ message: 'Invalid credentials' })
-      }
-    }
+    // Authenticate against PostgreSQL
+    const { PrismaClient } = await import('@prisma/client')
+    const prismaDb = new PrismaClient()
+    const dbUser = await prismaDb.user.findUnique({ where: { username: String(loginName) } })
+    if (!dbUser) return res.status(401).json({ message: 'Invalid credentials' })
+    const isValidPassword = await bcrypt.compare(String(password), dbUser.passwordHash)
+    if (!isValidPassword) return res.status(401).json({ message: 'Invalid credentials' })
 
     // Generate token
-    const token = jwt.sign({ userId: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' })
+    const token = jwt.sign({ userId: dbUser.id, username: dbUser.username }, JWT_SECRET, { expiresIn: '15m' })
+    const refreshToken = jwt.sign({ userId: dbUser.id, username: dbUser.username }, JWT_SECRET, { expiresIn: '7d' })
+    await redis.set(`refresh:${refreshToken}`, JSON.stringify({ userId: dbUser.id }), { EX: 7 * 24 * 60 * 60 })
 
-    // Remove password from response
-    delete user.password
+    const organizations = await (async () => {
+      const u = await prismaDb.user.findUnique({ where: { id: dbUser.id }, include: { organizations: true } })
+      return (u?.organizations || []).map(o => o.name)
+    })()
 
     const processedUser = {
-      ...user,
-      permissions: Array.isArray(user.permissions) ? user.permissions : JSON.parse(user.permissions || '[]'),
-      organizations: Array.isArray(user.organizations) ? user.organizations : (user.organizations ? JSON.parse(user.organizations) : (user.organization ? [user.organization] : []))
-    };
+      id: dbUser.id,
+      username: dbUser.username,
+      email: dbUser.email,
+      role: dbUser.role,
+      permissions: JSON.parse(dbUser.permissions || '[]'),
+      organizations
+    }
 
     console.log('Login successful for user:', loginName);
     console.log('Processed user data:', JSON.stringify(processedUser, null, 2));
 
-    res.json({
-      token,
-      user: processedUser
-    })
+    res.json({ accessToken: token, refreshToken, user: processedUser })
   } catch (error) {
     console.error('Login error:', error)
     res.status(500).json({ message: 'Internal server error' })
